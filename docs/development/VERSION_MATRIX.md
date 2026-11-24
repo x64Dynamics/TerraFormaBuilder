@@ -36,7 +36,7 @@ Target status lifecycle:
 | **1.20.6** | 21 | NeoForge | In Progress | Pending | Pending | Java 21 LTS |
 | **1.21.0** | 21 | Fabric | In Progress | Pending | Pending | Tricky Trials initial |
 | **1.21.0** | 21 | NeoForge | In Progress | Pending | Pending | Tricky Trials initial |
-| **1.21.1** | 21 | Fabric | In Progress | Pending | Pending | Tricky Trials LTS |
+| **1.21.1** | 21 | Fabric | **Implemented** | **Built** | **Verified** | Tricky Trials LTS, full HUD, flight, blur fixed |
 | **1.21.1** | 21 | NeoForge | **Implemented** | **Built** | **Verified** | Primary reference target, flight, hotbar, blur fixed |
 | **1.21.2** | 21 | Fabric | In Progress | Pending | Pending | Bundles update |
 | **1.21.2** | 21 | NeoForge | In Progress | Pending | Pending | Bundles update |
