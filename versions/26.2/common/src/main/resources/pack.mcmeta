@@ -1,0 +1,13 @@
+{
+  "pack": {
+    "description": "Mod resources",
+    "min_format": [
+      88,
+      0
+    ],
+    "max_format": [
+      88,
+      0
+    ]
+  }
+}

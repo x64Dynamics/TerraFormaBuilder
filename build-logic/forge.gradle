@@ -1,0 +1,92 @@
+apply plugin: 'net.minecraftforge.gradle'
+if (targetPins.getProperty('forge.night-config')) {
+    dependencies {
+        implementation "com.electronwill.night-config:core:${targetPins.getProperty('forge.night-config')}"
+        implementation "com.electronwill.night-config:toml:${targetPins.getProperty('forge.night-config')}"
+    }
+}
+if (targetPins.getProperty('forge.jopt-simple')) {
+    dependencies {
+        implementation('net.sf.jopt-simple:jopt-simple') {
+            version { strictly targetPins.getProperty('forge.jopt-simple') }
+        }
+    }
+}
+if (targetPins.getProperty('forge.modlauncher')) {
+    configurations.configureEach {
+        resolutionStrategy.force "cpw.mods:modlauncher:${targetPins.getProperty('forge.modlauncher')}"
+    }
+}
+if (targetPins.getProperty('forge.eventbus.validator')) {
+    dependencies { annotationProcessor "net.minecraftforge:eventbus-validator:${targetPins.getProperty('forge.eventbus.validator')}" }
+}
+if (targetPins.getProperty('forge.version').tokenize('.')[0].toInteger() >= 49) {
+    // Modern Forge loads each mod as one Java module, including its resources.
+    sourceSets.each {
+        def directory = layout.buildDirectory.dir("sourceSets/${it.name}")
+        it.output.resourcesDir = directory
+        it.java.destinationDirectory = directory
+    }
+}
+if (targetPins.getProperty('forge.gradle').startsWith('7.')) {
+    minecraft {
+        if (!targetMinecraft.startsWith('26.')) {
+            mappings channel: 'official', version: targetMinecraft
+        }
+        runs {
+            configureEach {
+                workingDir = new File(templateRunRoot,"${targetMinecraft}/forge/${name}")
+                if (name == 'client') {
+                    systemProperty 'org.lwjgl.system.SharedLibraryExtractPath', new File(templateRunRoot,"${targetMinecraft}/forge/client/natives").absolutePath
+                }
+                if (project.findProperty('smokeTest') == 'true') {
+                    maxHeapSize = '1536m'
+                    jvmArgs '-XX:ActiveProcessorCount=2'
+                }
+            }
+            register('client')
+            register('server') {
+                args '--nogui'
+                systemProperty 'terminal.jline', 'false'
+            }
+        }
+    }
+    repositories {
+        minecraft.mavenizer(it)
+        maven fg.forgeMaven
+        maven fg.minecraftLibsMaven
+    }
+    dependencies { implementation minecraft.dependency("net.minecraftforge:forge:${targetMinecraft}-${targetPins.getProperty('forge.version')}") }
+} else {
+minecraft {
+    reobf = targetPins.getProperty('forge.reobfuscate', 'true').toBoolean()
+    mappings channel: targetPins.getProperty('forge.mappings.channel'), version: targetPins.getProperty('forge.mappings.version')
+    runs {
+        configureEach {
+            if (project.findProperty('smokeTest') == 'true') {
+                jvmArgs '-Xmx1536m', '-XX:ActiveProcessorCount=2'
+            }
+        }
+        client {
+            workingDirectory new File(templateRunRoot,"${targetMinecraft}/forge/client")
+            property 'org.lwjgl.system.SharedLibraryExtractPath', new File(templateRunRoot,"${targetMinecraft}/forge/client/natives").absolutePath
+            mods { terraformabuilder { source sourceSets.main } }
+        }
+        server {
+            workingDirectory new File(templateRunRoot,"${targetMinecraft}/forge/server")
+            args '--nogui'
+            property 'terminal.jline', 'false'
+            mods { terraformabuilder { source sourceSets.main } }
+        }
+    }
+}
+dependencies { minecraft "net.minecraftforge:forge:${targetMinecraft}-${targetPins.getProperty('forge.version')}" }
+gradle.projectsEvaluated {
+    def reobfuscate = tasks.findByName('reobfJar')
+    if (reobfuscate != null) {
+        tasks.named('jar') { finalizedBy(reobfuscate) }
+    } else if (targetPins.getProperty('java.release').toInteger() < 21) {
+        throw new GradleException('The legacy Forge target requires reobfJar')
+    }
+}
+}

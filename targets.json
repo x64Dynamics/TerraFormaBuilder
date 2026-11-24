@@ -1,0 +1,556 @@
+{
+  "schema": 1,
+  "source": "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json",
+  "targets": [
+    {
+      "minecraft": "1.18.2",
+      "java": 17,
+      "loaders": {
+        "fabric": {
+          "status": "build-verified",
+          "dependency": "0.20.1"
+        },
+        "forge": {
+          "status": "build-verified",
+          "dependency": "40.3.0"
+        }
+      },
+      "unavailable": [
+        "neoforge"
+      ]
+    },
+    {
+      "minecraft": "1.19",
+      "java": 17,
+      "loaders": {
+        "fabric": {
+          "status": "build-verified",
+          "dependency": "0.20.1"
+        },
+        "forge": {
+          "status": "build-verified",
+          "dependency": "41.1.0"
+        }
+      },
+      "unavailable": [
+        "neoforge"
+      ]
+    },
+    {
+      "minecraft": "1.19.1",
+      "java": 17,
+      "loaders": {
+        "fabric": {
+          "status": "build-verified",
+          "dependency": "0.20.1"
+        },
+        "forge": {
+          "status": "build-verified",
+          "dependency": "42.0.9"
+        }
+      },
+      "unavailable": [
+        "neoforge"
+      ]
+    },
+    {
+      "minecraft": "1.19.2",
+      "java": 17,
+      "loaders": {
+        "fabric": {
+          "status": "build-verified",
+          "dependency": "0.20.1"
+        },
+        "forge": {
+          "status": "build-verified",
+          "dependency": "43.5.0"
+        }
+      },
+      "unavailable": [
+        "neoforge"
+      ]
+    },
+    {
+      "minecraft": "1.19.3",
+      "java": 17,
+      "loaders": {
+        "fabric": {
+          "status": "build-verified",
+          "dependency": "0.20.1"
+        },
+        "forge": {
+          "status": "build-verified",
+          "dependency": "44.1.0"
+        }
+      },
+      "unavailable": [
+        "neoforge"
+      ]
+    },
+    {
+      "minecraft": "1.19.4",
+      "java": 17,
+      "loaders": {
+        "fabric": {
+          "status": "build-verified",
+          "dependency": "0.20.1"
+        },
+        "forge": {
+          "status": "build-verified",
+          "dependency": "45.4.0"
+        }
+      },
+      "unavailable": [
+        "neoforge"
+      ]
+    },
+    {
+      "minecraft": "1.20",
+      "java": 17,
+      "loaders": {
+        "fabric": {
+          "status": "build-verified",
+          "dependency": "0.20.1"
+        },
+        "forge": {
+          "status": "build-verified",
+          "dependency": "46.0.14"
+        }
+      },
+      "unavailable": [
+        "neoforge"
+      ]
+    },
+    {
+      "minecraft": "1.20.1",
+      "java": 17,
+      "loaders": {
+        "fabric": {
+          "status": "build-verified",
+          "dependency": "0.20.1"
+        },
+        "forge": {
+          "status": "build-verified",
+          "dependency": "47.4.28"
+        }
+      },
+      "unavailable": [
+        "neoforge"
+      ]
+    },
+    {
+      "minecraft": "1.20.2",
+      "java": 17,
+      "loaders": {
+        "fabric": {
+          "status": "build-verified",
+          "dependency": "0.20.1"
+        },
+        "forge": {
+          "status": "build-verified",
+          "dependency": "48.1.0"
+        },
+        "neoforge": {
+          "status": "build-verified",
+          "dependency": "20.2.93"
+        }
+      },
+      "unavailable": []
+    },
+    {
+      "minecraft": "1.20.3",
+      "java": 17,
+      "loaders": {
+        "fabric": {
+          "status": "build-verified",
+          "dependency": "0.20.1"
+        },
+        "forge": {
+          "status": "build-verified",
+          "dependency": "49.0.2"
+        },
+        "neoforge": {
+          "status": "build-verified",
+          "dependency": "20.3.8-beta"
+        }
+      },
+      "unavailable": []
+    },
+    {
+      "minecraft": "1.20.4",
+      "java": 17,
+      "loaders": {
+        "fabric": {
+          "status": "build-verified",
+          "dependency": "0.20.1"
+        },
+        "forge": {
+          "status": "build-verified",
+          "dependency": "49.2.13"
+        },
+        "neoforge": {
+          "status": "build-verified",
+          "dependency": "20.4.253"
+        }
+      },
+      "unavailable": []
+    },
+    {
+      "minecraft": "1.20.5",
+      "java": 21,
+      "loaders": {
+        "fabric": {
+          "status": "build-verified",
+          "dependency": "0.20.1"
+        },
+        "neoforge": {
+          "status": "build-verified",
+          "dependency": "20.5.21-beta"
+        }
+      },
+      "unavailable": [
+        "forge"
+      ]
+    },
+    {
+      "minecraft": "1.20.6",
+      "java": 21,
+      "loaders": {
+        "fabric": {
+          "status": "build-verified",
+          "dependency": "0.20.1"
+        },
+        "forge": {
+          "status": "build-verified",
+          "dependency": "50.2.14"
+        },
+        "neoforge": {
+          "status": "build-verified",
+          "dependency": "20.6.144"
+        }
+      },
+      "unavailable": []
+    },
+    {
+      "minecraft": "1.21",
+      "java": 21,
+      "loaders": {
+        "fabric": {
+          "status": "build-verified",
+          "dependency": "0.20.1"
+        },
+        "forge": {
+          "status": "build-verified",
+          "dependency": "51.0.33"
+        },
+        "neoforge": {
+          "status": "build-verified",
+          "dependency": "21.0.167"
+        }
+      },
+      "unavailable": []
+    },
+    {
+      "minecraft": "1.21.1",
+      "java": 21,
+      "loaders": {
+        "fabric": {
+          "status": "build-verified",
+          "dependency": "0.20.1"
+        },
+        "forge": {
+          "status": "build-verified",
+          "dependency": "52.1.20"
+        },
+        "neoforge": {
+          "status": "build-verified",
+          "dependency": "21.1.265"
+        }
+      },
+      "unavailable": []
+    },
+    {
+      "minecraft": "1.21.2",
+      "java": 21,
+      "loaders": {
+        "fabric": {
+          "status": "build-verified",
+          "dependency": "0.20.1"
+        },
+        "neoforge": {
+          "status": "build-verified",
+          "dependency": "21.2.1-beta"
+        }
+      },
+      "unavailable": [
+        "forge"
+      ]
+    },
+    {
+      "minecraft": "1.21.3",
+      "java": 21,
+      "loaders": {
+        "fabric": {
+          "status": "build-verified",
+          "dependency": "0.20.1"
+        },
+        "forge": {
+          "status": "build-verified",
+          "dependency": "53.1.16"
+        },
+        "neoforge": {
+          "status": "build-verified",
+          "dependency": "21.3.100"
+        }
+      },
+      "unavailable": []
+    },
+    {
+      "minecraft": "1.21.4",
+      "java": 21,
+      "loaders": {
+        "fabric": {
+          "status": "build-verified",
+          "dependency": "0.20.1"
+        },
+        "forge": {
+          "status": "build-verified",
+          "dependency": "54.1.22"
+        },
+        "neoforge": {
+          "status": "build-verified",
+          "dependency": "21.4.161"
+        }
+      },
+      "unavailable": []
+    },
+    {
+      "minecraft": "1.21.5",
+      "java": 21,
+      "loaders": {
+        "fabric": {
+          "status": "build-verified",
+          "dependency": "0.20.1"
+        },
+        "forge": {
+          "status": "build-verified",
+          "dependency": "55.1.18"
+        },
+        "neoforge": {
+          "status": "build-verified",
+          "dependency": "21.5.101"
+        }
+      },
+      "unavailable": []
+    },
+    {
+      "minecraft": "1.21.6",
+      "java": 21,
+      "loaders": {
+        "fabric": {
+          "status": "build-verified",
+          "dependency": "0.20.1"
+        },
+        "forge": {
+          "status": "build-verified",
+          "dependency": "56.0.9"
+        },
+        "neoforge": {
+          "status": "build-verified",
+          "dependency": "21.6.20-beta"
+        }
+      },
+      "unavailable": []
+    },
+    {
+      "minecraft": "1.21.7",
+      "java": 21,
+      "loaders": {
+        "fabric": {
+          "status": "build-verified",
+          "dependency": "0.20.1"
+        },
+        "forge": {
+          "status": "build-verified",
+          "dependency": "57.0.3"
+        },
+        "neoforge": {
+          "status": "build-verified",
+          "dependency": "21.7.25-beta"
+        }
+      },
+      "unavailable": []
+    },
+    {
+      "minecraft": "1.21.8",
+      "java": 21,
+      "loaders": {
+        "fabric": {
+          "status": "build-verified",
+          "dependency": "0.20.1"
+        },
+        "forge": {
+          "status": "build-verified",
+          "dependency": "58.1.26"
+        },
+        "neoforge": {
+          "status": "build-verified",
+          "dependency": "21.8.57"
+        }
+      },
+      "unavailable": []
+    },
+    {
+      "minecraft": "1.21.9",
+      "java": 21,
+      "loaders": {
+        "fabric": {
+          "status": "build-verified",
+          "dependency": "0.20.1"
+        },
+        "forge": {
+          "status": "build-verified",
+          "dependency": "59.0.5"
+        },
+        "neoforge": {
+          "status": "build-verified",
+          "dependency": "21.9.16-beta"
+        }
+      },
+      "unavailable": []
+    },
+    {
+      "minecraft": "1.21.10",
+      "java": 21,
+      "loaders": {
+        "fabric": {
+          "status": "build-verified",
+          "dependency": "0.20.1"
+        },
+        "forge": {
+          "status": "build-verified",
+          "dependency": "60.1.18"
+        },
+        "neoforge": {
+          "status": "build-verified",
+          "dependency": "21.10.64"
+        }
+      },
+      "unavailable": []
+    },
+    {
+      "minecraft": "1.21.11",
+      "java": 21,
+      "loaders": {
+        "fabric": {
+          "status": "build-verified",
+          "dependency": "0.20.1"
+        },
+        "forge": {
+          "status": "build-verified",
+          "dependency": "61.2.4"
+        },
+        "neoforge": {
+          "status": "build-verified",
+          "dependency": "21.11.48"
+        }
+      },
+      "unavailable": []
+    },
+    {
+      "minecraft": "26.1",
+      "java": 25,
+      "loaders": {
+        "fabric": {
+          "status": "build-verified",
+          "dependency": "0.20.1"
+        },
+        "forge": {
+          "status": "build-verified",
+          "dependency": "62.0.9"
+        },
+        "neoforge": {
+          "status": "build-verified",
+          "dependency": "26.1.0.19-beta"
+        }
+      },
+      "unavailable": []
+    },
+    {
+      "minecraft": "26.1.1",
+      "java": 25,
+      "loaders": {
+        "fabric": {
+          "status": "build-verified",
+          "dependency": "0.20.1"
+        },
+        "forge": {
+          "status": "build-verified",
+          "dependency": "63.0.2"
+        },
+        "neoforge": {
+          "status": "build-verified",
+          "dependency": "26.1.1.15-beta"
+        }
+      },
+      "unavailable": []
+    },
+    {
+      "minecraft": "26.1.2",
+      "java": 25,
+      "loaders": {
+        "fabric": {
+          "status": "build-verified",
+          "dependency": "0.20.1"
+        },
+        "forge": {
+          "status": "build-verified",
+          "dependency": "64.1.5"
+        },
+        "neoforge": {
+          "status": "build-verified",
+          "dependency": "26.1.2.126"
+        }
+      },
+      "unavailable": []
+    },
+    {
+      "minecraft": "26.2",
+      "java": 25,
+      "loaders": {
+        "fabric": {
+          "status": "build-verified",
+          "dependency": "0.20.1"
+        },
+        "forge": {
+          "status": "build-verified",
+          "dependency": "65.1.5"
+        },
+        "neoforge": {
+          "status": "build-verified",
+          "dependency": "26.2.0.93"
+        }
+      },
+      "unavailable": []
+    },
+    {
+      "minecraft": "26.3",
+      "java": 25,
+      "loaders": {
+        "fabric": {
+          "status": "build-verified",
+          "dependency": "0.20.1"
+        },
+        "forge": {
+          "status": "build-verified",
+          "dependency": "66.1.0"
+        },
+        "neoforge": {
+          "status": "build-verified",
+          "dependency": "26.3.0.101"
+        }
+      },
+      "unavailable": []
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+apply plugin: targetPins.getProperty('neoforge.plugin')
+java { toolchain.languageVersion = JavaLanguageVersion.of(targetPins.getProperty('java.release').toInteger()) }
+if (targetPins.getProperty('neoforge.plugin') == 'net.neoforged.moddev') {
+    neoForge {
+        version = targetPins.getProperty('neoforge.version')
+        runs {
+            client { client(); gameDirectory = new File(templateRunRoot,"${targetMinecraft}/neoforge/client") }
+            server { server(); gameDirectory = new File(templateRunRoot,"${targetMinecraft}/neoforge/server") }
+        }
+        mods { terraformabuilder { sourceSet sourceSets.main } }
+    }
+} else {
+    // Library lists contain absolute paths and must not be reused across workspaces.
+    tasks.matching { it.name.endsWith('ListLibraries') || it.name.endsWith('ListTransformLibraries') }.configureEach {
+        inputs.property('templateLibraryListRoot', projectDir.absolutePath)
+    }
+    def requestedTasks = gradle.startParameter.taskNames.collect { it.toLowerCase() }
+    tasks.matching { it.name.endsWith('DownloadAssets') }.configureEach {
+        // Older NeoGradle otherwise shares one mutable index across Minecraft versions.
+        assetIndex.set("template-${targetMinecraft}")
+        // Its directory-cache restore can replace assets another version is using.
+        actions.clear()
+        inputs.file(new File(templateRoot,'tools/kyro/minecraft_cache.py'))
+        outputs.upToDateWhen { false }
+        outputs.cacheIf { false }
+        doLast {
+            def python = System.getProperty('os.name').toLowerCase().contains('windows') ? 'python' : 'python3'
+            def index = versionJson.get().assetIndex
+            def metadataFile = new File(project.buildDir,'template-assets/version.json')
+            metadataFile.parentFile.mkdirs()
+            metadataFile.setText(groovy.json.JsonOutput.toJson([id:targetMinecraft,
+                assetIndex:[id:index.id, url:index.url.toString(), sha1:index.sha1, size:index.size]]),'UTF-8')
+            def arguments = [python, new File(templateRoot,'tools/kyro/minecraft_cache.py').absolutePath,
+                targetMinecraft, '--assets', '--metadata', metadataFile.absolutePath,
+                '--asset-index-name', assetIndex.get()]
+            if (gradle.startParameter.offline) arguments.add('--offline')
+            project.exec { commandLine arguments }
+        }
+        onlyIf('Client assets are required for client launch or IDE setup') {
+            project.findProperty('downloadAssets') == 'true' || requestedTasks.any {
+                it.contains('client') || it.contains('prepare') || it.contains('idea') || it.contains('eclipse') || it.contains('rundata')
+            }
+        }
+    }
+    // JST requires Java 21 even when Minecraft and the mod target Java 17.
+    gradle.projectsEvaluated {
+        tasks.matching { it.name == 'neoFormTransformSource' }.configureEach {
+            javaVersion.set(JavaLanguageVersion.of(21))
+            javaLauncher.set(javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(21) })
+        }
+    }
+    dependencies { implementation "net.neoforged:neoforge:${targetPins.getProperty('neoforge.version')}" }
+    runs {
+        configureEach {
+            modSource sourceSets.main
+            workingDirectory = new File(templateRunRoot,"${targetMinecraft}/neoforge/${name}")
+        }
+        client { }
+        server { }
+    }
+}
