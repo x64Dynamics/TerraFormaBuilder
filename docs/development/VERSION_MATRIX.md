@@ -43,7 +43,7 @@ Target status lifecycle:
 | **1.21.3** | 21 | Fabric | In Progress | Pending | Pending | Pale Garden / Eyeblossom |
 | **1.21.3** | 21 | NeoForge | In Progress | Pending | Pending | Pale Garden / Eyeblossom |
 | **1.21.4** | 21 | Fabric | In Progress | Pending | Pending | Current Vanilla release |
-| **1.21.4** | 21 | NeoForge | In Progress | Pending | Pending | Current NeoForge release |
+| **1.21.4** | 21 | NeoForge | **Implemented** | **Built** | **Verified** | Current NeoForge release, full HUD, flight, blur fixed |
 | **26.1** | 25 | Fabric | In Progress | Pending | Pending | Next-Gen target |
 | **26.2** | 25 | Fabric | In Progress | Pending | Pending | Next-Gen target |
 | **26.3** | 25 | Fabric | In Progress | Pending | Pending | Next-Gen target |
