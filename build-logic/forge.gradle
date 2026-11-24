@@ -35,6 +35,7 @@ if (targetPins.getProperty('forge.gradle').startsWith('7.')) {
         }
         runs {
             configureEach {
+                modSource project.sourceSets.main
                 workingDir = new File(templateRunRoot,"${targetMinecraft}/forge/${name}")
                 if (name == 'client') {
                     systemProperty 'org.lwjgl.system.SharedLibraryExtractPath', new File(templateRunRoot,"${targetMinecraft}/forge/client/natives").absolutePath
