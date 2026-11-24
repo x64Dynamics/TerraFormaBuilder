@@ -6,6 +6,11 @@ import com.x64Dynamics.tfb.ui.hotbar.BuilderHotbarSlot;
 import com.x64Dynamics.tfb.ui.model.ArchitectWorkspaceModel;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 public final class TFBInWorldHud {
     private TFBInWorldHud() {}
@@ -24,7 +29,7 @@ public final class TFBInWorldHud {
         // 1. Top-Left Architectural Studio Banner
         int bannerX = 8;
         int bannerY = 8;
-        int bannerWidth = Math.min(380, screenWidth - 16);
+        int bannerWidth = Math.min(400, screenWidth - 16);
         int bannerHeight = 54;
 
         g.fill(bannerX, bannerY, bannerX + bannerWidth, bannerY + bannerHeight, 0xD80B132B);
@@ -86,28 +91,38 @@ public final class TFBInWorldHud {
             if (isSelected) {
                 g.fill(slotX, slotY, slotX + 20, slotY + 20, 0x5538BDF8);
                 drawBorder(g, slotX, slotY, 20, 20, 0xFF38BDF8);
-                g.drawString(mc.font, String.valueOf(i + 1), slotX + 2, slotY + 1, 0xFFF59E0B, false);
+                g.drawString(mc.font, String.valueOf(i + 1), slotX + 2, slotY + 1, 0xFFF59E0B, true);
             } else {
                 g.fill(slotX, slotY, slotX + 20, slotY + 20, 0x880F172A);
                 drawBorder(g, slotX, slotY, 20, 20, 0xFF334155);
-                g.drawString(mc.font, String.valueOf(i + 1), slotX + 2, slotY + 1, 0xFF64748B, false);
+                g.drawString(mc.font, String.valueOf(i + 1), slotX + 2, slotY + 1, 0xFF64748B, true);
             }
 
             if (slot != null) {
-                g.drawCenteredString(mc.font, slot.code(), slotX + 10, slotY + 8, slot.accentColor());
+                Item item = BuiltInRegistries.ITEM.get(new ResourceLocation(slot.iconItemKey()));
+                if (item != null && item != Items.AIR) {
+                    g.renderItem(new ItemStack(item), slotX + 2, slotY + 2);
+                } else {
+                    g.drawCenteredString(mc.font, slot.code(), slotX + 10, slotY + 8, slot.accentColor());
+                }
             }
         }
 
         // Floating Tooltip Pill over Active Slot
         if (activeSlot != null) {
+            Item activeItem = BuiltInRegistries.ITEM.get(new ResourceLocation(activeSlot.iconItemKey()));
             String tip = activeSlot.name() + " (" + (hotbarModel.getActiveSlot() + 1) + ")";
-            int tipWidth = mc.font.width(tip) + 8;
+            int textWidth = mc.font.width(tip);
+            int tipWidth = textWidth + 28;
             int tipX = Math.max(hotbarX, Math.min(screenWidth - tipWidth - 4, hotbarX + 3 + hotbarModel.getActiveSlot() * 22 - (tipWidth - 20) / 2));
-            int tipY = pageBarY - 14;
+            int tipY = pageBarY - 18;
 
-            g.fill(tipX, tipY, tipX + tipWidth, tipY + 12, 0xEE0F172A);
-            drawBorder(g, tipX, tipY, tipWidth, 12, 0xFF38BDF8);
-            g.drawString(mc.font, tip, tipX + 4, tipY + 2, 0xFFFFFFFF, false);
+            g.fill(tipX, tipY, tipX + tipWidth, tipY + 16, 0xEE0F172A);
+            drawBorder(g, tipX, tipY, tipWidth, 16, 0xFF38BDF8);
+            if (activeItem != null && activeItem != Items.AIR) {
+                g.renderItem(new ItemStack(activeItem), tipX + 2, tipY);
+            }
+            g.drawString(mc.font, tip, tipX + 20, tipY + 4, 0xFFFFFFFF, false);
         }
     }
 

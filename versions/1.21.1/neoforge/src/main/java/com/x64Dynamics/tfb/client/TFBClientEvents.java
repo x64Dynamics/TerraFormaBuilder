@@ -17,6 +17,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.InputEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
@@ -42,6 +43,7 @@ public final class TFBClientEvents {
             event.register(TFBKeyMappings.TOGGLE_FLIGHT);
             event.register(TFBKeyMappings.SPEED_UP);
             event.register(TFBKeyMappings.SPEED_DOWN);
+            event.register(TFBKeyMappings.ROTATE_TOOL);
         }
     }
 
@@ -115,6 +117,21 @@ public final class TFBClientEvents {
                     }
                 }
 
+                while (TFBKeyMappings.ROTATE_TOOL.consumeClick()) {
+                    ArchitectWorkspaceModel model = TFBClientController.getInstance().model();
+                    com.x64Dynamics.tfb.geometry.Rotation next = switch (model.rotation()) {
+                        case NONE -> com.x64Dynamics.tfb.geometry.Rotation.CLOCKWISE_90;
+                        case CLOCKWISE_90 -> com.x64Dynamics.tfb.geometry.Rotation.CLOCKWISE_180;
+                        case CLOCKWISE_180 -> com.x64Dynamics.tfb.geometry.Rotation.COUNTERCLOCKWISE_90;
+                        case COUNTERCLOCKWISE_90 -> com.x64Dynamics.tfb.geometry.Rotation.NONE;
+                    };
+                    model.setRotation(next);
+                    mc.player.displayClientMessage(
+                        Component.literal("§b[TFB] Rotation: §e" + next.name()),
+                        true
+                    );
+                }
+
                 // Builder Hotbar number keys 1–9
                 if (TFBClientController.getInstance().isArchitectMode()) {
                     for (int i = 0; i < 9; i++) {
@@ -177,6 +194,20 @@ public final class TFBClientEvents {
         public static void onRenderGui(RenderGuiEvent.Post event) {
             Minecraft mc = Minecraft.getInstance();
             TFBInWorldHud.render(event.getGuiGraphics(), mc);
+        }
+
+        @SubscribeEvent
+        public static void onClientLogout(ClientPlayerNetworkEvent.LoggingOut event) {
+            Minecraft mc = Minecraft.getInstance();
+            ArchitectFlightController.restorePreviousState(mc);
+            TFBClientController.getInstance().setArchitectMode(false);
+        }
+
+        @SubscribeEvent
+        public static void onClientRespawn(ClientPlayerNetworkEvent.Clone event) {
+            Minecraft mc = Minecraft.getInstance();
+            ArchitectFlightController.restorePreviousState(mc);
+            TFBClientController.getInstance().setArchitectMode(false);
         }
 
         @SubscribeEvent

@@ -64,6 +64,13 @@ public final class TFBKeyMappings {
         CATEGORY
     );
 
+    public static final KeyMapping ROTATE_TOOL = new KeyMapping(
+        "key.terraformabuilder.rotate_tool",
+        InputConstants.Type.KEYSYM,
+        GLFW.GLFW_KEY_R,
+        CATEGORY
+    );
+
     public static final KeyMapping[] ALL = new KeyMapping[] {
         OPEN_WORKSPACE,
         TOGGLE_PREVIEW,
@@ -72,7 +79,8 @@ public final class TFBKeyMappings {
         REDO,
         TOGGLE_FLIGHT,
         SPEED_UP,
-        SPEED_DOWN
+        SPEED_DOWN,
+        ROTATE_TOOL
     };
 
     public static void registerAll(Minecraft mc) {

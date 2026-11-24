@@ -6,6 +6,7 @@ public record BuilderHotbarSlot(
     String code,
     String name,
     String category,
+    String iconItemKey,
     int accentColor,
     IConstructionBrush brush,
     String contextualHint

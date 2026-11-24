@@ -95,6 +95,21 @@ public final class ClientEntrypoint implements ClientModInitializer {
                 }
             }
 
+            while (TFBKeyMappings.ROTATE_TOOL.consumeClick()) {
+                ArchitectWorkspaceModel model = TFBClientController.getInstance().model();
+                com.x64Dynamics.tfb.geometry.Rotation next = switch (model.rotation()) {
+                    case NONE -> com.x64Dynamics.tfb.geometry.Rotation.CLOCKWISE_90;
+                    case CLOCKWISE_90 -> com.x64Dynamics.tfb.geometry.Rotation.CLOCKWISE_180;
+                    case CLOCKWISE_180 -> com.x64Dynamics.tfb.geometry.Rotation.COUNTERCLOCKWISE_90;
+                    case COUNTERCLOCKWISE_90 -> com.x64Dynamics.tfb.geometry.Rotation.NONE;
+                };
+                model.setRotation(next);
+                mc.player.displayClientMessage(
+                    Component.literal("§b[TFB] Rotation: §e" + next.name()),
+                    true
+                );
+            }
+
             if (TFBClientController.getInstance().isArchitectMode()) {
                 for (int i = 0; i < 9; i++) {
                     if (mc.options.keyHotbarSlots[i].consumeClick()) {

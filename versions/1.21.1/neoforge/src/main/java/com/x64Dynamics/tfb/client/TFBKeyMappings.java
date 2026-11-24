@@ -63,5 +63,12 @@ public final class TFBKeyMappings {
         CATEGORY
     );
 
+    public static final KeyMapping ROTATE_TOOL = new KeyMapping(
+        "key.terraformabuilder.rotate_tool",
+        InputConstants.Type.KEYSYM,
+        GLFW.GLFW_KEY_R,
+        CATEGORY
+    );
+
     private TFBKeyMappings() {}
 }
