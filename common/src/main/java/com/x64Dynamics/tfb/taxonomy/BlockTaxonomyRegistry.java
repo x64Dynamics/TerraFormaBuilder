@@ -24,6 +24,14 @@ public final class BlockTaxonomyRegistry {
         return INSTANCE;
     }
 
+    public static BlockTaxonomyEntry get(String id) {
+        return getInstance().getOrRegister(BlockIdentifier.of(id));
+    }
+
+    public List<BlockTaxonomyEntry> all() {
+        return new ArrayList<>(cache.values());
+    }
+
     public synchronized BlockTaxonomyEntry getOrRegister(BlockIdentifier block) {
         String key = block.asString();
         BlockTaxonomyEntry cached = cache.get(key);

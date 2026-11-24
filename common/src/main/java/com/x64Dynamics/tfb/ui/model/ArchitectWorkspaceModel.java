@@ -5,8 +5,15 @@ import com.x64Dynamics.tfb.architectural.FacadeOrnamentGenerator;
 import com.x64Dynamics.tfb.architectural.InteriorFloorPlanner;
 import com.x64Dynamics.tfb.architectural.InteriorFurnishingGenerator;
 import com.x64Dynamics.tfb.architectural.InteriorRoom;
+import com.x64Dynamics.tfb.architectural.LayeredFacadeComposer;
+import com.x64Dynamics.tfb.architectural.ParametricFootprint;
 import com.x64Dynamics.tfb.architectural.PlacementTarget;
 import com.x64Dynamics.tfb.architectural.RoofGenerator;
+import com.x64Dynamics.tfb.architectural.WingConfiguration;
+import com.x64Dynamics.tfb.architectural.WingLayoutGenerator;
+import com.x64Dynamics.tfb.architectural.style.ArchitecturalStyleRuleSet;
+import com.x64Dynamics.tfb.architectural.style.ProceduralVariationEngine;
+import com.x64Dynamics.tfb.architectural.style.StyleRuleSetRegistry;
 import com.x64Dynamics.tfb.brush.ArchitecturalBrushes;
 import com.x64Dynamics.tfb.brush.BrushCategory;
 import com.x64Dynamics.tfb.brush.BrushContext;
@@ -16,18 +23,22 @@ import com.x64Dynamics.tfb.construction.ProgressiveBuildPlan;
 import com.x64Dynamics.tfb.editing.ConstructionTransforms;
 import com.x64Dynamics.tfb.editing.DesignHistorySnapshot;
 import com.x64Dynamics.tfb.editing.DesignHistoryStack;
+import com.x64Dynamics.tfb.editing.WorldSelectionManager;
 import com.x64Dynamics.tfb.geometry.Axis;
 import com.x64Dynamics.tfb.geometry.BoundingBox3i;
 import com.x64Dynamics.tfb.geometry.Direction;
 import com.x64Dynamics.tfb.geometry.Rotation;
 import com.x64Dynamics.tfb.geometry.Vec3i;
-import com.x64Dynamics.tfb.material.BlockIdentifier;
 import com.x64Dynamics.tfb.material.MaterialPalette;
 import com.x64Dynamics.tfb.material.MaterialRole;
 import com.x64Dynamics.tfb.material.StylePreset;
 import com.x64Dynamics.tfb.persistence.BlueprintMetadata;
 import com.x64Dynamics.tfb.persistence.ParametricBlueprint;
+import com.x64Dynamics.tfb.preview.PreviewFilterMode;
+import com.x64Dynamics.tfb.preview.WorldPreviewBuffer;
+import com.x64Dynamics.tfb.taxonomy.PaletteHarmonizer;
 import com.x64Dynamics.tfb.terrain.FoundationStrategy;
+import com.x64Dynamics.tfb.terrain.LandscapeAdapter;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -48,12 +59,14 @@ public class ArchitectWorkspaceModel {
     private int depth = 15;
     private Rotation rotation = Rotation.NONE;
     private Axis mirrorAxis = null;
+    private final WorldSelectionManager selectionManager;
 
     // Brush & Category
     private BrushCategory activeCategory = BrushCategory.ARCHITECTURAL;
     private IConstructionBrush activeBrush = new ArchitecturalBrushes.HouseBrush();
+    private WingConfiguration wingConfiguration = WingConfiguration.SINGLE_RECTANGLE;
 
-    // Materials
+    // Materials & Style
     private StylePreset stylePreset = StylePreset.MEDIEVAL;
     private MaterialPalette activePalette = StylePreset.MEDIEVAL.createPalette();
     private final Map<String, String> paletteOverrides = new HashMap<>();
@@ -70,6 +83,9 @@ public class ArchitectWorkspaceModel {
     private boolean addPilasters = true;
     private boolean addWindowShutters = true;
     private boolean addBalconies = true;
+    private boolean addCornice = true;
+    private float proceduralVariation = 0.15f;
+    private long proceduralSeed = 42L;
 
     // Interior
     private boolean enableInteriors = true;
@@ -82,10 +98,12 @@ public class ArchitectWorkspaceModel {
 
     // History & Preview Cache
     private final DesignHistoryStack historyStack = new DesignHistoryStack(32);
+    private final WorldPreviewBuffer previewBuffer = new WorldPreviewBuffer();
     private List<PlacementTarget> cachedPreviewTargets = new ArrayList<>();
     private ProgressiveBuildPlan cachedBuildPlan = null;
 
     public ArchitectWorkspaceModel() {
+        this.selectionManager = new WorldSelectionManager(boundingBox());
         pushHistorySnapshot();
         generatePreview();
     }
@@ -95,26 +113,51 @@ public class ArchitectWorkspaceModel {
     public void setActiveTab(WorkspaceTab tab) { this.activeTab = tab; }
 
     public Vec3i origin() { return origin; }
-    public void setOrigin(Vec3i origin) { this.origin = origin; generatePreview(); }
+    public void setOrigin(Vec3i origin) {
+        this.origin = origin;
+        selectionManager.setPrimaryBox(boundingBox());
+        generatePreview();
+    }
 
     public int width() { return width; }
-    public void setWidth(int width) { this.width = Math.max(3, width); generatePreview(); }
+    public void setWidth(int width) {
+        this.width = Math.max(3, width);
+        selectionManager.setPrimaryBox(boundingBox());
+        generatePreview();
+    }
 
     public int height() { return height; }
-    public void setHeight(int height) { this.height = Math.max(3, height); generatePreview(); }
+    public void setHeight(int height) {
+        this.height = Math.max(3, height);
+        selectionManager.setPrimaryBox(boundingBox());
+        generatePreview();
+    }
 
     public int depth() { return depth; }
-    public void setDepth(int depth) { this.depth = Math.max(3, depth); generatePreview(); }
+    public void setDepth(int depth) {
+        this.depth = Math.max(3, depth);
+        selectionManager.setPrimaryBox(boundingBox());
+        generatePreview();
+    }
 
     public BoundingBox3i boundingBox() {
         return new BoundingBox3i(origin, new Vec3i(origin.x() + width - 1, origin.y() + height - 1, origin.z() + depth - 1));
     }
+
+    public WorldSelectionManager selectionManager() { return selectionManager; }
+    public WorldPreviewBuffer previewBuffer() { return previewBuffer; }
 
     public Rotation rotation() { return rotation; }
     public void setRotation(Rotation rotation) { this.rotation = rotation; generatePreview(); }
 
     public Axis mirrorAxis() { return mirrorAxis; }
     public void setMirrorAxis(Axis axis) { this.mirrorAxis = axis; generatePreview(); }
+
+    public WingConfiguration wingConfiguration() { return wingConfiguration; }
+    public void setWingConfiguration(WingConfiguration config) {
+        this.wingConfiguration = config;
+        generatePreview();
+    }
 
     public BrushCategory activeCategory() { return activeCategory; }
     public void setActiveCategory(BrushCategory category) {
@@ -140,6 +183,13 @@ public class ArchitectWorkspaceModel {
         if (preset != null) {
             this.stylePreset = preset;
             this.activePalette = preset.createPalette();
+            ArchitecturalStyleRuleSet rule = StyleRuleSetRegistry.forPreset(preset);
+            this.roofShape = rule.preferredRoofType();
+            this.addPilasters = rule.allowPilasters();
+            this.addWindowShutters = rule.allowShutters();
+            this.addBalconies = rule.allowBalconies();
+            this.addDormers = rule.allowDormers();
+            this.addCornice = rule.allowCornice();
             generatePreview();
         }
     }
@@ -176,6 +226,12 @@ public class ArchitectWorkspaceModel {
     public boolean addBalconies() { return addBalconies; }
     public void setAddBalconies(boolean balconies) { this.addBalconies = balconies; generatePreview(); }
 
+    public boolean addCornice() { return addCornice; }
+    public void setAddCornice(boolean cornice) { this.addCornice = cornice; generatePreview(); }
+
+    public float proceduralVariation() { return proceduralVariation; }
+    public void setProceduralVariation(float rate) { this.proceduralVariation = Math.max(0.0f, Math.min(0.5f, rate)); generatePreview(); }
+
     public boolean enableInteriors() { return enableInteriors; }
     public void setEnableInteriors(boolean interiors) { this.enableInteriors = interiors; generatePreview(); }
 
@@ -191,6 +247,10 @@ public class ArchitectWorkspaceModel {
     public int tickBudgetMs() { return tickBudgetMs; }
     public void setTickBudgetMs(int budget) { this.tickBudgetMs = Math.max(1, budget); }
 
+    public float paletteHarmonyScore() {
+        return PaletteHarmonizer.scoreHarmony(activePalette);
+    }
+
     public List<PlacementTarget> cachedPreviewTargets() { return cachedPreviewTargets; }
     public ProgressiveBuildPlan cachedBuildPlan() { return cachedBuildPlan; }
     public int totalBlockCount() { return cachedPreviewTargets.size(); }
@@ -198,14 +258,19 @@ public class ArchitectWorkspaceModel {
     public synchronized void generatePreview() {
         List<PlacementTarget> targets = new ArrayList<>();
         BoundingBox3i box = boundingBox();
-        BrushContext ctx = new BrushContext(box, Collections.emptyList(), activePalette, null, foundationStrategy, Collections.emptyMap());
 
-        // Execute primary brush
-        if (activeBrush != null) {
-            targets.addAll(activeBrush.generate(ctx));
+        // 1. Primary generation: Wing Compound or standard brush
+        if (activeCategory == BrushCategory.ARCHITECTURAL && wingConfiguration != WingConfiguration.SINGLE_RECTANGLE) {
+            ParametricFootprint footprint = ParametricFootprint.create(box, wingConfiguration);
+            targets.addAll(WingLayoutGenerator.generateWingCompound(footprint, roofShape, activePalette));
+        } else {
+            BrushContext ctx = new BrushContext(box, Collections.emptyList(), activePalette, null, foundationStrategy, Collections.emptyMap());
+            if (activeBrush != null) {
+                targets.addAll(activeBrush.generate(ctx));
+            }
         }
 
-        // Add facade ornaments if architectural structure
+        // 2. Facade detailing & ornaments
         if (activeCategory == BrushCategory.ARCHITECTURAL && width >= 7 && depth >= 7) {
             if (addPilasters) {
                 targets.addAll(FacadeOrnamentGenerator.generatePilasters(box, Direction.SOUTH, 4, activePalette));
@@ -226,9 +291,12 @@ public class ArchitectWorkspaceModel {
                 Vec3i chimneyPos = new Vec3i(box.max().x() - 2, box.max().y() - 1, box.max().z() - 2);
                 targets.addAll(AdvancedRoofFeatures.generateChimney(chimneyPos, 4, activePalette));
             }
+            if (addCornice) {
+                targets.addAll(LayeredFacadeComposer.generateCorniceTrim(box, activePalette));
+            }
         }
 
-        // Add interior rooms & furnishings
+        // 3. Interior rooms & furnishings
         if (enableInteriors && activeCategory == BrushCategory.ARCHITECTURAL && width >= 10 && depth >= 10 && height >= 6) {
             BoundingBox3i interiorBox = new BoundingBox3i(
                 new Vec3i(box.min().x() + 1, box.min().y() + 1, box.min().z() + 1),
@@ -243,7 +311,12 @@ public class ArchitectWorkspaceModel {
             }
         }
 
-        // Apply transforms
+        // 4. Procedural texture variation
+        if (proceduralVariation > 0.0f) {
+            targets = ProceduralVariationEngine.applyFacadeVariation(targets, activePalette, proceduralSeed, proceduralVariation);
+        }
+
+        // 5. Transforms (rotation & mirror)
         if (rotation != Rotation.NONE) {
             targets = ConstructionTransforms.rotate(targets, rotation, origin);
         }
@@ -254,6 +327,7 @@ public class ArchitectWorkspaceModel {
 
         this.cachedPreviewTargets = targets;
         this.cachedBuildPlan = new ProgressiveBuildPlan(targets);
+        this.previewBuffer.updateFromTargets(targets, null);
     }
 
     public void pushHistorySnapshot() {
@@ -306,6 +380,7 @@ public class ArchitectWorkspaceModel {
         Map<String, Object> params = new HashMap<>();
         params.put("category", activeCategory.name());
         params.put("roofShape", roofShape.name());
+        params.put("wingConfig", wingConfiguration.name());
         return new ParametricBlueprint(meta, boundingBox(), activeBrush.id(), stylePreset.name(), foundationStrategy, paletteOverrides, params, Collections.emptyList());
     }
 

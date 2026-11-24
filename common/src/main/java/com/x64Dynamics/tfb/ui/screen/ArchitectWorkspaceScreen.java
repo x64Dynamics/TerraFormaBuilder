@@ -1,6 +1,7 @@
 package com.x64Dynamics.tfb.ui.screen;
 
 import com.x64Dynamics.tfb.architectural.RoofGenerator;
+import com.x64Dynamics.tfb.architectural.WingConfiguration;
 import com.x64Dynamics.tfb.brush.BrushRegistry;
 import com.x64Dynamics.tfb.brush.IConstructionBrush;
 import com.x64Dynamics.tfb.geometry.Axis;
@@ -8,6 +9,9 @@ import com.x64Dynamics.tfb.geometry.Rotation;
 import com.x64Dynamics.tfb.material.MaterialRole;
 import com.x64Dynamics.tfb.material.StylePreset;
 import com.x64Dynamics.tfb.persistence.ParametricBlueprint;
+import com.x64Dynamics.tfb.preview.PreviewFilterMode;
+import com.x64Dynamics.tfb.taxonomy.BlockTaxonomyEntry;
+import com.x64Dynamics.tfb.taxonomy.SearchableTaxonomyBrowser;
 import com.x64Dynamics.tfb.terrain.FoundationStrategy;
 import com.x64Dynamics.tfb.ui.model.ArchitectWorkspaceModel;
 import com.x64Dynamics.tfb.ui.model.WorkspaceTab;
@@ -49,9 +53,10 @@ public class ArchitectWorkspaceScreen {
     // Construction progress
     private UIProgressBar constructionProgressBar;
 
-    // Blueprint input fields
+    // Search & Blueprint fields
     private UITextField blueprintNameField;
     private UITextField blueprintAuthorField;
+    private UITextField materialSearchField;
 
     // Status message
     private String statusMessage = "Ready. Configure architectural parameters and preview in-world.";
@@ -150,22 +155,29 @@ public class ArchitectWorkspaceScreen {
                 tabWidgets.add(new UISlider(new UIBounds(contentX + contentWidth / 3, contentY, contentWidth / 3 - 6, rowHeight), "Height", 3, 48, model.height(), model::setHeight));
                 tabWidgets.add(new UISlider(new UIBounds(contentX + (contentWidth / 3) * 2, contentY, contentWidth / 3 - 6, rowHeight), "Depth", 3, 64, model.depth(), model::setDepth));
 
-                // Roof options
+                // Wings & Roof
+                List<WingConfiguration> wingConfigs = Arrays.asList(WingConfiguration.values());
+                tabWidgets.add(new UIDropdown<>(new UIBounds(contentX, contentY + 28, contentWidth / 2 - 6, rowHeight), "Wing Layout", wingConfigs, wingConfigs.indexOf(model.wingConfiguration()), model::setWingConfiguration));
+
                 List<RoofGenerator.RoofType> roofShapes = Arrays.asList(RoofGenerator.RoofType.values());
-                tabWidgets.add(new UIDropdown<>(new UIBounds(contentX, contentY + 28, contentWidth / 2 - 6, rowHeight), "Roof Style", roofShapes, roofShapes.indexOf(model.roofShape()), model::setRoofShape));
+                tabWidgets.add(new UIDropdown<>(new UIBounds(contentX + contentWidth / 2, contentY + 28, contentWidth / 2 - 6, rowHeight), "Roof Style", roofShapes, roofShapes.indexOf(model.roofShape()), model::setRoofShape));
 
-                tabWidgets.add(new UIToggleButton(new UIBounds(contentX + contentWidth / 2, contentY + 28, contentWidth / 4 - 6, rowHeight), "Dormers", model.addDormers(), model::setAddDormers));
-                tabWidgets.add(new UIToggleButton(new UIBounds(contentX + (contentWidth / 4) * 3, contentY + 28, contentWidth / 4 - 6, rowHeight), "Chimney", model.addChimney(), model::setAddChimney));
-
-                // Facade options
-                tabWidgets.add(new UIToggleButton(new UIBounds(contentX, contentY + 56, contentWidth / 3 - 6, rowHeight), "Pilasters", model.addPilasters(), model::setAddPilasters));
-                tabWidgets.add(new UIToggleButton(new UIBounds(contentX + contentWidth / 3, contentY + 56, contentWidth / 3 - 6, rowHeight), "Shutters", model.addWindowShutters(), model::setAddWindowShutters));
-                tabWidgets.add(new UIToggleButton(new UIBounds(contentX + (contentWidth / 3) * 2, contentY + 56, contentWidth / 3 - 6, rowHeight), "Balconies", model.addBalconies(), model::setAddBalconies));
+                // Features toggles
+                tabWidgets.add(new UIToggleButton(new UIBounds(contentX, contentY + 56, contentWidth / 4 - 6, rowHeight), "Pilasters", model.addPilasters(), model::setAddPilasters));
+                tabWidgets.add(new UIToggleButton(new UIBounds(contentX + contentWidth / 4, contentY + 56, contentWidth / 4 - 6, rowHeight), "Shutters", model.addWindowShutters(), model::setAddWindowShutters));
+                tabWidgets.add(new UIToggleButton(new UIBounds(contentX + (contentWidth / 4) * 2, contentY + 56, contentWidth / 4 - 6, rowHeight), "Balconies", model.addBalconies(), model::setAddBalconies));
+                tabWidgets.add(new UIToggleButton(new UIBounds(contentX + (contentWidth / 4) * 3, contentY + 56, contentWidth / 4 - 6, rowHeight), "Dormers", model.addDormers(), model::setAddDormers));
             }
 
             case MATERIALS -> {
                 List<StylePreset> presets = Arrays.asList(StylePreset.values());
                 tabWidgets.add(new UIDropdown<>(new UIBounds(contentX, contentY, contentWidth / 2 - 6, rowHeight), "Style Preset", presets, presets.indexOf(model.stylePreset()), model::setStylePreset));
+
+                materialSearchField = new UITextField(new UIBounds(contentX + contentWidth / 2, contentY, contentWidth / 2 - 6, rowHeight), "", "Search blocks...", q -> {
+                    List<BlockTaxonomyEntry> results = SearchableTaxonomyBrowser.search(q, null, null, null);
+                    setStatus("Found " + results.size() + " taxonomy blocks matching '" + q + "'.");
+                });
+                tabWidgets.add(materialSearchField);
 
                 int roleY = contentY + 28;
                 MaterialRole[] displayRoles = { MaterialRole.FOUNDATION, MaterialRole.WALL_PRIMARY, MaterialRole.ROOF_SLOPE, MaterialRole.PILLAR };
@@ -173,7 +185,7 @@ public class ArchitectWorkspaceScreen {
                     MaterialRole role = displayRoles[i];
                     String blockName = model.activePalette().get(role).toString();
                     tabWidgets.add(new UIButton(new UIBounds(contentX, roleY + i * 24, contentWidth - 12, rowHeight), role.name() + ": " + blockName, b -> {
-                        setStatus("Selected role: " + role.name());
+                        setStatus("Role: " + role.name() + " | Harmony: " + Math.round(model.paletteHarmonyScore() * 100) + "%");
                     }));
                 }
             }
@@ -192,13 +204,17 @@ public class ArchitectWorkspaceScreen {
             }
 
             case CONSTRUCTION -> {
-                tabWidgets.add(new UIToggleButton(new UIBounds(contentX, contentY, contentWidth / 3 - 6, rowHeight), "Instant Build", model.instantBuild(), model::setInstantBuild));
-                tabWidgets.add(new UISlider(new UIBounds(contentX + contentWidth / 3, contentY, contentWidth / 3 - 6, rowHeight), "Rate (blocks/t)", 1, 512, model.blocksPerTick(), model::setBlocksPerTick));
-                tabWidgets.add(new UISlider(new UIBounds(contentX + (contentWidth / 3) * 2, contentY, contentWidth / 3 - 6, rowHeight), "Tick Budget", 1, 50, model.tickBudgetMs(), model::setTickBudgetMs));
+                List<PreviewFilterMode> filterModes = Arrays.asList(PreviewFilterMode.values());
+                tabWidgets.add(new UIDropdown<>(new UIBounds(contentX, contentY, contentWidth / 2 - 6, rowHeight), "Preview Layer", filterModes, filterModes.indexOf(model.previewBuffer().filterMode()), model.previewBuffer()::setFilterMode));
 
-                tabWidgets.add(new UIButton(new UIBounds(contentX, contentY + 28, contentWidth / 3 - 6, rowHeight), "Pause Build", b -> setStatus("Build paused.")));
-                tabWidgets.add(new UIButton(new UIBounds(contentX + contentWidth / 3, contentY + 28, contentWidth / 3 - 6, rowHeight), "Resume Build", b -> setStatus("Build resumed.")));
-                tabWidgets.add(new UIButton(new UIBounds(contentX + (contentWidth / 3) * 2, contentY + 28, contentWidth / 3 - 6, rowHeight), "Cancel Build", b -> setStatus("Build cancelled.")));
+                tabWidgets.add(new UIToggleButton(new UIBounds(contentX + contentWidth / 2, contentY, contentWidth / 2 - 6, rowHeight), "Instant Build", model.instantBuild(), model::setInstantBuild));
+
+                tabWidgets.add(new UISlider(new UIBounds(contentX, contentY + 28, contentWidth / 2 - 6, rowHeight), "Rate (blocks/t)", 1, 512, model.blocksPerTick(), model::setBlocksPerTick));
+                tabWidgets.add(new UISlider(new UIBounds(contentX + contentWidth / 2, contentY + 28, contentWidth / 2 - 6, rowHeight), "Tick Budget (ms)", 1, 50, model.tickBudgetMs(), model::setTickBudgetMs));
+
+                tabWidgets.add(new UIButton(new UIBounds(contentX, contentY + 56, contentWidth / 3 - 6, rowHeight), "Pause Build", b -> setStatus("Build paused.")));
+                tabWidgets.add(new UIButton(new UIBounds(contentX + contentWidth / 3, contentY + 56, contentWidth / 3 - 6, rowHeight), "Resume Build", b -> setStatus("Build resumed.")));
+                tabWidgets.add(new UIButton(new UIBounds(contentX + (contentWidth / 3) * 2, contentY + 56, contentWidth / 3 - 6, rowHeight), "Cancel Build", b -> setStatus("Build cancelled.")));
             }
 
             case EDITING -> {
@@ -219,6 +235,8 @@ public class ArchitectWorkspaceScreen {
                     model.setMirrorAxis(null);
                     setStatus("Reset transforms.");
                 }));
+
+                tabWidgets.add(new UISlider(new UIBounds(contentX, contentY + 28, contentWidth / 2 - 6, rowHeight), "Grid Snap", 1, 16, model.selectionManager().gridSnap(), model.selectionManager()::setGridSnap));
             }
 
             case BLUEPRINTS -> {
@@ -234,7 +252,7 @@ public class ArchitectWorkspaceScreen {
             }
 
             case SETTINGS -> {
-                tabWidgets.add(new UIButton(new UIBounds(contentX, contentY, contentWidth - 12, rowHeight), "Controls: B=Workspace, P=Preview, G=Build, Ctrl+Z=Undo, Ctrl+Y=Redo", b -> {}));
+                tabWidgets.add(new UIButton(new UIBounds(contentX, contentY, contentWidth - 12, rowHeight), "Controls: B=Workspace, P=Preview, G=Build, Ctrl+Z=Undo, Ctrl+Y=Redo, Esc=Close", b -> {}));
             }
         }
     }
@@ -265,6 +283,9 @@ public class ArchitectWorkspaceScreen {
         String sizeBadge = model.width() + "x" + model.height() + "x" + model.depth();
         graphics.drawText("[" + sizeBadge + "]", 120, 8, 0xFF94A3B8, false);
         graphics.drawText(model.totalBlockCount() + " blocks", 185, 8, 0xFF34D399, false);
+
+        int harmony = Math.round(model.paletteHarmonyScore() * 100);
+        graphics.drawText("Harmony: " + harmony + "%", 255, 8, 0xFFF59E0B, false);
 
         // 3. Sidebar Category Header
         graphics.drawText("BRUSHES", 8, headerHeight + 8, 0xFF64748B, false);

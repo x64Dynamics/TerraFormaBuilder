@@ -51,6 +51,10 @@ public record BlockIdentifier(String namespace, String path, Map<String, String>
         return properties.get(key);
     }
 
+    public String namespacedId() {
+        return namespace + ":" + path;
+    }
+
     public String asString() {
         if (properties.isEmpty()) {
             return namespace + ":" + path;
