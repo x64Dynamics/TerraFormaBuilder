@@ -24,9 +24,9 @@ def inspect_artifact(mc, loader):
     jar = directory / 'libs' / f'{metadata["mod.id"]}-{mc}-{loader}-{metadata["mod.version"]}.jar'
     with zipfile.ZipFile(jar) as archive:
         names = archive.namelist()
-        package = metadata['mod.group'].replace('.','/')+'/'+metadata['mod.id']
-        assert package+'/TemplateMod.class' in names, 'Shared initializer missing'
-        assert package+f'/{loader}/Entrypoint.class' in names, 'Loader entrypoint missing'
+        package = metadata.get('mod.package', metadata['mod.group']+'.'+metadata['mod.id']).replace('.','/')
+        assert package+'/TerraFormaBuilder.class' in names, 'Shared initializer missing'
+        assert package+'/Entrypoint.class' in names, 'Loader entrypoint missing'
         for source in (ROOT / 'common/src/main/java').rglob('*.java'):
             source_package = re.search(r'package\s+([\w.]+);', source.read_text())[1]
             expected = source_package.replace('.', '/') + '/' + source.stem + '.class'
@@ -37,7 +37,7 @@ def inspect_artifact(mc, loader):
                     expected = resource_file.relative_to(resource_root).as_posix()
                     assert expected in names, f'Shared resource missing: {expected}'
         target_java = int(properties(ROOT / 'properties' / f'{mc}.properties')['java.release'])
-        for name in (package+'/TemplateMod.class',package+f'/{loader}/Entrypoint.class'):
+        for name in (package+'/TerraFormaBuilder.class',package+'/Entrypoint.class'):
             assert int.from_bytes(archive.read(name)[6:8],'big') == target_java+44, 'Incorrect Java bytecode target'
         assert not any(name.endswith('.java') for name in names), 'Sources in production JAR'
         resource = 'fabric.mod.json' if loader == 'fabric' else next(n for n in names if n in ('META-INF/mods.toml','META-INF/neoforge.mods.toml'))

@@ -119,7 +119,7 @@ def validate():
                 source_package = re.search(r'package\s+([\w.]+);',text)[1]
                 classes.append(source_package+'.'+source.stem)
             assert len(classes) == len(set(classes)), f'Duplicate classes: {mc}/{loader}'
-            assert (base / 'java' / package_path / loader / 'Entrypoint.java').is_file()
+            assert (base / 'java' / package_path / 'Entrypoint.java').is_file()
             resource_paths = set()
             for resource_root in [ROOT / 'common/src/main/resources', ROOT / 'versions' / mc / 'common/src/main/resources',base / 'resources']:
                 for file in resource_root.rglob('*'):
@@ -129,7 +129,7 @@ def validate():
                         resource_paths.add(relative)
             if loader == 'fabric':
                 data = json.loads((base / 'resources/fabric.mod.json').read_text())
-                assert data['entrypoints']['main'] == [package+'.fabric.Entrypoint']
+                assert data['entrypoints']['main'] == [package+'.Entrypoint']
             else:
                 import tomllib
                 metadata_file = next((base / 'resources/META-INF').glob('*.toml'))
