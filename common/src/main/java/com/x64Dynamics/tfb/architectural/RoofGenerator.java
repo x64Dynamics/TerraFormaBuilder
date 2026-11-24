@@ -16,7 +16,9 @@ public final class RoofGenerator {
         HIP,
         MANSARD,
         SHED,
-        FLAT
+        FLAT,
+        CONICAL,
+        DOME
     }
 
     private RoofGenerator() { }
@@ -29,7 +31,53 @@ public final class RoofGenerator {
             case MANSARD -> generateMansard(roofBounds, palette);
             case SHED -> generateShed(roofBounds, ridgeAxis, palette);
             case FLAT -> generateFlatWithParapet(roofBounds, palette);
+            case CONICAL -> generateConical(roofBounds, palette);
+            case DOME -> generateDome(roofBounds, palette);
         };
+    }
+
+    private static List<PlacementTarget> generateConical(BoundingBox3i bounds, MaterialPalette palette) {
+        List<PlacementTarget> targets = new ArrayList<>();
+        BlockIdentifier stair = palette.get(MaterialRole.ROOF_SLOPE);
+        BlockIdentifier slab = palette.get(MaterialRole.ROOF_RIDGE);
+        int radiusX = bounds.sizeX() / 2;
+        int radiusZ = bounds.sizeZ() / 2;
+        int maxRadius = Math.max(radiusX, radiusZ);
+        Vec3i center = new Vec3i((bounds.min().x() + bounds.max().x()) / 2, bounds.min().y(), (bounds.min().z() + bounds.max().z()) / 2);
+
+        for (int r = maxRadius, y = 0; r >= 0; r--, y++) {
+            int curRadX = Math.max(0, (int) Math.round((double) r * radiusX / maxRadius));
+            int curRadZ = Math.max(0, (int) Math.round((double) r * radiusZ / maxRadius));
+            for (int dz = -curRadZ; dz <= curRadZ; dz++) {
+                for (int dx = -curRadX; dx <= curRadX; dx++) {
+                    double normDist = (curRadX == 0 ? 0 : (dx * dx) / (double)(curRadX * curRadX)) +
+                                      (curRadZ == 0 ? 0 : (dz * dz) / (double)(curRadZ * curRadZ));
+                    if (normDist <= 1.0) {
+                        double innerLimit = Math.pow(1.0 - (1.0 / Math.max(1, Math.min(curRadX, curRadZ))), 2.0);
+                        if (r > 1 && normDist < innerLimit) continue;
+                        Vec3i p = new Vec3i(center.x() + dx, center.y() + y, center.z() + dz);
+                        targets.add(new PlacementTarget(p, r == 0 ? slab : stair, r == 0 ? MaterialRole.ROOF_RIDGE : MaterialRole.ROOF_SLOPE));
+                    }
+                }
+            }
+        }
+        return targets;
+    }
+
+    private static List<PlacementTarget> generateDome(BoundingBox3i bounds, MaterialPalette palette) {
+        List<PlacementTarget> targets = new ArrayList<>();
+        BlockIdentifier roofBlock = palette.get(MaterialRole.ROOF_SLOPE);
+        Vec3i center = new Vec3i((bounds.min().x() + bounds.max().x()) / 2, bounds.min().y(), (bounds.min().z() + bounds.max().z()) / 2);
+        int radX = bounds.sizeX() / 2;
+        int radZ = bounds.sizeZ() / 2;
+        int height = Math.min(radX, radZ);
+
+        for (Vec3i p : com.x64Dynamics.tfb.geometry.ShapeRasterizer.sphere(center, radX, height, radZ, true)) {
+            if (p.y() >= center.y()) {
+                targets.add(new PlacementTarget(p, roofBlock, MaterialRole.ROOF_SLOPE));
+            }
+        }
+        return targets;
     }
 
     private static List<PlacementTarget> generateGable(BoundingBox3i bounds, Axis ridgeAxis, MaterialPalette palette) {

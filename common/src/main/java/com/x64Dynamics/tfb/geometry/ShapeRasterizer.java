@@ -98,6 +98,194 @@ public final class ShapeRasterizer {
         return points;
     }
 
+    public static List<Vec3i> regularPolygon(Vec3i centerBottom, int radius, int sides, int height, double rotationRadians, boolean hollow) {
+        List<Vec3i> positions = new ArrayList<>();
+        if (radius <= 0 || sides < 3 || height <= 0) return positions;
+
+        // Calculate 2D vertices on XZ plane
+        double[] vx = new double[sides];
+        double[] vz = new double[sides];
+        for (int i = 0; i < sides; i++) {
+            double angle = rotationRadians + (2.0 * Math.PI * i) / sides;
+            vx[i] = centerBottom.x() + radius * Math.cos(angle);
+            vz[i] = centerBottom.z() + radius * Math.sin(angle);
+        }
+
+        int minX = (int) Math.floor(centerBottom.x() - radius - 1);
+        int maxX = (int) Math.ceil(centerBottom.x() + radius + 1);
+        int minZ = (int) Math.floor(centerBottom.z() - radius - 1);
+        int maxZ = (int) Math.ceil(centerBottom.z() + radius + 1);
+
+        for (int y = 0; y < height; y++) {
+            int currentY = centerBottom.y() + y;
+            boolean isCap = (y == 0 || y == height - 1);
+
+            for (int z = minZ; z <= maxZ; z++) {
+                for (int x = minX; x <= maxX; x++) {
+                    if (isPointInPolygon(x + 0.5, z + 0.5, vx, vz, sides)) {
+                        if (hollow && !isCap) {
+                            // Check if near perimeter (distance to any polygon edge < 1.0)
+                            double minDist = minDistanceToPolygonEdge(x + 0.5, z + 0.5, vx, vz, sides);
+                            if (minDist > 1.0) {
+                                continue;
+                            }
+                        }
+                        positions.add(new Vec3i(x, currentY, z));
+                    }
+                }
+            }
+        }
+        return positions;
+    }
+
+    public static List<Vec3i> roundedBox(BoundingBox3i bounds, int cornerRadius, boolean hollow) {
+        List<Vec3i> positions = new ArrayList<>();
+        int minX = bounds.min().x(), maxX = bounds.max().x();
+        int minY = bounds.min().y(), maxY = bounds.max().y();
+        int minZ = bounds.min().z(), maxZ = bounds.max().z();
+        int r = Math.max(1, Math.min(cornerRadius, Math.min(bounds.sizeX(), bounds.sizeZ()) / 2 - 1));
+
+        for (int y = minY; y <= maxY; y++) {
+            boolean isCap = (y == minY || y == maxY);
+            for (int z = minZ; z <= maxZ; z++) {
+                for (int x = minX; x <= maxX; x++) {
+                    // Check 4 rounded corners
+                    boolean inCorner = false;
+                    double distSq = 0;
+                    if (x < minX + r && z < minZ + r) { // MinX, MinZ corner
+                        distSq = Math.pow(x - (minX + r), 2) + Math.pow(z - (minZ + r), 2);
+                        inCorner = true;
+                    } else if (x > maxX - r && z < minZ + r) { // MaxX, MinZ corner
+                        distSq = Math.pow(x - (maxX - r), 2) + Math.pow(z - (minZ + r), 2);
+                        inCorner = true;
+                    } else if (x < minX + r && z > maxZ - r) { // MinX, MaxZ corner
+                        distSq = Math.pow(x - (minX + r), 2) + Math.pow(z - (maxZ - r), 2);
+                        inCorner = true;
+                    } else if (x > maxX - r && z > maxZ - r) { // MaxX, MaxZ corner
+                        distSq = Math.pow(x - (maxX - r), 2) + Math.pow(z - (maxZ - r), 2);
+                        inCorner = true;
+                    }
+
+                    if (inCorner && distSq > r * r) {
+                        continue; // Outside rounded corner
+                    }
+
+                    if (hollow && !isCap) {
+                        boolean onStraightEdge = (x == minX || x == maxX || z == minZ || z == maxZ);
+                        boolean onCornerPerimeter = inCorner && distSq >= Math.pow(r - 1.0, 2);
+                        if (!onStraightEdge && !onCornerPerimeter) {
+                            continue;
+                        }
+                    }
+                    positions.add(new Vec3i(x, y, z));
+                }
+            }
+        }
+        return positions;
+    }
+
+    public static List<Vec3i> rotatedBox(Vec3i origin, int sizeX, int sizeY, int sizeZ, double yawDegrees, boolean hollow) {
+        List<Vec3i> positions = new ArrayList<>();
+        double rad = Math.toRadians(-yawDegrees);
+        double cos = Math.cos(rad);
+        double sin = Math.sin(rad);
+
+        // Bounding box in world coordinates
+        double halfX = sizeX / 2.0;
+        double halfZ = sizeZ / 2.0;
+        int maxReach = (int) Math.ceil(Math.hypot(sizeX, sizeZ)) + 2;
+
+        for (int y = 0; y < sizeY; y++) {
+            boolean isCap = (y == 0 || y == sizeY - 1);
+            int currentY = origin.y() + y;
+
+            for (int dz = -maxReach; dz <= maxReach; dz++) {
+                for (int dx = -maxReach; dx <= maxReach; dx++) {
+                    // Rotate world offset into box local coordinates
+                    double localX = dx * cos - dz * sin + halfX;
+                    double localZ = dx * sin + dz * cos + halfZ;
+
+                    if (localX >= 0 && localX < sizeX && localZ >= 0 && localZ < sizeZ) {
+                        if (hollow && !isCap) {
+                            boolean onLocalEdge = (localX < 1.0 || localX >= sizeX - 1.0 || localZ < 1.0 || localZ >= sizeZ - 1.0);
+                            if (!onLocalEdge) continue;
+                        }
+                        positions.add(new Vec3i(origin.x() + dx, currentY, origin.z() + dz));
+                    }
+                }
+            }
+        }
+        return positions;
+    }
+
+    public static List<Vec3i> cubicBezierPath(Vec3d p0, Vec3d p1, Vec3d p2, Vec3d p3, int samples, int width) {
+        List<Vec3i> result = new ArrayList<>();
+        Set<Vec3i> deduplicated = new HashSet<>();
+        int halfW = Math.max(1, width / 2);
+
+        for (int s = 0; s <= samples; s++) {
+            double t = (double) s / (double) samples;
+            Vec3d pt = interpolateCubicBezier(p0, p1, p2, p3, t);
+            Vec3i center = pt.toFloorInt();
+
+            for (int dx = -halfW; dx <= halfW; dx++) {
+                for (int dz = -halfW; dz <= halfW; dz++) {
+                    if (dx * dx + dz * dz <= halfW * halfW) {
+                        Vec3i surface = center.add(dx, 0, dz);
+                        if (deduplicated.add(surface)) {
+                            result.add(surface);
+                        }
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    private static Vec3d interpolateCubicBezier(Vec3d p0, Vec3d p1, Vec3d p2, Vec3d p3, double t) {
+        double u = 1.0 - t;
+        double tt = t * t;
+        double uu = u * u;
+        double uuu = uu * u;
+        double ttt = tt * t;
+
+        double x = uuu * p0.x() + 3 * uu * t * p1.x() + 3 * u * tt * p2.x() + ttt * p3.x();
+        double y = uuu * p0.y() + 3 * uu * t * p1.y() + 3 * u * tt * p2.y() + ttt * p3.y();
+        double z = uuu * p0.z() + 3 * uu * t * p1.z() + 3 * u * tt * p2.z() + ttt * p3.z();
+        return new Vec3d(x, y, z);
+    }
+
+    private static boolean isPointInPolygon(double x, double z, double[] vx, double[] vz, int n) {
+        boolean inside = false;
+        for (int i = 0, j = n - 1; i < n; j = i++) {
+            if (((vz[i] > z) != (vz[j] > z)) &&
+                (x < (vx[j] - vx[i]) * (z - vz[i]) / (vz[j] - vz[i]) + vx[i])) {
+                inside = !inside;
+            }
+        }
+        return inside;
+    }
+
+    private static double minDistanceToPolygonEdge(double x, double z, double[] vx, double[] vz, int n) {
+        double minDistSq = Double.MAX_VALUE;
+        for (int i = 0, j = n - 1; i < n; j = i++) {
+            double distSq = distToSegmentSquared(x, z, vx[i], vz[i], vx[j], vz[j]);
+            if (distSq < minDistSq) {
+                minDistSq = distSq;
+            }
+        }
+        return Math.sqrt(minDistSq);
+    }
+
+    private static double distToSegmentSquared(double px, double pz, double x1, double z1, double x2, double z2) {
+        double l2 = (x2 - x1) * (x2 - x1) + (z2 - z1) * (z2 - z1);
+        if (l2 == 0) return (px - x1) * (px - x1) + (pz - z1) * (pz - z1);
+        double t = Math.max(0, Math.min(1, ((px - x1) * (x2 - x1) + (pz - z1) * (z2 - z1)) / l2));
+        double projX = x1 + t * (x2 - x1);
+        double projZ = z1 + t * (z2 - z1);
+        return (px - projX) * (px - projX) + (pz - projZ) * (pz - projZ);
+    }
+
     public static List<Vec3i> arch(Vec3i leftBase, Vec3i rightBase, int archHeight, int depth, Direction facing) {
         List<Vec3i> blocks = new ArrayList<>();
         int span = (int) Math.round(leftBase.distance(rightBase));

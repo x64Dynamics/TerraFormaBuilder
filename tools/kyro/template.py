@@ -24,15 +24,33 @@ def inventory():
 
 def selected(arguments):
     mc, loader = '1.20.1', 'fabric'
-    for argument in arguments:
-        if argument.startswith('-Pmc='): mc = argument.partition('=')[2]
-        if argument.startswith('-Ploader='): loader = argument.partition('=')[2]
+    for i, argument in enumerate(arguments):
+        if argument.startswith('-Pmc='):
+            mc = argument.partition('=')[2]
+            if i + 1 < len(arguments) and arguments[i + 1].startswith('.'):
+                mc += arguments[i + 1]
+        if argument.startswith('-Ploader='):
+            loader = argument.partition('=')[2]
     target = next((t for t in inventory() if t['minecraft'] == mc), None)
     if target is None or loader not in target['loaders']:
         raise ValueError(f'Unavailable target: {mc}/{loader}. Run: python tools/kyro/template.py list')
     return mc, loader, properties(ROOT / 'properties' / f'{mc}.properties')
 
+def sanitize_arguments(arguments):
+    res = []
+    i = 0
+    while i < len(arguments):
+        arg = arguments[i]
+        if arg.startswith('-Pmc=') and i + 1 < len(arguments) and arguments[i + 1].startswith('.'):
+            res.append(arg + arguments[i + 1])
+            i += 2
+        else:
+            res.append(arg)
+            i += 1
+    return res
+
 def gradle(arguments):
+    arguments = sanitize_arguments(arguments)
     if '-Pcore=true' in arguments:
         mc, loader, pins, profile = 'core','core',{},'forge'
     else:

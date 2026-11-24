@@ -78,6 +78,7 @@ public class ArchitectWorkspaceModel {
 
     // Architecture details
     private RoofGenerator.RoofType roofShape = RoofGenerator.RoofType.GABLE;
+    private boolean useFacadeRhythm = true;
     private boolean addDormers = true;
     private boolean addChimney = true;
     private boolean addPilasters = true;
@@ -90,6 +91,7 @@ public class ArchitectWorkspaceModel {
     // Interior
     private boolean enableInteriors = true;
     private boolean furnishRooms = true;
+    private float furnishingDensity = 1.0f;
 
     // Construction state
     private boolean instantBuild = false;
@@ -226,6 +228,9 @@ public class ArchitectWorkspaceModel {
     public boolean addBalconies() { return addBalconies; }
     public void setAddBalconies(boolean balconies) { this.addBalconies = balconies; generatePreview(); }
 
+    public boolean useFacadeRhythm() { return useFacadeRhythm; }
+    public void setUseFacadeRhythm(boolean rhythm) { this.useFacadeRhythm = rhythm; generatePreview(); }
+
     public boolean addCornice() { return addCornice; }
     public void setAddCornice(boolean cornice) { this.addCornice = cornice; generatePreview(); }
 
@@ -237,6 +242,9 @@ public class ArchitectWorkspaceModel {
 
     public boolean furnishRooms() { return furnishRooms; }
     public void setFurnishRooms(boolean furnish) { this.furnishRooms = furnish; generatePreview(); }
+
+    public float furnishingDensity() { return furnishingDensity; }
+    public void setFurnishingDensity(float density) { this.furnishingDensity = Math.max(0.1f, Math.min(1.0f, density)); generatePreview(); }
 
     public boolean instantBuild() { return instantBuild; }
     public void setInstantBuild(boolean instant) { this.instantBuild = instant; }
@@ -306,7 +314,7 @@ public class ArchitectWorkspaceModel {
             targets.addAll(floorPlan.partitionWalls());
             if (furnishRooms) {
                 for (InteriorRoom room : floorPlan.rooms()) {
-                    targets.addAll(InteriorFurnishingGenerator.furnishRoom(room, activePalette));
+                    targets.addAll(InteriorFurnishingGenerator.furnishRoom(room, activePalette, floorPlan.transitClearanceZones(), furnishingDensity));
                 }
             }
         }

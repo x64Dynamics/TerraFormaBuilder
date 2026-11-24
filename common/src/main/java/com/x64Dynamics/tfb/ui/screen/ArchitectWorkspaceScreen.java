@@ -163,10 +163,11 @@ public class ArchitectWorkspaceScreen {
                 tabWidgets.add(new UIDropdown<>(new UIBounds(contentX + contentWidth / 2, contentY + 28, contentWidth / 2 - 6, rowHeight), "Roof Style", roofShapes, roofShapes.indexOf(model.roofShape()), model::setRoofShape));
 
                 // Features toggles
-                tabWidgets.add(new UIToggleButton(new UIBounds(contentX, contentY + 56, contentWidth / 4 - 6, rowHeight), "Pilasters", model.addPilasters(), model::setAddPilasters));
-                tabWidgets.add(new UIToggleButton(new UIBounds(contentX + contentWidth / 4, contentY + 56, contentWidth / 4 - 6, rowHeight), "Shutters", model.addWindowShutters(), model::setAddWindowShutters));
-                tabWidgets.add(new UIToggleButton(new UIBounds(contentX + (contentWidth / 4) * 2, contentY + 56, contentWidth / 4 - 6, rowHeight), "Balconies", model.addBalconies(), model::setAddBalconies));
-                tabWidgets.add(new UIToggleButton(new UIBounds(contentX + (contentWidth / 4) * 3, contentY + 56, contentWidth / 4 - 6, rowHeight), "Dormers", model.addDormers(), model::setAddDormers));
+                tabWidgets.add(new UIToggleButton(new UIBounds(contentX, contentY + 56, contentWidth / 5 - 4, rowHeight), "Rhythm", model.useFacadeRhythm(), model::setUseFacadeRhythm));
+                tabWidgets.add(new UIToggleButton(new UIBounds(contentX + contentWidth / 5, contentY + 56, contentWidth / 5 - 4, rowHeight), "Pilasters", model.addPilasters(), model::setAddPilasters));
+                tabWidgets.add(new UIToggleButton(new UIBounds(contentX + (contentWidth / 5) * 2, contentY + 56, contentWidth / 5 - 4, rowHeight), "Shutters", model.addWindowShutters(), model::setAddWindowShutters));
+                tabWidgets.add(new UIToggleButton(new UIBounds(contentX + (contentWidth / 5) * 3, contentY + 56, contentWidth / 5 - 4, rowHeight), "Balconies", model.addBalconies(), model::setAddBalconies));
+                tabWidgets.add(new UIToggleButton(new UIBounds(contentX + (contentWidth / 5) * 4, contentY + 56, contentWidth / 5 - 4, rowHeight), "Dormers", model.addDormers(), model::setAddDormers));
             }
 
             case MATERIALS -> {
@@ -201,6 +202,7 @@ public class ArchitectWorkspaceScreen {
             case INTERIORS -> {
                 tabWidgets.add(new UIToggleButton(new UIBounds(contentX, contentY, contentWidth / 2 - 6, rowHeight), "Generate Room Floorplans", model.enableInteriors(), model::setEnableInteriors));
                 tabWidgets.add(new UIToggleButton(new UIBounds(contentX + contentWidth / 2, contentY, contentWidth / 2 - 6, rowHeight), "Procedural Furnishing", model.furnishRooms(), model::setFurnishRooms));
+                tabWidgets.add(new UISlider(new UIBounds(contentX, contentY + 28, contentWidth - 12, rowHeight), "Furnishing Density (%)", 10, 100, (int) (model.furnishingDensity() * 100), val -> model.setFurnishingDensity(val / 100.0f)));
             }
 
             case CONSTRUCTION -> {

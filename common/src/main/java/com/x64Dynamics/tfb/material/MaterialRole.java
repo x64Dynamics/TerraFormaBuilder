@@ -23,7 +23,8 @@ public enum MaterialRole {
     FENCE,
     BALUSTRADE,
     LIGHT_SOURCE,
-    DECORATION;
+    DECORATION,
+    AIR;
 
     public MaterialRole fallback() {
         return switch (this) {
