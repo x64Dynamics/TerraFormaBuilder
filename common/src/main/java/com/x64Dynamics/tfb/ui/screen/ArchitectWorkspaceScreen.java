@@ -41,6 +41,7 @@ public class ArchitectWorkspaceScreen {
 
     // Header & Global Widgets
     private UITabBar tabBar;
+    private UIButton flightButton;
     private UIButton previewButton;
     private UIButton instantBuildButton;
     private UIButton undoButton;
@@ -80,9 +81,17 @@ public class ArchitectWorkspaceScreen {
         int footerHeight = 18;
 
         // 1. Top Header Actions
-        int actionBtnWidth = 56;
+        int actionBtnWidth = 52;
         int actionBtnHeight = 16;
         int actionY = 4;
+
+        boolean flightOn = com.x64Dynamics.tfb.ui.TFBClientController.getInstance().isFlightActive();
+        flightButton = new UIButton(new UIBounds(width - (actionBtnWidth * 6 + 28), actionY, actionBtnWidth, actionBtnHeight), flightOn ? "Flight: ON" : "Flight: OFF", b -> {
+            com.x64Dynamics.tfb.ui.TFBClientController.getInstance().toggleFlight();
+            boolean state = com.x64Dynamics.tfb.ui.TFBClientController.getInstance().isFlightActive();
+            b.setLabel(state ? "Flight: ON" : "Flight: OFF");
+            setStatus(state ? "Architect Flight enabled." : "Architect Flight disabled.");
+        });
 
         previewButton = new UIButton(new UIBounds(width - (actionBtnWidth * 5 + 24), actionY, actionBtnWidth, actionBtnHeight), "Preview", b -> {
             model.generatePreview();
@@ -103,6 +112,7 @@ public class ArchitectWorkspaceScreen {
             // Handled by platform adapter to close screen
         });
 
+        widgets.add(flightButton);
         widgets.add(previewButton);
         widgets.add(instantBuildButton);
         widgets.add(undoButton);
@@ -254,7 +264,20 @@ public class ArchitectWorkspaceScreen {
             }
 
             case SETTINGS -> {
-                tabWidgets.add(new UIButton(new UIBounds(contentX, contentY, contentWidth - 12, rowHeight), "Controls: B=Workspace, P=Preview, G=Build, Ctrl+Z=Undo, Ctrl+Y=Redo, Esc=Close", b -> {}));
+                tabWidgets.add(new UIToggleButton(new UIBounds(contentX, contentY, contentWidth / 3 - 6, rowHeight), "Architect Flight", com.x64Dynamics.tfb.ui.TFBClientController.getInstance().isFlightActive(), active -> {
+                    com.x64Dynamics.tfb.ui.TFBClientController.getInstance().setFlightActive(active);
+                    if (flightButton != null) flightButton.setLabel(active ? "Flight: ON" : "Flight: OFF");
+                    setStatus(active ? "Architect Flight activated." : "Architect Flight paused.");
+                }));
+                tabWidgets.add(new UISlider(new UIBounds(contentX + contentWidth / 3, contentY, contentWidth / 3 - 6, rowHeight), "Flight Speed", 1, 4, Math.round(com.x64Dynamics.tfb.ui.TFBClientController.getInstance().getFlightSpeed()), speed -> {
+                    com.x64Dynamics.tfb.ui.TFBClientController.getInstance().setFlightSpeed(speed);
+                    setStatus("Flight speed set to " + speed + "x.");
+                }));
+                tabWidgets.add(new UIToggleButton(new UIBounds(contentX + (contentWidth / 3) * 2, contentY, contentWidth / 3 - 6, rowHeight), "Noclip Camera", com.x64Dynamics.tfb.ui.TFBClientController.getInstance().isNoclip(), noclip -> {
+                    com.x64Dynamics.tfb.ui.TFBClientController.getInstance().setNoclip(noclip);
+                    setStatus(noclip ? "Noclip free-camera activated." : "Normal collision restored.");
+                }));
+                tabWidgets.add(new UIButton(new UIBounds(contentX, contentY + 28, contentWidth - 6, rowHeight), "Hotkeys: B=Workspace | H=Flight | P=Preview | G=Build | [/]=Speed | Ctrl+Z/Y=Undo/Redo", b -> {}));
             }
         }
     }
@@ -267,18 +290,35 @@ public class ArchitectWorkspaceScreen {
     public void render(IGuiGraphicsContext graphics, int mouseX, int mouseY) {
         int sidebarWidth = Math.max(120, width / 5);
         int headerHeight = 24;
+        int tabBarHeight = 22;
+        int tabContentHeight = 88;
         int footerHeight = 18;
 
-        // 1. Backgrounds
-        graphics.fill(0, 0, width, height, 0xEE090D16);
-        graphics.fill(0, 0, width, headerHeight, 0xFF0F172A);
-        graphics.fill(0, height - footerHeight, width, height, 0xFF0B0F19);
-        graphics.fill(0, headerHeight, sidebarWidth, height - footerHeight, 0xFF0B132B);
+        // 1. Transparent Architectural Viewport Architecture
+        // Notice: The central viewport (from sidebarWidth to width, and below tab drawer to footer)
+        // is deliberately left completely transparent so the Minecraft world and live 3D preview remain 100% visible!
 
-        // Borders
+        // Header Bar
+        graphics.fill(0, 0, width, headerHeight, 0xEE0F172A);
         graphics.drawBorder(0, 0, width, headerHeight, 0xFF1E293B);
-        graphics.drawBorder(0, height - footerHeight, width, footerHeight, 0xFF1E293B);
+
+        // Tab Bar Area
+        graphics.fill(sidebarWidth, headerHeight, width, headerHeight + tabBarHeight, 0xDD0B132B);
+        graphics.drawBorder(sidebarWidth, headerHeight, width - sidebarWidth, tabBarHeight, 0xFF1E293B);
+
+        // Tab Content Floating Shelf (translucent dock over the upper screen)
+        if (!tabWidgets.isEmpty()) {
+            graphics.fill(sidebarWidth + 2, headerHeight + tabBarHeight, width - 4, headerHeight + tabBarHeight + tabContentHeight, 0xD00F172A);
+            graphics.drawBorder(sidebarWidth + 2, headerHeight + tabBarHeight, width - sidebarWidth - 6, tabContentHeight, 0xFF25334D);
+        }
+
+        // Left Sidebar (Brushes & Categories)
+        graphics.fill(0, headerHeight, sidebarWidth, height - footerHeight, 0xEE0B132B);
         graphics.drawBorder(0, headerHeight, sidebarWidth, height - headerHeight - footerHeight, 0xFF1E293B);
+
+        // Footer Bar
+        graphics.fill(0, height - footerHeight, width, height, 0xEE0B0F19);
+        graphics.drawBorder(0, height - footerHeight, width, footerHeight, 0xFF1E293B);
 
         // 2. Header Title & Badges
         graphics.drawText("TerraFormaBuilder", 8, 8, 0xFF38BDF8, true);

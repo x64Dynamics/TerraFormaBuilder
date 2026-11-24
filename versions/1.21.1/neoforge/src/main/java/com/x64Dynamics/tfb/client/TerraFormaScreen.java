@@ -19,6 +19,7 @@ public class TerraFormaScreen extends Screen {
     protected void init() {
         super.init();
         screen.init(this.width, this.height);
+        TFBClientController.getInstance().setArchitectMode(true);
     }
 
     @Override
@@ -64,7 +65,18 @@ public class TerraFormaScreen extends Screen {
         };
 
         screen.render(ctx, mouseX, mouseY);
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
+        // Do not call super.render() which invokes renderBackground and triggers vanilla screen blur shaders.
+    }
+
+    @Override
+    public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        // Deliberately empty: prevents vanilla Minecraft from applying the post-processing blur shader
+        // so the in-game world, structures, and live 3D preview voxels remain completely clear and unblurred.
+    }
+
+    @Override
+    public void renderTransparentBackground(GuiGraphics guiGraphics) {
+        // Deliberately empty to keep world transparent
     }
 
     @Override

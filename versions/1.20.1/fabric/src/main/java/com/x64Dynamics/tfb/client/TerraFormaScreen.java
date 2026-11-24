@@ -19,6 +19,7 @@ public class TerraFormaScreen extends Screen {
     protected void init() {
         super.init();
         screen.init(this.width, this.height);
+        TFBClientController.getInstance().setArchitectMode(true);
     }
 
     @Override
@@ -64,7 +65,12 @@ public class TerraFormaScreen extends Screen {
         };
 
         screen.render(ctx, mouseX, mouseY);
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
+        // Do not call super.render() which invokes renderBackground
+    }
+
+    @Override
+    public void renderBackground(GuiGraphics guiGraphics) {
+        // Deliberately empty to keep Minecraft world and 3D preview completely clear
     }
 
     @Override

@@ -3,11 +3,14 @@ package com.x64Dynamics.tfb.client;
 import com.x64Dynamics.tfb.architectural.PlacementTarget;
 import com.x64Dynamics.tfb.geometry.Vec3i;
 import com.x64Dynamics.tfb.ui.TFBClientController;
+import com.x64Dynamics.tfb.ui.hotbar.BuilderHotbarModel;
+import com.x64Dynamics.tfb.ui.hotbar.BuilderHotbarSlot;
 import com.x64Dynamics.tfb.ui.model.ArchitectWorkspaceModel;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
@@ -15,8 +18,11 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.client.event.InputEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.event.RenderGuiEvent;
+import net.neoforged.neoforge.client.event.RenderGuiLayerEvent;
+import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 
 import java.util.List;
@@ -33,6 +39,9 @@ public final class TFBClientEvents {
             event.register(TFBKeyMappings.EXECUTE_BUILD);
             event.register(TFBKeyMappings.UNDO);
             event.register(TFBKeyMappings.REDO);
+            event.register(TFBKeyMappings.TOGGLE_FLIGHT);
+            event.register(TFBKeyMappings.SPEED_UP);
+            event.register(TFBKeyMappings.SPEED_DOWN);
         }
     }
 
@@ -43,10 +52,38 @@ public final class TFBClientEvents {
             Minecraft mc = Minecraft.getInstance();
             if (mc.player == null || mc.level == null) return;
 
-            // When no GUI is open, process gameplay hotkeys
+            // Tick active flight physics and navigation
+            ArchitectFlightController.tick(mc);
+
+            // Process hotkeys when in-world (no screen open)
             if (mc.screen == null) {
                 while (TFBKeyMappings.OPEN_WORKSPACE.consumeClick()) {
                     mc.setScreen(new TerraFormaScreen());
+                }
+
+                while (TFBKeyMappings.TOGGLE_FLIGHT.consumeClick()) {
+                    TFBClientController.getInstance().toggleFlight();
+                    boolean active = TFBClientController.getInstance().isFlightActive();
+                    mc.player.displayClientMessage(
+                        Component.literal("§b[TFB] Architect Flight: " + (active ? "§aEnabled" : "§cDisabled")),
+                        true
+                    );
+                }
+
+                while (TFBKeyMappings.SPEED_UP.consumeClick()) {
+                    TFBClientController.getInstance().adjustFlightSpeed(0.2f);
+                    mc.player.displayClientMessage(
+                        Component.literal(String.format("§b[TFB] Flight Speed: §e%.1fx", TFBClientController.getInstance().getFlightSpeed())),
+                        true
+                    );
+                }
+
+                while (TFBKeyMappings.SPEED_DOWN.consumeClick()) {
+                    TFBClientController.getInstance().adjustFlightSpeed(-0.2f);
+                    mc.player.displayClientMessage(
+                        Component.literal(String.format("§b[TFB] Flight Speed: §e%.1fx", TFBClientController.getInstance().getFlightSpeed())),
+                        true
+                    );
                 }
 
                 while (TFBKeyMappings.TOGGLE_PREVIEW.consumeClick()) {
@@ -77,7 +114,69 @@ public final class TFBClientEvents {
                         mc.player.displayClientMessage(Component.literal("§7[TFB] Nothing to redo."), true);
                     }
                 }
+
+                // Builder Hotbar number keys 1–9
+                if (TFBClientController.getInstance().isArchitectMode()) {
+                    for (int i = 0; i < 9; i++) {
+                        if (mc.options.keyHotbarSlots[i].consumeClick()) {
+                            BuilderHotbarModel.getInstance().setSlot(i);
+                            BuilderHotbarSlot s = BuilderHotbarModel.getInstance().getActiveSlotData();
+                            if (s != null) {
+                                mc.player.displayClientMessage(Component.literal("§b[TFB Tool " + (i + 1) + "] §f" + s.name()), true);
+                            }
+                        }
+                    }
+                }
             }
+        }
+
+        @SubscribeEvent
+        public static void onMouseScroll(InputEvent.MouseScrollingEvent event) {
+            TFBClientController controller = TFBClientController.getInstance();
+            if (!controller.isArchitectMode()) return;
+
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.screen == null && mc.player != null) {
+                double scroll = event.getScrollDeltaY();
+                if (scroll != 0) {
+                    BuilderHotbarModel hotbar = BuilderHotbarModel.getInstance();
+                    if (Screen.hasShiftDown()) {
+                        // Shift + scroll cycles category pages
+                        if (scroll > 0) hotbar.nextPage();
+                        else hotbar.prevPage();
+                        String page = BuilderHotbarModel.PAGE_NAMES[hotbar.getActivePage()];
+                        mc.player.displayClientMessage(Component.literal("§e[TFB Category] §f" + page), true);
+                    } else {
+                        // Standard scroll cycles tool slots
+                        if (scroll > 0) hotbar.prevSlot();
+                        else hotbar.nextSlot();
+                        BuilderHotbarSlot s = hotbar.getActiveSlotData();
+                        if (s != null) {
+                            mc.player.displayClientMessage(Component.literal("§b[TFB Tool] §f" + s.name()), true);
+                        }
+                    }
+                    event.setCanceled(true);
+                }
+            }
+        }
+
+        @SubscribeEvent
+        public static void onRenderGuiLayerPre(RenderGuiLayerEvent.Pre event) {
+            // Replace vanilla survival hotbar and exp bar with dedicated TFB Builder Hotbar
+            if (TFBClientController.getInstance().isArchitectMode()) {
+                ResourceLocation name = event.getName();
+                if (name.equals(VanillaGuiLayers.HOTBAR) ||
+                    name.equals(VanillaGuiLayers.EXPERIENCE_BAR) ||
+                    name.equals(VanillaGuiLayers.SELECTED_ITEM_NAME)) {
+                    event.setCanceled(true);
+                }
+            }
+        }
+
+        @SubscribeEvent
+        public static void onRenderGui(RenderGuiEvent.Post event) {
+            Minecraft mc = Minecraft.getInstance();
+            TFBInWorldHud.render(event.getGuiGraphics(), mc);
         }
 
         @SubscribeEvent
@@ -86,8 +185,7 @@ public final class TFBClientEvents {
             Minecraft mc = Minecraft.getInstance();
             if (mc.player == null) return;
 
-            // If holding a stick or architect mode is active, set foundation origin
-            if (event.getItemStack().is(Items.STICK)) {
+            if (event.getItemStack().is(Items.STICK) || TFBClientController.getInstance().isArchitectMode()) {
                 BlockPos clicked = event.getPos();
                 BlockPos target = clicked.above();
                 Vec3i origin = new Vec3i(target.getX(), target.getY(), target.getZ());
@@ -98,22 +196,6 @@ public final class TFBClientEvents {
                 );
                 event.setCanceled(true);
             }
-        }
-
-        @SubscribeEvent
-        public static void onRenderGui(RenderGuiEvent.Post event) {
-            TFBClientController controller = TFBClientController.getInstance();
-            if (!controller.isPreviewActive()) return;
-
-            Minecraft mc = Minecraft.getInstance();
-            if (mc.screen != null || mc.player == null) return;
-
-            GuiGraphics g = event.getGuiGraphics();
-            ArchitectWorkspaceModel model = controller.model();
-
-            String hudText = "§b[TFB] §f" + model.width() + "x" + model.height() + "x" + model.depth() +
-                             " | §a" + model.totalBlockCount() + " blocks §8| §7[B] Workspace §8| §7[G] Build";
-            g.drawString(mc.font, hudText, 8, 8, 0xFFFFFFFF, true);
         }
 
         public static void executeBuild(Minecraft mc) {

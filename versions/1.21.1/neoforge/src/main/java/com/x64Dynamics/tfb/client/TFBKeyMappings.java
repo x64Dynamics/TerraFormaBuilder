@@ -42,5 +42,26 @@ public final class TFBKeyMappings {
         CATEGORY
     );
 
+    public static final KeyMapping TOGGLE_FLIGHT = new KeyMapping(
+        "key.terraformabuilder.toggle_flight",
+        InputConstants.Type.KEYSYM,
+        GLFW.GLFW_KEY_H,
+        CATEGORY
+    );
+
+    public static final KeyMapping SPEED_UP = new KeyMapping(
+        "key.terraformabuilder.speed_up",
+        InputConstants.Type.KEYSYM,
+        GLFW.GLFW_KEY_RIGHT_BRACKET,
+        CATEGORY
+    );
+
+    public static final KeyMapping SPEED_DOWN = new KeyMapping(
+        "key.terraformabuilder.speed_down",
+        InputConstants.Type.KEYSYM,
+        GLFW.GLFW_KEY_LEFT_BRACKET,
+        CATEGORY
+    );
+
     private TFBKeyMappings() {}
 }
