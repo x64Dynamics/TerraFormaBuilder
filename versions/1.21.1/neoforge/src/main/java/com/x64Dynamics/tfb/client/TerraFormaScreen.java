@@ -108,6 +108,19 @@ public class TerraFormaScreen extends Screen {
         if (screen.keyPressed(keyCode, scanCode, modifiers)) {
             return true;
         }
+        if (hasControlDown()) {
+            if (keyCode == 90) {
+                if (hasShiftDown()) {
+                    TFBClientController.getInstance().model().redo();
+                } else {
+                    TFBClientController.getInstance().model().undo();
+                }
+                return true;
+            } else if (keyCode == 89) {
+                TFBClientController.getInstance().model().redo();
+                return true;
+            }
+        }
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
