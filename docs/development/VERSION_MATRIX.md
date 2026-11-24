@@ -28,7 +28,7 @@ Target status lifecycle:
 | **1.20.2** | 17 | NeoForge | In Progress | Pending | Pending | Early NeoForge fork |
 | **1.20.3** | 17 | Fabric | In Progress | Pending | Pending | Minor release |
 | **1.20.3** | 17 | NeoForge | In Progress | Pending | Pending | Minor release |
-| **1.20.4** | 17 | Fabric | In Progress | Pending | Pending | Stable 1.20.4 release |
+| **1.20.4** | 17 | Fabric | **Implemented** | **Built** | **Verified** | Stable 1.20.4 release, full HUD, flight, blur fixed |
 | **1.20.4** | 17 | NeoForge | **Implemented** | **Built** | **Verified** | NeoForge 20.4.x, full HUD, events, flight, blur fixed |
 | **1.20.5** | 21 | Fabric | In Progress | Pending | Pending | Java 21 migration + Components |
 | **1.20.5** | 21 | NeoForge | In Progress | Pending | Pending | Java 21 migration |
