@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,6 +16,10 @@ public final class BlueprintManager {
         if (!storageDirectory.exists()) {
             storageDirectory.mkdirs();
         }
+    }
+
+    public BlueprintManager(Path basePath) {
+        this(basePath.toFile());
     }
 
     public File storageDirectory() {
