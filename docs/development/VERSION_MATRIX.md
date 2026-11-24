@@ -22,7 +22,7 @@ Target status lifecycle:
 | **1.20.0** | 17 | Fabric | In Progress | Pending | Pending | Trails & Tales |
 | **1.20.0** | 17 | Forge | In Progress | Pending | Pending | Trails & Tales |
 | **1.20.1** | 17 | Fabric | **Implemented** | **Built** | **Verified** | Full hotbar, HUD, screen, flight |
-| **1.20.1** | 17 | Forge | In Progress | Pending | Pending | Forge 47.4.28 |
+| **1.20.1** | 17 | Forge | **Implemented** | **Built** | **Verified** | Forge 47.4.28, full HUD, events, flight, blur fixed |
 | **1.20.2** | 17 | Fabric | In Progress | Pending | Pending | Network configuration phase |
 | **1.20.2** | 17 | Forge | In Progress | Pending | Pending | GuiGraphics migration |
 | **1.20.2** | 17 | NeoForge | In Progress | Pending | Pending | Early NeoForge fork |
