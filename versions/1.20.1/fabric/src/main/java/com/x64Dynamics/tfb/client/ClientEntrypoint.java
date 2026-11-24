@@ -124,8 +124,31 @@ public final class ClientEntrypoint implements ClientModInitializer {
         }
     }
 
-    public static void onRenderHud(GuiGraphics g, Minecraft mc) {
-        TFBInWorldHud.render(g, mc);
+    public static void onRenderHud(GuiGraphics g, float partialTick) {
+        TFBInWorldHud.render(g, Minecraft.getInstance());
+    }
+
+    public static boolean onMouseScroll(double scrollDelta) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.screen != null || mc.player == null) return false;
+        if (!TFBClientController.getInstance().isArchitectMode()) return false;
+        if (scrollDelta == 0) return false;
+
+        BuilderHotbarModel hotbar = BuilderHotbarModel.getInstance();
+        if (net.minecraft.client.gui.screens.Screen.hasShiftDown()) {
+            if (scrollDelta > 0) {
+                hotbar.prevPage();
+            } else {
+                hotbar.nextPage();
+            }
+        } else {
+            if (scrollDelta > 0) {
+                hotbar.prevSlot();
+            } else {
+                hotbar.nextSlot();
+            }
+        }
+        return true;
     }
 
     public static void executeBuild(Minecraft mc) {
