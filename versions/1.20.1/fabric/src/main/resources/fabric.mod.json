@@ -9,6 +9,9 @@
   "entrypoints": {
     "main": [
       "com.x64Dynamics.tfb.Entrypoint"
+    ],
+    "client": [
+      "com.x64Dynamics.tfb.client.ClientEntrypoint"
     ]
   },
   "depends": {

@@ -1,0 +1,8 @@
+{
+  "key.categories.terraformabuilder": "TerraFormaBuilder",
+  "key.terraformabuilder.open_workspace": "Open Architect Workspace",
+  "key.terraformabuilder.toggle_preview": "Toggle 3D Live Preview",
+  "key.terraformabuilder.execute_build": "Execute Construction",
+  "key.terraformabuilder.undo": "Undo Design Operation",
+  "key.terraformabuilder.redo": "Redo Design Operation"
+}
