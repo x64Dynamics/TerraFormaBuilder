@@ -1,7 +1,12 @@
 package com.x64Dynamics.tfb.client;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.StringArgumentType;
+import com.x64Dynamics.tfb.brush.BrushRegistry;
+import com.x64Dynamics.tfb.brush.IConstructionBrush;
+import com.x64Dynamics.tfb.material.StylePreset;
 import com.x64Dynamics.tfb.ui.TFBClientController;
+import com.x64Dynamics.tfb.ui.hotbar.BuilderHotbarModel;
 import com.x64Dynamics.tfb.ui.model.ArchitectWorkspaceModel;
 import net.minecraft.client.Minecraft;
 import net.minecraft.commands.CommandSourceStack;
@@ -27,10 +32,74 @@ public final class TFBCommands {
                     mc.tell(() -> mc.setScreen(new TerraFormaScreen()));
                     return 1;
                 }))
+                .then(Commands.literal("mode").executes(ctx -> {
+                    TFBClientController ctrl = TFBClientController.getInstance();
+                    ctrl.toggleArchitectMode();
+                    boolean active = ctrl.isArchitectMode();
+                    ctx.getSource().sendSystemMessage(Component.literal("§b[TFB] Architect Mode: " + (active ? "§aACTIVE" : "§cINACTIVE")));
+                    return 1;
+                }))
+                .then(Commands.literal("flight").executes(ctx -> {
+                    TFBClientController ctrl = TFBClientController.getInstance();
+                    ctrl.toggleFlight();
+                    boolean active = ctrl.isFlightActive();
+                    ctx.getSource().sendSystemMessage(Component.literal("§b[TFB] Architect Flight: " + (active ? "§aENABLED" : "§cDISABLED")));
+                    return 1;
+                }))
                 .then(Commands.literal("preview").executes(ctx -> {
                     TFBClientController.getInstance().togglePreview();
                     boolean active = TFBClientController.getInstance().isPreviewActive();
                     ctx.getSource().sendSystemMessage(Component.literal("§b[TFB] Preview: " + (active ? "§aEnabled" : "§cDisabled")));
+                    return 1;
+                }))
+                .then(Commands.literal("hud").executes(ctx -> {
+                    TFBClientController ctrl = TFBClientController.getInstance();
+                    ctrl.toggleHud();
+                    ctx.getSource().sendSystemMessage(Component.literal("§b[TFB] In-World HUD: " + (ctrl.isHudVisible() ? "§aVISIBLE" : "§cMINIMIZED")));
+                    return 1;
+                }))
+                .then(Commands.literal("banner").executes(ctx -> {
+                    TFBClientController ctrl = TFBClientController.getInstance();
+                    ctrl.toggleStudioBanner();
+                    ctx.getSource().sendSystemMessage(Component.literal("§b[TFB] Studio Banner: " + (ctrl.isStudioBannerVisible() ? "§aVISIBLE" : "§cOFF")));
+                    return 1;
+                }))
+                .then(Commands.literal("hotbar").executes(ctx -> {
+                    TFBClientController ctrl = TFBClientController.getInstance();
+                    ctrl.toggleBuilderHotbar();
+                    ctx.getSource().sendSystemMessage(Component.literal("§b[TFB] Builder Hotbar: " + (ctrl.isBuilderHotbarVisible() ? "§aVISIBLE" : "§cOFF")));
+                    return 1;
+                }))
+                .then(Commands.literal("tool")
+                    .then(Commands.argument("name", StringArgumentType.word()).executes(ctx -> {
+                        String name = StringArgumentType.getString(ctx, "name");
+                        IConstructionBrush brush = BrushRegistry.get(name);
+                        if (brush != null) {
+                            TFBClientController.getInstance().model().setActiveBrush(brush);
+                            ctx.getSource().sendSystemMessage(Component.literal("§b[TFB] Selected tool: §f" + brush.displayName()));
+                        } else {
+                            ctx.getSource().sendSystemMessage(Component.literal("§c[TFB] Unknown tool: " + name));
+                        }
+                        return 1;
+                    }))
+                )
+                .then(Commands.literal("style")
+                    .then(Commands.argument("preset", StringArgumentType.word()).executes(ctx -> {
+                        String presetStr = StringArgumentType.getString(ctx, "preset").toUpperCase();
+                        try {
+                            StylePreset preset = StylePreset.valueOf(presetStr);
+                            TFBClientController.getInstance().model().setStylePreset(preset);
+                            ctx.getSource().sendSystemMessage(Component.literal("§b[TFB] Style preset set to: §e" + preset.displayName()));
+                        } catch (IllegalArgumentException e) {
+                            ctx.getSource().sendSystemMessage(Component.literal("§c[TFB] Unknown style preset: " + presetStr));
+                        }
+                        return 1;
+                    }))
+                )
+                .then(Commands.literal("snap").executes(ctx -> {
+                    TFBClientController.getInstance().model().cycleGridSnap();
+                    int snap = TFBClientController.getInstance().model().selectionManager().gridSnap();
+                    ctx.getSource().sendSystemMessage(Component.literal("§b[TFB] Grid Snap: §f" + snap + " blocks"));
                     return 1;
                 }))
                 .then(Commands.literal("build").executes(ctx -> {
@@ -59,6 +128,8 @@ public final class TFBCommands {
                     ctx.getSource().sendSystemMessage(Component.literal(
                         "§b[TerraFormaBuilder Info]\n" +
                         "§7Dimensions: §f" + model.width() + "x" + model.height() + "x" + model.depth() + "\n" +
+                        "§7Origin: §e(" + model.origin().x() + ", " + model.origin().y() + ", " + model.origin().z() + ")\n" +
+                        "§7Rotation: §6" + model.rotation().name() + "\n" +
                         "§7Total Blocks: §a" + model.totalBlockCount() + "\n" +
                         "§7Style Preset: §e" + model.stylePreset().name() + " (Harmony: " + Math.round(model.paletteHarmonyScore() * 100) + "%)\n" +
                         "§7Wing Layout: §d" + model.wingConfiguration().displayName() + "\n" +

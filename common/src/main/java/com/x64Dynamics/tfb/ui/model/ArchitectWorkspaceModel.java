@@ -177,7 +177,40 @@ public class ArchitectWorkspaceModel {
             this.activeBrush = brush;
             this.activeCategory = brush.category();
             generatePreview();
+            try {
+                com.x64Dynamics.tfb.ui.hotbar.BuilderHotbarModel.getInstance().syncFromBrush(brush);
+            } catch (Throwable ignored) {}
         }
+    }
+
+    public void adjustWidth(int delta) {
+        setWidth(this.width + delta);
+    }
+
+    public void adjustHeight(int delta) {
+        setHeight(this.height + delta);
+    }
+
+    public void adjustDepth(int delta) {
+        setDepth(this.depth + delta);
+    }
+
+    public void cycleStylePreset() {
+        StylePreset[] presets = StylePreset.values();
+        int next = (stylePreset.ordinal() + 1) % presets.length;
+        setStylePreset(presets[next]);
+    }
+
+    public void cycleRoofShape() {
+        RoofGenerator.RoofType[] types = RoofGenerator.RoofType.values();
+        int next = (roofShape.ordinal() + 1) % types.length;
+        setRoofShape(types[next]);
+    }
+
+    public void cycleGridSnap() {
+        int current = selectionManager.gridSnap();
+        int next = current == 1 ? 2 : current == 2 ? 4 : current == 4 ? 8 : current == 8 ? 16 : 1;
+        selectionManager.setGridSnap(next);
     }
 
     public StylePreset stylePreset() { return stylePreset; }
