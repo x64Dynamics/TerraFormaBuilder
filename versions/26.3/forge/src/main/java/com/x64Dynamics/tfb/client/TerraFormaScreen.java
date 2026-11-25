@@ -80,7 +80,7 @@ public class TerraFormaScreen extends Screen {
 
     @Override
     public boolean keyPressed(KeyEvent event) {
-        if (screen.keyPressed(event.key(), event.scancode(), event.modifiers())) return true;
+        if (screen.keyPressed(event.key(), event.keycode(), event.modifiers())) return true;
         if (this.minecraft != null && this.minecraft.hasControlDown()) {
             if (event.key() == 90) {
                 if (this.minecraft.hasShiftDown()) TFBClientController.getInstance().model().redo();

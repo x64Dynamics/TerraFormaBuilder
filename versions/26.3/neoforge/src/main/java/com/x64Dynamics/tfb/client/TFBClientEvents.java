@@ -60,9 +60,9 @@ public final class TFBClientEvents {
 
             ArchitectFlightController.tick(mc);
 
-            if (mc.screen == null) {
+            if (mc.gui.screen() == null) {
                 while (TFBKeyMappings.OPEN_WORKSPACE.consumeClick()) {
-                    mc.setScreen(new TerraFormaScreen());
+                    mc.gui.setScreen(new TerraFormaScreen());
                 }
 
                 while (TFBKeyMappings.TOGGLE_FLIGHT.consumeClick()) {
@@ -140,7 +140,7 @@ public final class TFBClientEvents {
             if (!controller.isArchitectMode()) return;
 
             Minecraft mc = Minecraft.getInstance();
-            if (mc.screen == null && mc.player != null) {
+            if (mc.gui.screen() == null && mc.player != null) {
                 double scroll = event.getScrollDeltaY();
                 if (scroll != 0) {
                     BuilderHotbarModel hotbar = BuilderHotbarModel.getInstance();

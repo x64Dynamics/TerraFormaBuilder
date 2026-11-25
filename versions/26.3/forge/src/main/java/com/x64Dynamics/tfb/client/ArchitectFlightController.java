@@ -38,7 +38,7 @@ public final class ArchitectFlightController {
         mc.player.getAbilities().flying = true;
         mc.player.resetFallDistance();
 
-        if (mc.screen != null) {
+        if (mc.gui.screen() != null) {
             mc.player.setDeltaMovement(0, 0, 0);
             return;
         }

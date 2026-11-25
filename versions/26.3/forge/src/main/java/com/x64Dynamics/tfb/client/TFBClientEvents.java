@@ -62,10 +62,10 @@ public final class TFBClientEvents {
             ArchitectFlightController.tick(mc);
 
             while (TFBKeyMappings.OPEN_WORKSPACE.consumeClick()) {
-                if (mc.screen instanceof TerraFormaScreen) {
-                    mc.setScreen(null);
-                } else if (mc.screen == null) {
-                    mc.setScreen(new TerraFormaScreen());
+                if (mc.gui.screen() instanceof TerraFormaScreen) {
+                    mc.gui.setScreen(null);
+                } else if (mc.gui.screen() == null) {
+                    mc.gui.setScreen(new TerraFormaScreen());
                 }
             }
 
@@ -97,7 +97,7 @@ public final class TFBClientEvents {
                 mc.player.sendOverlayMessage(Component.literal(String.format("§b[TFB] Flight Speed: §e%.1fx", spd)));
             }
 
-            if (TFBClientController.getInstance().isArchitectMode() && mc.screen == null) {
+            if (TFBClientController.getInstance().isArchitectMode() && mc.gui.screen() == null) {
                 BuilderHotbarModel hotbar = BuilderHotbarModel.getInstance();
                 for (int i = 0; i < 9; i++) {
                     if (mc.options.keyHotbarSlots[i].consumeClick()) {
@@ -114,7 +114,7 @@ public final class TFBClientEvents {
         @SubscribeEvent
         public static boolean onMouseScroll(InputEvent.MouseScrollingEvent event) {
             Minecraft mc = Minecraft.getInstance();
-            if (mc.screen != null || mc.player == null) return false;
+            if (mc.gui.screen() != null || mc.player == null) return false;
             if (!TFBClientController.getInstance().isArchitectMode()) return false;
 
             double scrollDelta = event.getDeltaY();

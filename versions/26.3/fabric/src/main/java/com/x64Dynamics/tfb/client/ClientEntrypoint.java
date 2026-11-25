@@ -43,9 +43,9 @@ public final class ClientEntrypoint implements ClientModInitializer {
 
         ArchitectFlightController.tick(mc);
 
-        if (mc.screen == null) {
+        if (mc.gui.screen() == null) {
             while (TFBKeyMappings.OPEN_WORKSPACE.consumeClick()) {
-                mc.setScreen(new TerraFormaScreen());
+                mc.gui.setScreen(new TerraFormaScreen());
             }
 
             while (TFBKeyMappings.TOGGLE_FLIGHT.consumeClick()) {
@@ -124,7 +124,7 @@ public final class ClientEntrypoint implements ClientModInitializer {
 
     public static boolean onMouseScroll(double scrollDelta) {
         Minecraft mc = Minecraft.getInstance();
-        if (mc.screen != null || mc.player == null) return false;
+        if (mc.gui.screen() != null || mc.player == null) return false;
         if (!TFBClientController.getInstance().isArchitectMode()) return false;
         if (scrollDelta == 0) return false;
 

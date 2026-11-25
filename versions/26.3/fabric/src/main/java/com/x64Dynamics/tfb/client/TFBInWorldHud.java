@@ -19,7 +19,7 @@ public final class TFBInWorldHud {
     public static void render(GuiGraphicsExtractor g, Minecraft mc) {
         TFBClientController controller = TFBClientController.getInstance();
         if (!controller.isArchitectMode() || !controller.isHudVisible()) return;
-        if (mc.screen != null || mc.player == null) return;
+        if (mc.gui.screen() != null || mc.player == null) return;
 
         int screenWidth = mc.getWindow().getGuiScaledWidth();
         int screenHeight = mc.getWindow().getGuiScaledHeight();
