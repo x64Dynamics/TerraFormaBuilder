@@ -118,6 +118,22 @@ public final class ArchitectClientEvents {
                 );
             }
 
+            while (ArchitectKeyMappings.UNDO.consumeClick()) {
+                if (ClientController.getInstance().model().undo()) {
+                    mc.player.displayClientMessage(Component.literal("§e[TFB] Reverted last design operation."), true);
+                } else {
+                    mc.player.displayClientMessage(Component.literal("§7[TFB] Nothing to undo."), true);
+                }
+            }
+
+            while (ArchitectKeyMappings.REDO.consumeClick()) {
+                if (ClientController.getInstance().model().redo()) {
+                    mc.player.displayClientMessage(Component.literal("§e[TFB] Restored undone design operation."), true);
+                } else {
+                    mc.player.displayClientMessage(Component.literal("§7[TFB] Nothing to redo."), true);
+                }
+            }
+
             if (ClientController.getInstance().isArchitectMode() && mc.screen == null) {
                 BuilderHotbarModel hotbar = BuilderHotbarModel.getInstance();
                 for (int i = 0; i < 9; i++) {
@@ -155,6 +171,30 @@ public final class ArchitectClientEvents {
                     }
                 }
                 event.setCanceled(true);
+            }
+        }
+
+        @SubscribeEvent
+        public static void onMouseButton(InputEvent.MouseButton.Pre event) {
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.screen != null || mc.player == null || mc.level == null) return;
+            ClientController controller = ClientController.getInstance();
+            if (!controller.isArchitectMode() || event.getAction() != 1) return;
+
+            if (mc.hitResult instanceof net.minecraft.world.phys.BlockHitResult bhr
+                    && bhr.getType() == net.minecraft.world.phys.HitResult.Type.BLOCK) {
+                var clicked = bhr.getBlockPos();
+                var pos = new com.x64Dynamics.tfb.geometry.Vec3i(clicked.getX(), clicked.getY(), clicked.getZ());
+                if (event.getButton() == 0) {
+                    controller.model().setPos1(pos);
+                    mc.player.displayClientMessage(Component.literal("§a[TFB] POS1 set to (" + pos.x() + ", " + pos.y() + ", " + pos.z() + ")"), true);
+                    event.setCanceled(true);
+                } else if (event.getButton() == 1) {
+                    controller.model().setPos2(pos);
+                    ArchitectWorkspaceModel m = controller.model();
+                    mc.player.displayClientMessage(Component.literal("§6[TFB] POS2 set to (" + pos.x() + ", " + pos.y() + ", " + pos.z() + ") §8| §b" + m.width() + "x" + m.height() + "x" + m.depth()), true);
+                    event.setCanceled(true);
+                }
             }
         }
 

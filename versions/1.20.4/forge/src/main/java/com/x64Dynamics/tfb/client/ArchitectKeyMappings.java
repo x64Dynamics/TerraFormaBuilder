@@ -56,6 +56,20 @@ public final class ArchitectKeyMappings {
             CATEGORY
     );
 
+    public static final KeyMapping UNDO = new KeyMapping(
+            "key.terraformabuilder.undo",
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_Z,
+            CATEGORY
+    );
+
+    public static final KeyMapping REDO = new KeyMapping(
+            "key.terraformabuilder.redo",
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_Y,
+            CATEGORY
+    );
+
     public static final KeyMapping[] ALL = {
             OPEN_WORKSPACE,
             TOGGLE_PREVIEW,
@@ -63,7 +77,9 @@ public final class ArchitectKeyMappings {
             TOGGLE_FLIGHT,
             SPEED_UP,
             SPEED_DOWN,
-            ROTATE_TOOL
+            ROTATE_TOOL,
+            UNDO,
+            REDO
     };
 
     private ArchitectKeyMappings() {}

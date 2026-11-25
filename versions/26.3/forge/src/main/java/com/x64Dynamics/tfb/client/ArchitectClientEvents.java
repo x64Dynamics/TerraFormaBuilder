@@ -140,6 +140,31 @@ public final class ArchitectClientEvents {
         }
 
         @SubscribeEvent
+        public static boolean onMouseButton(InputEvent.MouseButton.Pre event) {
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.gui.screen() != null || mc.player == null || mc.level == null) return false;
+            ClientController controller = ClientController.getInstance();
+            if (!controller.isArchitectMode() || event.getAction() != 1) return false;
+
+            if (mc.hitResult instanceof net.minecraft.world.phys.BlockHitResult bhr
+                    && bhr.getType() == net.minecraft.world.phys.HitResult.Type.BLOCK) {
+                var clicked = bhr.getBlockPos();
+                var pos = new com.x64Dynamics.tfb.geometry.Vec3i(clicked.getX(), clicked.getY(), clicked.getZ());
+                if (event.getButton() == 0) {
+                    controller.model().setPos1(pos);
+                    mc.player.sendOverlayMessage(Component.literal("§a[TFB] POS1 set to (" + pos.x() + ", " + pos.y() + ", " + pos.z() + ")"));
+                    return true;
+                } else if (event.getButton() == 1) {
+                    controller.model().setPos2(pos);
+                    ArchitectWorkspaceModel m = controller.model();
+                    mc.player.sendOverlayMessage(Component.literal("§6[TFB] POS2 set to (" + pos.x() + ", " + pos.y() + ", " + pos.z() + ") §8| §b" + m.width() + "x" + m.height() + "x" + m.depth()));
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        @SubscribeEvent
         public static void onPlayerLogout(ClientPlayerNetworkEvent.LoggingOut event) {
             Minecraft mc = Minecraft.getInstance();
             ArchitectFlightController.restorePreviousState(mc);

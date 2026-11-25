@@ -38,7 +38,8 @@ public final class ArchitectWorldRenderer {
 
         Camera camera = event.getCamera();
         Vec3 camPos = camera.getPosition();
-        PoseStack poseStack = event.getPoseStack();
+        PoseStack poseStack = new PoseStack();
+        poseStack.mulPose(event.getPoseStack());
         MultiBufferSource.BufferSource bufferSource = mc.renderBuffers().bufferSource();
 
         BoundingBox3i box = controller.model().boundingBox();

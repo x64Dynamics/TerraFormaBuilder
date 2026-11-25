@@ -29,7 +29,6 @@ import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.x64Dynamics.tfb.geometry.Direction;
 @EventBusSubscriber(modid = "terraformabuilder", value = Dist.CLIENT)
 public final class ArchitectWorldRenderer {
     private static final RandomSource PREVIEW_RANDOM = RandomSource.create(42L);
@@ -62,6 +61,18 @@ public final class ArchitectWorldRenderer {
 
         VertexConsumer lineConsumer = bufferSource.getBuffer(RenderTypes.lines());
         ShapeRenderer.renderShape(poseStack, lineConsumer, Shapes.create(0, 0, 0, sizeX, sizeY, sizeZ), minX, minY, minZ, 0xFF38BDF8, 2.0f);
+
+        var gp = controller.model().gridPlacement();
+        if (!gp.registry().allBuildings().isEmpty()) {
+            for (var bld : gp.registry().allBuildings()) {
+                BoundingBox3i gb = gp.grid().toWorldBounds(bld);
+                boolean sel = bld.id().equals(gp.selectedBuildingId());
+                ShapeRenderer.renderShape(poseStack, lineConsumer,
+                    Shapes.create(0, 0, 0, gb.sizeX(), gb.sizeY(), gb.sizeZ()),
+                    gb.min().x() - camPos.x, gb.min().y() - camPos.y, gb.min().z() - camPos.z,
+                    sel ? 0xFFFACC15 : 0xFF34D399, 2.0f);
+            }
+        }
 
         Vec3i p1 = controller.model().selectionManager().pos1();
         if (p1 != null) {

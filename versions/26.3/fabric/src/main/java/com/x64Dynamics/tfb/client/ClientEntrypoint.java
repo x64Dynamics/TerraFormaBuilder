@@ -148,6 +148,30 @@ public final class ClientEntrypoint implements ClientModInitializer {
         return true;
     }
 
+    public static boolean onMouseButton(int button, int action) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.gui.screen() != null || mc.player == null || mc.level == null) return false;
+        ClientController controller = ClientController.getInstance();
+        if (!controller.isArchitectMode() || action != 1) return false;
+
+        if (mc.hitResult instanceof net.minecraft.world.phys.BlockHitResult bhr
+                && bhr.getType() == net.minecraft.world.phys.HitResult.Type.BLOCK) {
+            BlockPos clicked = bhr.getBlockPos();
+            Vec3i pos = new Vec3i(clicked.getX(), clicked.getY(), clicked.getZ());
+            if (button == 0) {
+                controller.model().setPos1(pos);
+                mc.player.sendOverlayMessage(Component.literal("§a[TFB] POS1 set to (" + pos.x() + ", " + pos.y() + ", " + pos.z() + ")"));
+                return true;
+            } else if (button == 1) {
+                controller.model().setPos2(pos);
+                ArchitectWorkspaceModel m = controller.model();
+                mc.player.sendOverlayMessage(Component.literal("§6[TFB] POS2 set to (" + pos.x() + ", " + pos.y() + ", " + pos.z() + ") §8| §b" + m.width() + "x" + m.height() + "x" + m.depth()));
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static void executeBuild(Minecraft mc) {
         Level level = mc.level;
         if (level == null || mc.player == null) return;
