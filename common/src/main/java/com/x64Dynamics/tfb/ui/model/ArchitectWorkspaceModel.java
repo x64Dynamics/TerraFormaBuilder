@@ -89,10 +89,14 @@ public class ArchitectWorkspaceModel {
     private float proceduralVariation = 0.15f;
     private long proceduralSeed = 42L;
 
-    // Interior
+    // Interior & Home Builder summary
     private boolean enableInteriors = true;
     private boolean furnishRooms = true;
     private float furnishingDensity = 1.0f;
+    private int requestedStories = 0; // 0 = auto
+    private boolean addPorchAndGarden = true;
+    private int generatedStories = 1;
+    private int generatedRoomCount = 1;
 
     // Construction state
     private boolean instantBuild = false;
@@ -355,6 +359,19 @@ public class ArchitectWorkspaceModel {
         return PaletteHarmonizer.scoreHarmony(activePalette);
     }
 
+    public int requestedStories() { return requestedStories; }
+    public void setRequestedStories(int stories) { this.requestedStories = Math.max(0, Math.min(4, stories)); generatePreview(); }
+
+    public boolean addPorchAndGarden() { return addPorchAndGarden; }
+    public void setAddPorchAndGarden(boolean porch) { this.addPorchAndGarden = porch; generatePreview(); }
+
+    public int generatedStories() { return generatedStories; }
+    public int generatedRoomCount() { return generatedRoomCount; }
+
+    public long proceduralSeed() { return proceduralSeed; }
+    public void setProceduralSeed(long seed) { this.proceduralSeed = seed; generatePreview(); }
+    public void randomizeSeed() { this.proceduralSeed = (this.proceduralSeed * 6364136223846793005L + 1442695040888963407L) & 0x7FFFFFFFL; generatePreview(); }
+
     public List<PlacementTarget> cachedPreviewTargets() { return cachedPreviewTargets; }
     public ProgressiveBuildPlan cachedBuildPlan() { return cachedBuildPlan; }
     public int totalBlockCount() { return cachedPreviewTargets.size(); }
@@ -363,78 +380,106 @@ public class ArchitectWorkspaceModel {
         List<PlacementTarget> targets = new ArrayList<>();
         BoundingBox3i box = boundingBox();
 
-        // 1. Primary generation: Wing Compound or standard brush
-        if (activeCategory == BrushCategory.ARCHITECTURAL && wingConfiguration != WingConfiguration.SINGLE_RECTANGLE) {
-            ParametricFootprint footprint = ParametricFootprint.create(box, wingConfiguration);
-            targets.addAll(WingLayoutGenerator.generateWingCompound(footprint, roofShape, activePalette));
-        } else {
-            List<Vec3i> pathPts = Collections.emptyList();
-            if (selectionManager.pos1() != null && selectionManager.pos2() != null) {
-                pathPts = List.of(selectionManager.pos1(), selectionManager.pos2());
-            }
-            BrushContext ctx = new BrushContext(box, pathPts, activePalette, null, foundationStrategy, Collections.emptyMap());
-            if (activeBrush != null) {
-                targets.addAll(activeBrush.generate(ctx));
-            }
-        }
+        boolean isUnifiedHome = (activeBrush instanceof ArchitecturalBrushes.HouseBrush)
+            && wingConfiguration == WingConfiguration.SINGLE_RECTANGLE;
 
-        // 2. Facade detailing & ornaments
-        if (activeCategory == BrushCategory.ARCHITECTURAL && width >= 7 && depth >= 7) {
-            if (addPilasters) {
-                targets.addAll(FacadeOrnamentGenerator.generatePilasters(box, Direction.SOUTH, 4, activePalette));
-            }
-            if (addWindowShutters) {
-                Vec3i winCenter = new Vec3i(box.min().x() + width / 2, box.min().y() + 2, box.max().z());
-                targets.addAll(FacadeOrnamentGenerator.addWindowShuttersAndFlowerBox(winCenter, Direction.SOUTH, 1, 2, activePalette));
-            }
-            if (addBalconies && height >= 8) {
-                Vec3i doorCenter = new Vec3i(box.min().x() + width / 2, box.min().y() + 4, box.max().z());
-                targets.addAll(FacadeOrnamentGenerator.generateBalcony(doorCenter, Direction.SOUTH, 3, 2, activePalette));
-            }
-            if (addDormers && height >= 7) {
-                Vec3i dormerPos = new Vec3i(box.min().x() + width / 2, box.max().y() - 2, box.max().z());
-                targets.addAll(AdvancedRoofFeatures.generateDormer(dormerPos, Direction.SOUTH, 3, 3, activePalette));
-            }
-            if (addChimney) {
-                Vec3i chimneyPos = new Vec3i(box.max().x() - 2, box.max().y() - 1, box.max().z() - 2);
-                targets.addAll(AdvancedRoofFeatures.generateChimney(chimneyPos, 4, activePalette));
-            }
-            if (addCornice) {
-                targets.addAll(LayeredFacadeComposer.generateCorniceTrim(box, activePalette));
-            }
-        }
-
-        // 3. Multi-Story Interior rooms & furnishings
-        if (enableInteriors && activeCategory == BrushCategory.ARCHITECTURAL && width >= 8 && depth >= 8 && height >= 5) {
-            int storyHeight = 4;
-            int numStories = Math.max(1, (height - 2) / storyHeight);
-
-            for (int s = 0; s < numStories; s++) {
-                int floorY = box.min().y() + 1 + (s * storyHeight);
-                int ceilingY = Math.min(box.max().y() - 1, floorY + storyHeight - 1);
-                if (ceilingY <= floorY) continue;
-
-                if (s > 0) {
-                    BoundingBox3i floorBounds = BoundingBox3i.fromCorners(
-                        new Vec3i(box.min().x() + 1, floorY - 1, box.min().z() + 1),
-                        new Vec3i(box.max().x() - 1, floorY - 1, box.max().z() - 1)
-                    );
-                    targets.addAll(FloorGenerator.generateFloor(floorBounds, floorY - 1, true, activePalette));
-                }
-
-                BoundingBox3i storyBox = BoundingBox3i.fromCorners(
-                    new Vec3i(box.min().x() + 1, floorY, box.min().z() + 1),
-                    new Vec3i(box.max().x() - 1, ceilingY, box.max().z() - 1)
+        if (isUnifiedHome) {
+            com.x64Dynamics.tfb.architectural.IntelligentHomeGenerator.HomeConfig homeCfg =
+                new com.x64Dynamics.tfb.architectural.IntelligentHomeGenerator.HomeConfig(
+                    box,
+                    activePalette,
+                    roofShape,
+                    requestedStories,
+                    wingConfiguration,
+                    addPorchAndGarden,
+                    addChimney,
+                    enableInteriors && furnishRooms,
+                    furnishingDensity,
+                    proceduralSeed
                 );
+            com.x64Dynamics.tfb.architectural.IntelligentHomeGenerator.HomeGenerationResult res =
+                com.x64Dynamics.tfb.architectural.IntelligentHomeGenerator.generateHome(homeCfg);
+            targets.addAll(res.targets());
+            this.generatedStories = res.stories();
+            this.generatedRoomCount = res.roomCount();
+        } else {
+            // 1. Primary generation: Wing Compound or standard brush
+            if (activeCategory == BrushCategory.ARCHITECTURAL && wingConfiguration != WingConfiguration.SINGLE_RECTANGLE) {
+                ParametricFootprint footprint = ParametricFootprint.create(box, wingConfiguration);
+                targets.addAll(WingLayoutGenerator.generateWingCompound(footprint, roofShape, activePalette));
+            } else {
+                List<Vec3i> pathPts = Collections.emptyList();
+                if (selectionManager.pos1() != null && selectionManager.pos2() != null) {
+                    pathPts = List.of(selectionManager.pos1(), selectionManager.pos2());
+                }
+                BrushContext ctx = new BrushContext(box, pathPts, activePalette, null, foundationStrategy, Collections.emptyMap());
+                if (activeBrush != null) {
+                    targets.addAll(activeBrush.generate(ctx));
+                }
+            }
 
-                InteriorFloorPlanner.FloorPlanResult floorPlan = InteriorFloorPlanner.planStory(storyBox, s, numStories, activePalette);
-                targets.addAll(floorPlan.partitionWalls());
+            // 2. Facade detailing & ornaments
+            if (activeCategory == BrushCategory.ARCHITECTURAL && width >= 7 && depth >= 7) {
+                if (addPilasters) {
+                    targets.addAll(FacadeOrnamentGenerator.generatePilasters(box, Direction.SOUTH, 4, activePalette));
+                }
+                if (addWindowShutters) {
+                    Vec3i winCenter = new Vec3i(box.min().x() + width / 2, box.min().y() + 2, box.max().z());
+                    targets.addAll(FacadeOrnamentGenerator.addWindowShuttersAndFlowerBox(winCenter, Direction.SOUTH, 1, 2, activePalette));
+                }
+                if (addBalconies && height >= 8) {
+                    Vec3i doorCenter = new Vec3i(box.min().x() + width / 2, box.min().y() + 4, box.max().z());
+                    targets.addAll(FacadeOrnamentGenerator.generateBalcony(doorCenter, Direction.SOUTH, 3, 2, activePalette));
+                }
+                if (addDormers && height >= 7) {
+                    Vec3i dormerPos = new Vec3i(box.min().x() + width / 2, box.max().y() - 2, box.max().z());
+                    targets.addAll(AdvancedRoofFeatures.generateDormer(dormerPos, Direction.SOUTH, 3, 3, activePalette));
+                }
+                if (addChimney) {
+                    Vec3i chimneyPos = new Vec3i(box.max().x() - 2, box.max().y() - 1, box.max().z() - 2);
+                    targets.addAll(AdvancedRoofFeatures.generateChimney(chimneyPos, 4, activePalette));
+                }
+                if (addCornice) {
+                    targets.addAll(LayeredFacadeComposer.generateCorniceTrim(box, activePalette));
+                }
+            }
 
-                if (furnishRooms) {
-                    for (InteriorRoom room : floorPlan.rooms()) {
-                        targets.addAll(InteriorFurnishingGenerator.furnishRoom(room, activePalette, floorPlan.transitClearanceZones(), furnishingDensity));
+            // 3. Multi-Story Interior rooms & furnishings
+            if (enableInteriors && activeCategory == BrushCategory.ARCHITECTURAL && width >= 8 && depth >= 8 && height >= 5) {
+                int storyHeight = 4;
+                int numStories = requestedStories > 0 ? Math.min(4, requestedStories) : Math.max(1, (height - 2) / storyHeight);
+                this.generatedStories = numStories;
+                int roomTotal = 0;
+
+                for (int s = 0; s < numStories; s++) {
+                    int floorY = box.min().y() + 1 + (s * storyHeight);
+                    int ceilingY = Math.min(box.max().y() - 1, floorY + storyHeight - 1);
+                    if (ceilingY <= floorY) continue;
+
+                    if (s > 0) {
+                        BoundingBox3i floorBounds = BoundingBox3i.fromCorners(
+                            new Vec3i(box.min().x() + 1, floorY - 1, box.min().z() + 1),
+                            new Vec3i(box.max().x() - 1, floorY - 1, box.max().z() - 1)
+                        );
+                        targets.addAll(FloorGenerator.generateFloor(floorBounds, floorY - 1, true, activePalette));
+                    }
+
+                    BoundingBox3i storyBox = BoundingBox3i.fromCorners(
+                        new Vec3i(box.min().x() + 1, floorY, box.min().z() + 1),
+                        new Vec3i(box.max().x() - 1, ceilingY, box.max().z() - 1)
+                    );
+
+                    InteriorFloorPlanner.FloorPlanResult floorPlan = InteriorFloorPlanner.planStory(storyBox, s, numStories, activePalette);
+                    targets.addAll(floorPlan.partitionWalls());
+                    roomTotal += floorPlan.rooms().size();
+
+                    if (furnishRooms) {
+                        for (InteriorRoom room : floorPlan.rooms()) {
+                            targets.addAll(InteriorFurnishingGenerator.furnishRoom(room, activePalette, floorPlan.transitClearanceZones(), furnishingDensity));
+                        }
                     }
                 }
+                this.generatedRoomCount = Math.max(1, roomTotal);
             }
         }
 

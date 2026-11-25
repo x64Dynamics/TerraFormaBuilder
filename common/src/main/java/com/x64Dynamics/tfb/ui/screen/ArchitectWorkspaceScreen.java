@@ -141,9 +141,9 @@ public class ArchitectWorkspaceScreen {
         widgets.add(tabBar);
 
         // 3. Left Sidebar (Category Filter & Brush List)
-        int catBtnY = headerHeight + 2;
+        int catBtnY = headerHeight + 18;
         int catBtnW = (sidebarWidth - 14) / 4;
-        int catBtnH = 18;
+        int catBtnH = 16;
 
         widgets.add(new UIButton(new UIBounds(6, catBtnY, catBtnW, catBtnH), "ALL", b -> {
             List<IConstructionBrush> list = new ArrayList<>(BrushRegistry.all());
@@ -178,7 +178,7 @@ public class ArchitectWorkspaceScreen {
             }
         }));
 
-        int brushListY = headerHeight + 24;
+        int brushListY = headerHeight + 38;
         int brushListHeight = height - brushListY - footerHeight - 4;
 
         List<IConstructionBrush> allBrushes = new ArrayList<>(BrushRegistry.all());
@@ -211,24 +211,29 @@ public class ArchitectWorkspaceScreen {
 
         switch (tab) {
             case ARCHITECTURE -> {
-                // Dimensions
-                tabWidgets.add(new UISlider(new UIBounds(contentX, contentY, contentWidth / 3 - 6, rowHeight), "Width", 3, 64, model.width(), model::setWidth));
-                tabWidgets.add(new UISlider(new UIBounds(contentX + contentWidth / 3, contentY, contentWidth / 3 - 6, rowHeight), "Height", 3, 48, model.height(), model::setHeight));
-                tabWidgets.add(new UISlider(new UIBounds(contentX + (contentWidth / 3) * 2, contentY, contentWidth / 3 - 6, rowHeight), "Depth", 3, 64, model.depth(), model::setDepth));
+                // Row 1: Essential Home Dimensions & Floors (0 = Auto)
+                tabWidgets.add(new UISlider(new UIBounds(contentX, contentY, contentWidth / 3 - 6, rowHeight), "Width", 7, 48, model.width(), model::setWidth));
+                tabWidgets.add(new UISlider(new UIBounds(contentX + contentWidth / 3, contentY, contentWidth / 3 - 6, rowHeight), "Depth", 7, 48, model.depth(), model::setDepth));
+                tabWidgets.add(new UISlider(new UIBounds(contentX + (contentWidth / 3) * 2, contentY, contentWidth / 3 - 6, rowHeight), "Floors (0=Auto)", 0, 4, model.requestedStories(), model::setRequestedStories));
 
-                // Wings & Roof
-                List<WingConfiguration> wingConfigs = Arrays.asList(WingConfiguration.values());
-                tabWidgets.add(new UIDropdown<>(new UIBounds(contentX, contentY + 28, contentWidth / 2 - 6, rowHeight), "Wing Layout", wingConfigs, wingConfigs.indexOf(model.wingConfiguration()), model::setWingConfiguration));
+                // Row 2: Style, Roof & Footprint Layout
+                List<StylePreset> styles = Arrays.asList(StylePreset.values());
+                tabWidgets.add(new UIDropdown<>(new UIBounds(contentX, contentY + 28, contentWidth / 3 - 6, rowHeight), "Style", styles, styles.indexOf(model.stylePreset()), model::setStylePreset));
 
                 List<RoofGenerator.RoofType> roofShapes = Arrays.asList(RoofGenerator.RoofType.values());
-                tabWidgets.add(new UIDropdown<>(new UIBounds(contentX + contentWidth / 2, contentY + 28, contentWidth / 2 - 6, rowHeight), "Roof Style", roofShapes, roofShapes.indexOf(model.roofShape()), model::setRoofShape));
+                tabWidgets.add(new UIDropdown<>(new UIBounds(contentX + contentWidth / 3, contentY + 28, contentWidth / 3 - 6, rowHeight), "Roof", roofShapes, roofShapes.indexOf(model.roofShape()), model::setRoofShape));
 
-                // Features toggles
-                tabWidgets.add(new UIToggleButton(new UIBounds(contentX, contentY + 56, contentWidth / 5 - 4, rowHeight), "Rhythm", model.useFacadeRhythm(), model::setUseFacadeRhythm));
-                tabWidgets.add(new UIToggleButton(new UIBounds(contentX + contentWidth / 5, contentY + 56, contentWidth / 5 - 4, rowHeight), "Pilasters", model.addPilasters(), model::setAddPilasters));
-                tabWidgets.add(new UIToggleButton(new UIBounds(contentX + (contentWidth / 5) * 2, contentY + 56, contentWidth / 5 - 4, rowHeight), "Shutters", model.addWindowShutters(), model::setAddWindowShutters));
-                tabWidgets.add(new UIToggleButton(new UIBounds(contentX + (contentWidth / 5) * 3, contentY + 56, contentWidth / 5 - 4, rowHeight), "Balconies", model.addBalconies(), model::setAddBalconies));
-                tabWidgets.add(new UIToggleButton(new UIBounds(contentX + (contentWidth / 5) * 4, contentY + 56, contentWidth / 5 - 4, rowHeight), "Dormers", model.addDormers(), model::setAddDormers));
+                List<WingConfiguration> wingConfigs = Arrays.asList(WingConfiguration.values());
+                tabWidgets.add(new UIDropdown<>(new UIBounds(contentX + (contentWidth / 3) * 2, contentY + 28, contentWidth / 3 - 6, rowHeight), "Layout", wingConfigs, wingConfigs.indexOf(model.wingConfiguration()), model::setWingConfiguration));
+
+                // Row 3: Essential Home Features & Quick Regenerate
+                tabWidgets.add(new UIToggleButton(new UIBounds(contentX, contentY + 56, contentWidth / 4 - 4, rowHeight), "Furnish", model.furnishRooms(), model::setFurnishRooms));
+                tabWidgets.add(new UIToggleButton(new UIBounds(contentX + contentWidth / 4, contentY + 56, contentWidth / 4 - 4, rowHeight), "Porch & Garden", model.addPorchAndGarden(), model::setAddPorchAndGarden));
+                tabWidgets.add(new UIToggleButton(new UIBounds(contentX + (contentWidth / 4) * 2, contentY + 56, contentWidth / 4 - 4, rowHeight), "Chimney", model.addChimney(), model::setAddChimney));
+                tabWidgets.add(new UIButton(new UIBounds(contentX + (contentWidth / 4) * 3, contentY + 56, contentWidth / 4 - 4, rowHeight), "New Variation", b -> {
+                    model.randomizeSeed();
+                    setStatus("Generated new home variation (seed " + model.proceduralSeed() + ").");
+                }));
             }
 
             case SELECTION -> {
@@ -472,16 +477,13 @@ public class ArchitectWorkspaceScreen {
         graphics.drawBorder(0, height - footerHeight, width, footerHeight, 0xFF1E293B);
 
         // 2. Header Title & Badges
-        graphics.drawText("TerraFormaBuilder", 8, 8, 0xFF38BDF8, true);
-        String sizeBadge = model.width() + "x" + model.height() + "x" + model.depth();
-        graphics.drawText("[" + sizeBadge + "]", 120, 8, 0xFF94A3B8, false);
-        graphics.drawText(model.totalBlockCount() + " blocks", 185, 8, 0xFF34D399, false);
-
-        int harmony = Math.round(model.paletteHarmonyScore() * 100);
-        graphics.drawText("Harmony: " + harmony + "%", 255, 8, 0xFFF59E0B, false);
+        graphics.drawText("TFB Home Builder", 8, 8, 0xFF38BDF8, true);
+        String sizeBadge = model.width() + "x" + model.depth() + " | " + model.generatedStories() + "F | " + model.generatedRoomCount() + "R";
+        graphics.drawText("[" + sizeBadge + "]", 112, 8, 0xFF94A3B8, false);
+        graphics.drawText(model.totalBlockCount() + " blks", 208, 8, 0xFF34D399, false);
 
         // 3. Sidebar Category Header
-        graphics.drawText("BRUSHES", 8, headerHeight + 8, 0xFF64748B, false);
+        graphics.drawText("HOME / TOOLS", 8, headerHeight + 6, 0xFF64748B, false);
 
         // 4. Render main widgets
         for (UIWidget widget : widgets) {

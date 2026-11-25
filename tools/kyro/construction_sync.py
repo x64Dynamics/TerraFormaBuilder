@@ -13,6 +13,9 @@ SERVER_BUILD_BLOCK = """            if (targets.isEmpty()) {
                 return;
             }
 
+            List<com.x64Dynamics.tfb.construction.ScheduledBlockPlacement> scheduled =
+                com.x64Dynamics.tfb.construction.DependencyAwareScheduler.scheduleWithDependencies(targets);
+
             net.minecraft.server.MinecraftServer server = mc.getSingleplayerServer();
             if (server != null) {
                 net.minecraft.server.level.ServerLevel serverLevel = server.getLevel(level.dimension());
@@ -20,7 +23,7 @@ SERVER_BUILD_BLOCK = """            if (targets.isEmpty()) {
                     server.execute(() -> {
                         int placed = 0;
                         int confirmed = 0;
-                        for (PlacementTarget target : targets) {
+                        for (com.x64Dynamics.tfb.construction.ScheduledBlockPlacement target : scheduled) {
                             Vec3i pos = target.pos();
                             BlockPos bp = new BlockPos(pos.x(), pos.y(), pos.z());
                             BlockState state = BlockStateParser.parse(target.block());

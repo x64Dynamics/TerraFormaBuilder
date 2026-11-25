@@ -24,6 +24,7 @@ public final class Entrypoint {
 
         IPlatformBridge bridge = new DefaultPlatformBridge("neoforge", configDir, new DefaultNetworkBridge(), new DefaultLevelAccess());
         TerraFormaBuilder.initializeWithBridge(bridge);
+        BlockRegistryScanner.scanIfNeeded();
 
         if (FMLEnvironment.dist == Dist.CLIENT) {
             LOGGER.info(String.format("[%s] Initializing client subsystems on NeoForge (Preview renderer, Workspace UI, Keybindings)",

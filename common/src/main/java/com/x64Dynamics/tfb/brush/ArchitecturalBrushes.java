@@ -37,40 +37,30 @@ public final class ArchitecturalBrushes {
         public BrushCategory category() { return BrushCategory.ARCHITECTURAL; }
 
         public List<PlacementTarget> generate(BrushContext context) {
-            List<PlacementTarget> targets = new ArrayList<>();
             BoundingBox3i bounds = context.bounds();
             MaterialPalette palette = context.palette();
+            int stories = context.getProperty("stories", 0);
+            boolean furnish = context.getProperty("furnish", true);
+            boolean porch = context.getProperty("porch", true);
+            boolean chimney = context.getProperty("chimney", true);
+            float density = context.getProperty("density", 1.0f);
+            long seed = context.getProperty("seed", 42L);
 
-            int roofHeight = Math.max(3, bounds.sizeY() / 3);
-            int wallHeight = Math.max(3, bounds.sizeY() - roofHeight);
-            BoundingBox3i wallBounds = BoundingBox3i.fromOriginAndSize(bounds.min(), bounds.sizeX(), wallHeight, bounds.sizeZ());
-            BoundingBox3i roofBounds = BoundingBox3i.fromOriginAndSize(bounds.min().add(0, wallHeight, 0), bounds.sizeX(), roofHeight, bounds.sizeZ());
-
-            // 1. Foundation / Ground Floor
-            targets.addAll(FloorGenerator.generateFloor(wallBounds, wallBounds.min().y(), true, palette));
-
-            // 2. Composed 3D Architectural Facades (Pillars, Plinths, Window Bays, Doorway, Cornice)
-            int minX = wallBounds.min().x(), maxX = wallBounds.max().x();
-            int minZ = wallBounds.min().z(), maxZ = wallBounds.max().z();
-            int y = wallBounds.min().y();
-            int lenX = wallBounds.sizeX();
-            int lenZ = wallBounds.sizeZ();
-
-            // South facade (Entrance door & framed windows)
-            targets.addAll(WallSegmentationEngine.composeFacade(new Vec3i(minX, y, maxZ), Direction.EAST, Direction.SOUTH, lenX, wallHeight, true, palette));
-            // North facade (Windows & rhythm pillars)
-            targets.addAll(WallSegmentationEngine.composeFacade(new Vec3i(maxX, y, minZ), Direction.WEST, Direction.NORTH, lenX, wallHeight, false, palette));
-            // East facade (Side windows)
-            targets.addAll(WallSegmentationEngine.composeFacade(new Vec3i(maxX, y, maxZ), Direction.NORTH, Direction.EAST, lenZ, wallHeight, false, palette));
-            // West facade (Side windows)
-            targets.addAll(WallSegmentationEngine.composeFacade(new Vec3i(minX, y, minZ), Direction.SOUTH, Direction.WEST, lenZ, wallHeight, false, palette));
-
-            // 3. Roof aligned to dominant axis with filled gable pediments
-            Axis ridgeAxis = (bounds.sizeX() >= bounds.sizeZ()) ? Axis.X : Axis.Z;
-            targets.addAll(RoofGenerator.generateRoof(roofBounds, RoofGenerator.RoofType.GABLE, ridgeAxis, 1, palette));
-
+            IntelligentHomeGenerator.HomeConfig config = new IntelligentHomeGenerator.HomeConfig(
+                bounds,
+                palette,
+                RoofGenerator.RoofType.GABLE,
+                stories,
+                WingConfiguration.SINGLE_RECTANGLE,
+                porch,
+                chimney,
+                furnish,
+                density,
+                seed
+            );
+            List<PlacementTarget> targets = new ArrayList<>(IntelligentHomeGenerator.generateHome(config).targets());
             if (context.heightmap() != null) {
-                targets.addAll(TerrainAdapter.adapt(wallBounds, context.heightmap(), context.foundationStrategy(), palette).foundationPlacements());
+                targets.addAll(TerrainAdapter.adapt(bounds, context.heightmap(), context.foundationStrategy(), palette).foundationPlacements());
             }
             return targets;
         }

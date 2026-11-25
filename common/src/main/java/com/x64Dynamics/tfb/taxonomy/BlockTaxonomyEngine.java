@@ -8,27 +8,44 @@ public final class BlockTaxonomyEngine {
     private BlockTaxonomyEngine() { }
 
     public static BlockTaxonomyEntry analyze(BlockIdentifier block) {
+        return analyze(block, EnumSet.noneOf(BlockTrait.class), Collections.emptySet(), 0);
+    }
+
+    public static BlockTaxonomyEntry analyze(
+        BlockIdentifier block,
+        Set<BlockTrait> discoveredTraits,
+        Set<String> propertyNames,
+        int discoveredLuminance
+    ) {
         String path = block.path().toLowerCase(Locale.ROOT);
         EnumSet<BlockTrait> traits = EnumSet.noneOf(BlockTrait.class);
+        if (discoveredTraits != null) {
+            traits.addAll(discoveredTraits);
+        }
 
-        // Detect structural traits
-        if (path.contains("stairs")) traits.add(BlockTrait.STAIR);
-        else if (path.contains("slab")) traits.add(BlockTrait.SLAB);
-        else if (path.contains("wall")) traits.add(BlockTrait.WALL);
-        else if (path.contains("fence_gate")) traits.add(BlockTrait.FENCE_GATE);
-        else if (path.contains("fence")) traits.add(BlockTrait.FENCE);
-        else if (path.contains("door") && !path.contains("trapdoor")) traits.add(BlockTrait.DOOR);
-        else if (path.contains("trapdoor")) traits.add(BlockTrait.TRAPDOOR);
-        else if (path.contains("pillar") || path.endsWith("_log") || path.endsWith("_wood") || path.endsWith("_stem")) traits.add(BlockTrait.PILLAR);
-        else if (path.contains("pane")) traits.add(BlockTrait.GLASS_PANE);
-        else if (path.contains("lantern")) { traits.add(BlockTrait.LANTERN); traits.add(BlockTrait.LIGHT_EMITTING); }
-        else if (path.contains("torch")) { traits.add(BlockTrait.TORCH); traits.add(BlockTrait.LIGHT_EMITTING); }
-        else if (path.contains("carpet")) traits.add(BlockTrait.CARPET);
-        else traits.add(BlockTrait.SOLID_CUBE);
+        // Detect structural traits from path if not already provided by runtime class inspection
+        if (traits.isEmpty() || (traits.size() == 1 && traits.contains(BlockTrait.WATERLOGGABLE))) {
+            if (path.contains("stairs")) traits.add(BlockTrait.STAIR);
+            else if (path.contains("slab")) traits.add(BlockTrait.SLAB);
+            else if (path.contains("wall") && !path.contains("wall_torch") && !path.contains("wall_sign")) traits.add(BlockTrait.WALL);
+            else if (path.contains("fence_gate")) traits.add(BlockTrait.FENCE_GATE);
+            else if (path.contains("fence")) traits.add(BlockTrait.FENCE);
+            else if (path.contains("door") && !path.contains("trapdoor")) traits.add(BlockTrait.DOOR);
+            else if (path.contains("trapdoor")) traits.add(BlockTrait.TRAPDOOR);
+            else if (path.contains("pillar") || path.endsWith("_log") || path.endsWith("_wood") || path.endsWith("_stem") || path.endsWith("_hyphae")) traits.add(BlockTrait.PILLAR);
+            else if (path.contains("pane") || path.contains("iron_bars")) traits.add(BlockTrait.GLASS_PANE);
+            else if (path.contains("lantern")) { traits.add(BlockTrait.LANTERN); traits.add(BlockTrait.LIGHT_EMITTING); }
+            else if (path.contains("torch")) { traits.add(BlockTrait.TORCH); traits.add(BlockTrait.LIGHT_EMITTING); }
+            else if (path.contains("carpet")) traits.add(BlockTrait.CARPET);
+            else traits.add(BlockTrait.SOLID_CUBE);
+        }
 
         // Waterloggable check
-        if (block.property("waterlogged") != null) {
+        if (block.property("waterlogged") != null || (propertyNames != null && propertyNames.contains("waterlogged"))) {
             traits.add(BlockTrait.WATERLOGGABLE);
+        }
+        if (propertyNames != null && (propertyNames.contains("open") || propertyNames.contains("powered"))) {
+            traits.add(BlockTrait.INTERACTABLE);
         }
 
         // Detect substance
@@ -38,7 +55,10 @@ public final class BlockTaxonomyEngine {
         ColorTone primaryTone = inferPrimaryTone(path, substance);
         ColorTone accentTone = primaryTone.complementary();
 
-        int luminance = traits.contains(BlockTrait.LIGHT_EMITTING) ? 15 : 0;
+        int luminance = discoveredLuminance > 0 ? discoveredLuminance : (traits.contains(BlockTrait.LIGHT_EMITTING) ? 15 : 0);
+        if (luminance > 0) {
+            traits.add(BlockTrait.LIGHT_EMITTING);
+        }
 
         return new BlockTaxonomyEntry(block, traits, substance, primaryTone, accentTone, luminance);
     }

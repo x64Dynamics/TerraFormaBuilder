@@ -8,12 +8,12 @@ public final class StyleRuleSetRegistry {
     public static ArchitecturalStyleRuleSet forPreset(StylePreset preset) {
         if (preset == null) return ArchitecturalStyleRuleSet.MEDIEVAL;
         return switch (preset) {
-            case MEDIEVAL -> ArchitecturalStyleRuleSet.MEDIEVAL;
+            case MEDIEVAL, GOTHIC -> ArchitecturalStyleRuleSet.MEDIEVAL;
             case MODERN -> ArchitecturalStyleRuleSet.MODERN;
-            case RUSTIC -> ArchitecturalStyleRuleSet.RUSTIC;
+            case RUSTIC, NORDIC -> ArchitecturalStyleRuleSet.RUSTIC;
             case FANTASY -> ArchitecturalStyleRuleSet.FANTASY;
             case INDUSTRIAL -> ArchitecturalStyleRuleSet.INDUSTRIAL;
-            case TRADITIONAL -> ArchitecturalStyleRuleSet.TRADITIONAL;
+            case TRADITIONAL, JAPANESE, VICTORIAN, CLASSICAL -> ArchitecturalStyleRuleSet.TRADITIONAL;
             case MINIMALIST -> ArchitecturalStyleRuleSet.MINIMALIST;
         };
     }

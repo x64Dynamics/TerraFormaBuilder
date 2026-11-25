@@ -38,9 +38,30 @@ public final class BlockTaxonomyRegistry {
         if (cached != null) return cached;
 
         BlockTaxonomyEntry entry = BlockTaxonomyEngine.analyze(block);
-        cache.put(key, entry);
-        bySubstance.get(entry.substance()).add(entry);
-        byTone.get(entry.primaryTone()).add(entry);
+        return putEntry(key, entry);
+    }
+
+    public synchronized BlockTaxonomyEntry registerDiscovered(
+        BlockIdentifier block,
+        Set<BlockTrait> traits,
+        Set<String> propertyNames,
+        int luminance
+    ) {
+        String key = block.asString();
+        BlockTaxonomyEntry entry = BlockTaxonomyEngine.analyze(block, traits, propertyNames, luminance);
+        return putEntry(key, entry);
+    }
+
+    public boolean contains(String namespacedId) {
+        return cache.containsKey(namespacedId);
+    }
+
+    private BlockTaxonomyEntry putEntry(String key, BlockTaxonomyEntry entry) {
+        BlockTaxonomyEntry existing = cache.put(key, entry);
+        if (existing == null) {
+            bySubstance.get(entry.substance()).add(entry);
+            byTone.get(entry.primaryTone()).add(entry);
+        }
         return entry;
     }
 
