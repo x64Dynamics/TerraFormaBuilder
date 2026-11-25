@@ -31,42 +31,26 @@ public final class ArchitectHudRenderer {
         if (controller.isStudioBannerVisible()) {
             int bannerX = 8;
             int bannerY = 8;
-            int bannerWidth = Math.min(420, screenWidth - 16);
-            int bannerHeight = 54;
+            int bannerWidth = Math.min(280, screenWidth - 16);
+            int bannerHeight = 38;
 
             g.fill(bannerX, bannerY, bannerX + bannerWidth, bannerY + bannerHeight, 0xD80B132B);
             drawBorder(g, bannerX, bannerY, bannerWidth, bannerHeight, 0xFF1E293B);
 
-            String pageName = BuilderHotbarModel.PAGE_NAMES[hotbarModel.getActivePage()];
-            String title = "§b§lTERRAFORMABUILDER §8| §fArchitect Mode §a● ACTIVE §8| §ePg " + (hotbarModel.getActivePage() + 1) + "/4: " + pageName;
-            g.drawString(mc.font, title, bannerX + 6, bannerY + 5, 0xFFFFFFFF, true);
-
             BuilderHotbarSlot activeSlot = hotbarModel.getActiveSlotData();
             String toolName = activeSlot != null ? activeSlot.name() : "None";
             Vec3i origin = workspaceModel.origin();
-            String row1 = "§7Tool: §f" + toolName + " §8| §7Size: §b" + workspaceModel.width() + "x" + workspaceModel.height() + "x" + workspaceModel.depth() +
-                          " §8| §7Pos: §e(" + origin.x() + "," + origin.y() + "," + origin.z() + ")" +
-                          " §8| §7Rot: §6" + workspaceModel.rotation().name();
-            g.drawString(mc.font, row1, bannerX + 6, bannerY + 18, 0xFFFFFFFF, false);
-
             String flightStatus = controller.isFlightActive() ? "§aON" : "§cOFF";
-            String previewStatus = controller.isPreviewActive() ? "§aON" : "§cOFF";
-            String row2 = "§7Flight: " + flightStatus + " §8| §7Speed: §e" + String.format("%.1fx", controller.getFlightSpeed()) +
-                          " §8| §7Snap: §f" + workspaceModel.selectionManager().gridSnap() +
-                          " §8| §7Style: §d" + workspaceModel.stylePreset().displayName() +
-                          " §8| §7Blocks: §a" + workspaceModel.totalBlockCount() +
-                          " §8| §7[B] Workspace";
-            g.drawString(mc.font, row2, bannerX + 6, bannerY + 29, 0xFFFFFFFF, false);
-
-            String hint = "§6▶ §f" + hotbarModel.getContextualHint();
-            g.drawString(mc.font, hint, bannerX + 6, bannerY + 41, 0xFFFFFFFF, false);
-        }
+            String title = "§b§lTFB §8| §f" + toolName + " §8| §b" + workspaceModel.width() + "x" + workspaceModel.height() + "x" + workspaceModel.depth() + " §8| §d" + workspaceModel.stylePreset().displayName();
+                                    String row1 = "§7Pos: " + "§e(" + origin.x() + "," + origin.y() + "," + origin.z() + ")" + " §8| §7Blocks: §a" + workspaceModel.totalBlockCount() + " §8| §7Flight: " + flightStatus;
+                                    String hint = "§6▶ §f" + hotbarModel.getContextualHint();
+                                }
 
         if (workspaceModel.isShapeEditorMode() && controller.isStudioBannerVisible()) {
             String sid = workspaceModel.selectedSectionId() != null ? workspaceModel.selectedSectionId() : "none";
             String tool = workspaceModel.activeSculptTool().name();
             String secInfo = "§aSculpt: §e" + tool + " §8| §7Section: §b" + sid + " §8| §7Sections: §f" + workspaceModel.activeArchProject().sections().size();
-            g.drawString(mc.font, secInfo, 14, 66, 0xFFFFFFFF, false);
+            g.drawString(mc.font, secInfo, 10, 50, 0xFFFFFFFF, false);
         }
 
         // 2. Bottom Dedicated Builder Hotbar
@@ -74,7 +58,7 @@ public final class ArchitectHudRenderer {
             int hotbarWidth = 202;
             int hotbarX = (screenWidth - hotbarWidth) / 2;
             int hotbarY = screenHeight - 26;
-            int pageBarY = hotbarY - 14;
+            int pageBarY = hotbarY - 16;
 
             // Page Indicator Tabs
             g.fill(hotbarX, pageBarY, hotbarX + hotbarWidth, hotbarY - 2, 0xD00F172A);
@@ -126,7 +110,7 @@ public final class ArchitectHudRenderer {
                 int textWidth = mc.font.width(tip);
                 int tipWidth = textWidth + 28;
                 int tipX = Math.max(hotbarX, Math.min(screenWidth - tipWidth - 4, hotbarX + 3 + hotbarModel.getActiveSlot() * 22 - (tipWidth - 20) / 2));
-                int tipY = pageBarY - 18;
+                int tipY = pageBarY - 20;
 
                 g.fill(tipX, tipY, tipX + tipWidth, tipY + 16, 0xEE0F172A);
                 drawBorder(g, tipX, tipY, tipWidth, 16, 0xFF38BDF8);
