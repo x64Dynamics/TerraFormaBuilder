@@ -24,15 +24,33 @@ def inventory():
 
 def selected(arguments):
     mc, loader = '1.20.1', 'fabric'
-    for argument in arguments:
-        if argument.startswith('-Pmc='): mc = argument.partition('=')[2]
-        if argument.startswith('-Ploader='): loader = argument.partition('=')[2]
+    for i, argument in enumerate(arguments):
+        if argument.startswith('-Pmc='):
+            mc = argument.partition('=')[2]
+            if i + 1 < len(arguments) and arguments[i + 1].startswith('.'):
+                mc += arguments[i + 1]
+        if argument.startswith('-Ploader='):
+            loader = argument.partition('=')[2]
     target = next((t for t in inventory() if t['minecraft'] == mc), None)
     if target is None or loader not in target['loaders']:
         raise ValueError(f'Unavailable target: {mc}/{loader}. Run: python tools/kyro/template.py list')
     return mc, loader, properties(ROOT / 'properties' / f'{mc}.properties')
 
+def sanitize_arguments(arguments):
+    res = []
+    i = 0
+    while i < len(arguments):
+        arg = arguments[i]
+        if arg.startswith('-Pmc=') and i + 1 < len(arguments) and arguments[i + 1].startswith('.'):
+            res.append(arg + arguments[i + 1])
+            i += 2
+        else:
+            res.append(arg)
+            i += 1
+    return res
+
 def gradle(arguments):
+    arguments = sanitize_arguments(arguments)
     if '-Pcore=true' in arguments:
         mc, loader, pins, profile = 'core','core',{},'forge'
     else:
@@ -59,7 +77,7 @@ def gradle(arguments):
     if java_home: env['JAVA_HOME'] = java_home
     project_root = ROOT / '.gradle/build-roots' / mc / loader
     project_root.mkdir(parents=True,exist_ok=True)
-    (project_root / 'settings.gradle').write_text("rootProject.name = 'minecraft-mod-template'\n",encoding='utf-8')
+    (project_root / 'settings.gradle').write_text("rootProject.name = 'TerraFormaBuilder'\n",encoding='utf-8')
     (project_root / 'build.gradle').write_bytes((ROOT / 'build-logic/target.gradle').read_bytes())
     (project_root / 'gradle.properties').write_bytes((ROOT / 'gradle.properties').read_bytes())
     command = [str(executable),'-classpath',str(jar),'org.gradle.wrapper.GradleWrapperMain','-p',str(project_root),f'-PtemplateRoot={ROOT}',*arguments]
@@ -119,7 +137,7 @@ def validate():
                 source_package = re.search(r'package\s+([\w.]+);',text)[1]
                 classes.append(source_package+'.'+source.stem)
             assert len(classes) == len(set(classes)), f'Duplicate classes: {mc}/{loader}'
-            assert (base / 'java' / package_path / loader / 'Entrypoint.java').is_file()
+            assert (base / 'java' / package_path / 'Entrypoint.java').is_file()
             resource_paths = set()
             for resource_root in [ROOT / 'common/src/main/resources', ROOT / 'versions' / mc / 'common/src/main/resources',base / 'resources']:
                 for file in resource_root.rglob('*'):
@@ -129,7 +147,7 @@ def validate():
                         resource_paths.add(relative)
             if loader == 'fabric':
                 data = json.loads((base / 'resources/fabric.mod.json').read_text())
-                assert data['entrypoints']['main'] == [package+'.fabric.Entrypoint']
+                assert data['entrypoints']['main'] == [package+'.Entrypoint']
             else:
                 import tomllib
                 metadata_file = next((base / 'resources/META-INF').glob('*.toml'))

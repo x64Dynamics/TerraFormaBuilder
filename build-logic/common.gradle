@@ -36,6 +36,14 @@ tasks.withType(JavaExec).configureEach {
     }
     if (name == 'runClient') {
         systemProperty 'org.lwjgl.system.SharedLibraryExtractPath', new File(templateRunRoot,"${targetMinecraft}/${targetLoader}/client/natives").absolutePath
+        systemProperty 'org.lwjgl.opengl.Display.preferDedicatedGpu', 'true'
+        systemProperty 'sun.java2d.opengl', 'true'
+        systemProperty 'minecraft.preferDedicatedGpu', 'true'
+        if (project.findProperty('smokeTest') != 'true') {
+            minHeapSize = '1024m'
+            maxHeapSize = '3072m'
+            jvmArgs '-XX:+UnlockExperimentalVMOptions', '-XX:+UseG1GC', '-XX:G1NewSizePercent=20', '-XX:G1ReservePercent=20', '-XX:MaxGCPauseMillis=50'
+        }
     }
     if (project.findProperty('smokeTest') == 'true' && name in ['runClient','runServer']) {
         maxHeapSize = '1536m'

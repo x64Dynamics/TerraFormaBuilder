@@ -58,7 +58,8 @@ def client(mc, loader, run_root, reports, timeout):
                          'Error during mod loading', 'ModLoadingException',
                          'Encountered an unexpected exception')
                 assert not any(marker in text for marker in fatal), 'Fatal client loading error in log'
-                initialized = f'{metadata["mod.name"]} initialized on {loader}' in text
+                initialized = (f'{metadata["mod.name"]} initialized on {loader}' in text
+                               or f'{metadata["mod.name"]} fully initialized with bridge on {loader}' in text)
                 audio = 'OpenAL initialized' in text or 'Sound engine started' in text
                 textures = 'Created:' in text and 'atlas' in text
                 if initialized and audio and textures:
@@ -186,7 +187,8 @@ def server(mc, loader, run_root, reports, timeout, stop_method='rcon'):
             config = game / 'config' / (metadata['mod.id'] + '.json')
             assert started, 'Server never reached world-ready state'
             assert process.returncode == 0, f'Launch exited {process.returncode}'
-            assert f'{metadata["mod.name"]} initialized on {loader}' in text, 'Shared initializer was not executed'
+            assert (f'{metadata["mod.name"]} initialized on {loader}' in text
+                    or f'{metadata["mod.name"]} fully initialized with bridge on {loader}' in text), 'Shared initializer was not executed'
             assert json.loads(config.read_text())['enabled'] is True, 'Shared JSON config missing'
             assert 'Stopping server' in text, 'Graceful shutdown not observed'
             result.update(status='runtime-verified', exit_code=process.returncode)

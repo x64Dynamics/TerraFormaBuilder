@@ -35,9 +35,17 @@ if (targetPins.getProperty('forge.gradle').startsWith('7.')) {
         }
         runs {
             configureEach {
-                workingDir = new File(templateRunRoot,"${targetMinecraft}/forge/${name}")
+                mods {
+                    create(modMetadata.getProperty('mod.id')) {
+                        source project.sourceSets.main
+                    }
+                }
+                workingDir.set(new File(templateRunRoot,"${targetMinecraft}/forge/${name}"))
                 if (name == 'client') {
                     systemProperty 'org.lwjgl.system.SharedLibraryExtractPath', new File(templateRunRoot,"${targetMinecraft}/forge/client/natives").absolutePath
+                    systemProperty 'org.lwjgl.opengl.Display.preferDedicatedGpu', 'true'
+                    systemProperty 'sun.java2d.opengl', 'true'
+                    systemProperty 'minecraft.preferDedicatedGpu', 'true'
                 }
                 if (project.findProperty('smokeTest') == 'true') {
                     maxHeapSize = '1536m'

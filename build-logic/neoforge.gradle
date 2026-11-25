@@ -4,7 +4,13 @@ if (targetPins.getProperty('neoforge.plugin') == 'net.neoforged.moddev') {
     neoForge {
         version = targetPins.getProperty('neoforge.version')
         runs {
-            client { client(); gameDirectory = new File(templateRunRoot,"${targetMinecraft}/neoforge/client") }
+            client {
+                client()
+                gameDirectory = new File(templateRunRoot,"${targetMinecraft}/neoforge/client")
+                systemProperty 'org.lwjgl.opengl.Display.preferDedicatedGpu', 'true'
+                systemProperty 'sun.java2d.opengl', 'true'
+                systemProperty 'minecraft.preferDedicatedGpu', 'true'
+            }
             server { server(); gameDirectory = new File(templateRunRoot,"${targetMinecraft}/neoforge/server") }
         }
         mods { terraformabuilder { sourceSet sourceSets.main } }

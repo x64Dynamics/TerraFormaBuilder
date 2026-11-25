@@ -12,7 +12,14 @@ dependencies {
 }
 loom {
     runs {
-        client { client(); runDir(new File(templateRunRoot,"${targetMinecraft}/fabric/client").absolutePath) }
-        server { server(); runDir(new File(templateRunRoot,"${targetMinecraft}/fabric/server").absolutePath) }
+        client {
+            client()
+            runDir(new File(templateRunRoot,"${targetMinecraft}/fabric/client").absolutePath)
+            vmArgs "-Dorg.lwjgl.opengl.Display.preferDedicatedGpu=true", "-Dsun.java2d.opengl=true", "-Dminecraft.preferDedicatedGpu=true"
+        }
+        server {
+            server()
+            runDir(new File(templateRunRoot,"${targetMinecraft}/fabric/server").absolutePath)
+        }
     }
 }

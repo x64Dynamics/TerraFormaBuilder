@@ -85,7 +85,7 @@ def scaffold(version, loader):
   "description": "${mod_description}",
   "license": "${mod_license}",
   "environment": "*",
-  "entrypoints": { "main": ["dev.example.examplemod.fabric.Entrypoint"] },
+  "entrypoints": { "main": ["dev.example.examplemod.Entrypoint"] },
   "depends": { "fabricloader": ">=${loader_version}", "minecraft": "${minecraft_version}", "java": ">=${java_release}" }
 }
 '''

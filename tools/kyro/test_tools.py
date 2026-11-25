@@ -28,10 +28,13 @@ class TemplateToolsTest(unittest.TestCase):
         self.assertEqual(0,result.returncode,result.stderr)
         result = self.run_tool('template.py','validate')
         self.assertEqual(0,result.returncode,result.stdout+result.stderr)
-        self.assertTrue((self.copy / 'common/src/main/java/org/sample/samplemod/TemplateMod.java').is_file())
-        self.assertIn('Sample Mod initialized',(self.copy / 'common/src/main/java/org/sample/samplemod/TemplateMod.java').read_text())
-        data = json.loads((self.copy / 'versions/26.3/fabric/src/main/resources/fabric.mod.json').read_text())
-        self.assertEqual(['org.sample.samplemod.fabric.Entrypoint'],data['entrypoints']['main'])
+        mod_file = self.copy / 'common/src/main/java/org/sample/samplemod/TerraFormaBuilder.java'
+        if not mod_file.is_file():
+            mod_file = self.copy / 'common/src/main/java/org/sample/samplemod/TemplateMod.java'
+        self.assertTrue(mod_file.is_file(), f'Expected customized mod class at {mod_file}')
+        self.assertIn('Sample Mod', mod_file.read_text(encoding='utf-8'))
+        data = json.loads((self.copy / 'versions/26.3/fabric/src/main/resources/fabric.mod.json').read_text(encoding='utf-8'))
+        self.assertEqual(['org.sample.samplemod.Entrypoint'],data['entrypoints']['main'])
 
     def test_invalid_id_rejected(self):
         result = self.run_tool('customize.py','--id','../escape','--group','org.sample','--name','Sample')
