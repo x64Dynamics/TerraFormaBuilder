@@ -5,6 +5,10 @@ import java.util.*;
 public record BlockIdentifier(String namespace, String path, Map<String, String> properties) {
     public static final BlockIdentifier AIR = new BlockIdentifier("minecraft", "air", Collections.emptyMap());
 
+    public boolean isAir() {
+        return "air".equals(path) || "cave_air".equals(path) || "void_air".equals(path);
+    }
+
     public BlockIdentifier {
         properties = properties == null || properties.isEmpty() ? Collections.emptyMap() : Collections.unmodifiableMap(new LinkedHashMap<>(properties));
     }

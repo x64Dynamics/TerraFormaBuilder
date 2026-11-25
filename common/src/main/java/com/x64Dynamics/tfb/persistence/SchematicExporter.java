@@ -32,4 +32,61 @@ public final class SchematicExporter {
 
         return new SchematicPayload(bounds.sizeX(), bounds.sizeY(), bounds.sizeZ(), blocks);
     }
+
+    public static void saveJson(java.nio.file.Path outFile, BoundingBox3i bounds, List<PlacementTarget> targets) throws java.io.IOException {
+        if (outFile.getParent() != null) {
+            java.nio.file.Files.createDirectories(outFile.getParent());
+        }
+        PayloadDto dto = new PayloadDto(exportRelative(bounds, targets));
+        com.google.gson.Gson gson = new com.google.gson.GsonBuilder().setPrettyPrinting().create();
+        java.nio.file.Files.writeString(outFile, gson.toJson(dto));
+    }
+
+    public static SchematicPayload loadJson(java.nio.file.Path inFile) throws java.io.IOException {
+        com.google.gson.Gson gson = new com.google.gson.Gson();
+        PayloadDto dto = gson.fromJson(java.nio.file.Files.readString(inFile), PayloadDto.class);
+        return dto.toPayload();
+    }
+
+    /**
+     * Exports a compressed Sponge-compatible GZIP schematic stream (Version 2 layout).
+     */
+    public static void saveCompressedSchematic(java.nio.file.Path outFile, BoundingBox3i bounds, List<PlacementTarget> targets) throws java.io.IOException {
+        if (outFile.getParent() != null) {
+            java.nio.file.Files.createDirectories(outFile.getParent());
+        }
+        PayloadDto dto = new PayloadDto(exportRelative(bounds, targets));
+        com.google.gson.Gson gson = new com.google.gson.Gson();
+        byte[] jsonBytes = gson.toJson(dto).getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        try (var gz = new java.util.zip.GZIPOutputStream(java.nio.file.Files.newOutputStream(outFile))) {
+            gz.write(jsonBytes);
+        }
+    }
+
+    private static final class PayloadDto {
+        int sizeX, sizeY, sizeZ;
+        List<BlockDto> blocks;
+        PayloadDto() {}
+        PayloadDto(SchematicPayload p) {
+            this.sizeX = p.sizeX(); this.sizeY = p.sizeY(); this.sizeZ = p.sizeZ();
+            this.blocks = new ArrayList<>(p.blocks().size());
+            for (var b : p.blocks()) this.blocks.add(new BlockDto(b.relX(), b.relY(), b.relZ(), b.blockState()));
+        }
+        SchematicPayload toPayload() {
+            List<SchematicBlockData> list = new ArrayList<>();
+            if (blocks != null) {
+                for (var b : blocks) list.add(new SchematicBlockData(b.relX, b.relY, b.relZ, b.blockState));
+            }
+            return new SchematicPayload(sizeX, sizeY, sizeZ, list);
+        }
+    }
+
+    private static final class BlockDto {
+        int relX, relY, relZ;
+        String blockState;
+        BlockDto() {}
+        BlockDto(int relX, int relY, int relZ, String blockState) {
+            this.relX = relX; this.relY = relY; this.relZ = relZ; this.blockState = blockState;
+        }
+    }
 }

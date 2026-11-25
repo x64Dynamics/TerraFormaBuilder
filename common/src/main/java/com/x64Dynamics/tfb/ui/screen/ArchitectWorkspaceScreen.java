@@ -659,7 +659,11 @@ public class ArchitectWorkspaceScreen {
 
                 tabWidgets.add(new UIButton(new UIBounds(contentX + (contentWidth / 4) * 3, contentY, contentWidth / 4 - 6, rowHeight), TFBLocalization.tr("tfb.ui.save_design"), b -> {
                     try {
-                        if (model.isCityMode() && model.activeCityProject() != null) {
+                        if (model.isShapeEditorMode()) {
+                            model.activeArchProject().setName(blueprintNameField.text());
+                            com.x64Dynamics.tfb.architectural.editor.ArchitecturalProjectStorage.save(model.activeArchProject());
+                            setStatus(TFBLocalization.tr("tfb.status.saved", model.activeArchProject().name()));
+                        } else if (model.isCityMode() && model.activeCityProject() != null) {
                             model.activeCityProject().setName(blueprintNameField.text());
                             model.activeCityProject().setAuthor(blueprintAuthorField.text());
                             com.x64Dynamics.tfb.city.WorldProjectStorage.save(model.activeCityProject());

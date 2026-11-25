@@ -84,6 +84,20 @@ public final class CityPlannerEngine {
             arterialProfile, basePalette
         ));
         if (heightmap != null) {
+            if (!heightmap.isFlat()) {
+                List<TerrainRoadPathfinder.RoadNode> ewNodes = TerrainRoadPathfinder.findPath(
+                    new Vec3i(minX, y, midZ), new Vec3i(maxX, y, midZ), heightmap, y - 2, 4096
+                );
+                List<TerrainRoadPathfinder.RoadNode> nsNodes = TerrainRoadPathfinder.findPath(
+                    new Vec3i(midX, y, minZ), new Vec3i(midX, y, maxZ), heightmap, y - 2, 4096
+                );
+                if (!ewNodes.isEmpty() && !nsNodes.isEmpty()) {
+                    List<PlacementTarget> astarRoads = new ArrayList<>();
+                    astarRoads.addAll(TerrainRoadPathfinder.buildRoadTargets(ewNodes, 2, basePalette));
+                    astarRoads.addAll(TerrainRoadPathfinder.buildRoadTargets(nsNodes, 2, basePalette));
+                    roadTargets = astarRoads;
+                }
+            }
             List<PlacementTarget> gradedRoads = new ArrayList<>(roadTargets.size());
             com.x64Dynamics.tfb.material.BlockIdentifier sub = basePalette.get(com.x64Dynamics.tfb.material.MaterialRole.FOUNDATION);
             for (PlacementTarget rt : roadTargets) {
