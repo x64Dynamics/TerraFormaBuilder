@@ -176,19 +176,19 @@ public final class IntelligentHomeGenerator {
                 boolean isGround = (s == 0);
 
                 for (PlacementTarget t : WallSegmentationEngine.composeFacade(
-                    new Vec3i(minX, storyY, maxZ), Direction.EAST, Direction.SOUTH, width, storyHeight, isGround && facing == Direction.SOUTH, palette)) {
+                    new Vec3i(minX, storyY, maxZ), Direction.EAST, Direction.SOUTH, width, storyHeight, isGround && facing == Direction.SOUTH, palette, rules)) {
                     put(map, t.pos(), t.block(), t.role());
                 }
                 for (PlacementTarget t : WallSegmentationEngine.composeFacade(
-                    new Vec3i(maxX, storyY, minZ), Direction.WEST, Direction.NORTH, width, storyHeight, isGround && facing == Direction.NORTH, palette)) {
+                    new Vec3i(maxX, storyY, minZ), Direction.WEST, Direction.NORTH, width, storyHeight, isGround && facing == Direction.NORTH, palette, rules)) {
                     put(map, t.pos(), t.block(), t.role());
                 }
                 for (PlacementTarget t : WallSegmentationEngine.composeFacade(
-                    new Vec3i(maxX, storyY, maxZ), Direction.NORTH, Direction.EAST, depth, storyHeight, isGround && facing == Direction.EAST, palette)) {
+                    new Vec3i(maxX, storyY, maxZ), Direction.NORTH, Direction.EAST, depth, storyHeight, isGround && facing == Direction.EAST, palette, rules)) {
                     put(map, t.pos(), t.block(), t.role());
                 }
                 for (PlacementTarget t : WallSegmentationEngine.composeFacade(
-                    new Vec3i(minX, storyY, minZ), Direction.SOUTH, Direction.WEST, depth, storyHeight, isGround && facing == Direction.WEST, palette)) {
+                    new Vec3i(minX, storyY, minZ), Direction.SOUTH, Direction.WEST, depth, storyHeight, isGround && facing == Direction.WEST, palette, rules)) {
                     put(map, t.pos(), t.block(), t.role());
                 }
 

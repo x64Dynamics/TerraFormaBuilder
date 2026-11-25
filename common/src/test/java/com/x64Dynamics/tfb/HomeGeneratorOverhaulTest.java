@@ -79,4 +79,11 @@ public class HomeGeneratorOverhaulTest {
             assertTrue(res.targets().stream().anyMatch(t -> t.role() == MaterialRole.DOOR && t.pos().x() == 14));
         }
     }
+
+    @Test
+    public void testWallSegmentationArchedAndBalconyBays() {
+        var seg = com.x64Dynamics.tfb.architectural.WallSegmentationEngine.calculateRhythm(15, 6, false, 4, true, true);
+        assertTrue(seg.bays().stream().anyMatch(b -> b.type() == com.x64Dynamics.tfb.architectural.WallSegmentationEngine.BayType.BALCONY));
+        assertTrue(seg.bays().stream().anyMatch(b -> b.type() == com.x64Dynamics.tfb.architectural.WallSegmentationEngine.BayType.ARCHED_WINDOW));
+    }
 }

@@ -52,7 +52,11 @@ public final class SectionComposer {
         maxZ = minZ + depth - 1;
 
         int stories = section.stories();
-        int storyHeight = 4;
+        var styleRules = com.x64Dynamics.tfb.architectural.style.StyleRuleSetRegistry.forPreset(section.style());
+        int storyHeight = (section.style() == com.x64Dynamics.tfb.material.StylePreset.MODERN
+            || section.style() == com.x64Dynamics.tfb.material.StylePreset.FANTASY) ? 5 : 4;
+        int pillarStep = Math.max(3, styleRules.windowSpacing() + 1);
+        int windowStep = Math.max(2, styleRules.windowSpacing());
         int wallTopY = minY + stories * storyHeight;
 
         BlockIdentifier groundWall = palette.get(MaterialRole.WALL_PRIMARY);
@@ -93,7 +97,7 @@ public final class SectionComposer {
                             continue;
                         }
                         boolean corner = onX && onZ;
-                        boolean bayPost = (onZ && (x - minX) % 4 == 0) || (onX && (z - minZ) % 4 == 0);
+                        boolean bayPost = styleRules.allowPilasters() && ((onZ && (x - minX) % pillarStep == 0) || (onX && (z - minZ) % pillarStep == 0));
                         if (corner || bayPost) {
                             put(map, new Vec3i(x, y, z), pillar, MaterialRole.PILLAR);
                         } else if (y == y1 && s < stories - 1) {
@@ -107,13 +111,13 @@ public final class SectionComposer {
 
             // Rhythmic windows with slab lintels & trapdoor shutters on all 4 facades
             int winY = y0 + 1;
-            for (int x = minX + 2; x <= maxX - 2; x += 3) {
-                if ((x - minX) % 4 == 0) continue;
+            for (int x = minX + 2; x <= maxX - 2; x += windowStep) {
+                if (styleRules.allowPilasters() && (x - minX) % pillarStep == 0) continue;
                 placeWindowWithShutters(map, x, winY, minZ, Direction.NORTH, glass, slab, shutterBase);
                 placeWindowWithShutters(map, x, winY, maxZ, Direction.SOUTH, glass, slab, shutterBase);
             }
-            for (int z = minZ + 2; z <= maxZ - 2; z += 3) {
-                if ((z - minZ) % 4 == 0) continue;
+            for (int z = minZ + 2; z <= maxZ - 2; z += windowStep) {
+                if (styleRules.allowPilasters() && (z - minZ) % pillarStep == 0) continue;
                 placeWindowWithShutters(map, minX, winY, z, Direction.WEST, glass, slab, shutterBase);
                 placeWindowWithShutters(map, maxX, winY, z, Direction.EAST, glass, slab, shutterBase);
             }
