@@ -11,7 +11,7 @@ import static org.junit.Assert.*;
 public final class TaxonomyTest {
     @Test
     public void testInference() {
-        BlockTaxonomyEntry entry = BlockTaxonomyEngine.analyze(BlockIdentifier.of("minecraft:deepslate_tile_stairs[facing=north,half=bottom]"));
+        BlockTaxonomyEntry entry = BlockTaxonomyClassifier.analyze(BlockIdentifier.of("minecraft:deepslate_tile_stairs[facing=north,half=bottom]"));
         assertTrue(entry.hasTrait(BlockTrait.STAIR));
         assertEquals(MaterialSubstance.DEEPSLATE, entry.substance());
         assertEquals(ColorTone.BLACK, entry.primaryTone());
@@ -19,7 +19,7 @@ public final class TaxonomyTest {
 
     @Test
     public void testModdedBlockDiscovery() {
-        BlockTaxonomyEntry modded = BlockTaxonomyEngine.analyze(BlockIdentifier.of("biomesoplenty:fir_planks"));
+        BlockTaxonomyEntry modded = BlockTaxonomyClassifier.analyze(BlockIdentifier.of("biomesoplenty:fir_planks"));
         assertTrue(modded.hasTrait(BlockTrait.SOLID_CUBE));
         assertEquals(MaterialSubstance.WOOD, modded.substance());
     }

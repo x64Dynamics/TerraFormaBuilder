@@ -1,6 +1,6 @@
 package com.x64Dynamics.tfb.client;
 
-import com.x64Dynamics.tfb.ui.TFBClientController;
+import com.x64Dynamics.tfb.ui.controller.ClientController;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -15,7 +15,7 @@ public final class ArchitectFlightController {
     public static void tick(Minecraft mc) {
         if (mc.player == null || mc.level == null) return;
 
-        TFBClientController controller = TFBClientController.getInstance();
+        ClientController controller = ClientController.getInstance();
         boolean architectMode = controller.isArchitectMode();
         controller.model().cameraController().setActive(architectMode);
         if (architectMode) controller.model().cameraController().tick(0.05f);

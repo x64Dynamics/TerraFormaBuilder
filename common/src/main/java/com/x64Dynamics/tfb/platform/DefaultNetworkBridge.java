@@ -8,6 +8,7 @@ import com.x64Dynamics.tfb.persistence.ParametricBlueprint;
 import java.util.UUID;
 import java.util.logging.Logger;
 
+import com.x64Dynamics.tfb.TerraFormaBuilder;
 public class DefaultNetworkBridge implements INetworkBridge {
     private static final Logger LOGGER = Logger.getLogger("TerraFormaBuilder.Network");
 

@@ -1,6 +1,6 @@
 package com.x64Dynamics.tfb.grid;
 
-import com.x64Dynamics.tfb.architectural.RoofGenerator;
+import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
 import com.x64Dynamics.tfb.geometry.Direction;
 import com.x64Dynamics.tfb.geometry.Vec3i;
 import com.x64Dynamics.tfb.material.StylePreset;
@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
+import com.x64Dynamics.tfb.TerraFormaBuilder;
 /**
  * Saves and restores complete GridManager + BuildingRegistry projects to disk.
  */
@@ -71,8 +72,8 @@ public final class GridProjectManager {
                 -64, 319
             );
             BuildingRegistry registry = new BuildingRegistry();
-            PlacementRuleEngine rules = new PlacementRuleEngine(PlacementRuleEngine.PlacementRules.defaults());
-            ConnectionEngine connEngine = new ConnectionEngine();
+            PlacementValidator rules = new PlacementValidator(PlacementValidator.PlacementRules.defaults());
+            ComplexConnectionPlanner connEngine = new ComplexConnectionPlanner();
             StructurePlacementController ctrl = new StructurePlacementController(grid, registry, rules, connEngine);
 
             int count = Integer.parseInt(props.getProperty("buildingCount", "0"));

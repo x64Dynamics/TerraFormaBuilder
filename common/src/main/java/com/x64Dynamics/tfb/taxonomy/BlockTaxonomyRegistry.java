@@ -37,7 +37,7 @@ public final class BlockTaxonomyRegistry {
         BlockTaxonomyEntry cached = cache.get(key);
         if (cached != null) return cached;
 
-        BlockTaxonomyEntry entry = BlockTaxonomyEngine.analyze(block);
+        BlockTaxonomyEntry entry = BlockTaxonomyClassifier.analyze(block);
         return putEntry(key, entry);
     }
 
@@ -48,7 +48,7 @@ public final class BlockTaxonomyRegistry {
         int luminance
     ) {
         String key = block.asString();
-        BlockTaxonomyEntry entry = BlockTaxonomyEngine.analyze(block, traits, propertyNames, luminance);
+        BlockTaxonomyEntry entry = BlockTaxonomyClassifier.analyze(block, traits, propertyNames, luminance);
         return putEntry(key, entry);
     }
 

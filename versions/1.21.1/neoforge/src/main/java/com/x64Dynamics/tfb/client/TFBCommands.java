@@ -5,7 +5,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.x64Dynamics.tfb.brush.BrushRegistry;
 import com.x64Dynamics.tfb.brush.IConstructionBrush;
 import com.x64Dynamics.tfb.material.StylePreset;
-import com.x64Dynamics.tfb.ui.TFBClientController;
+import com.x64Dynamics.tfb.ui.controller.ClientController;
 import com.x64Dynamics.tfb.ui.hotbar.BuilderHotbarModel;
 import com.x64Dynamics.tfb.ui.model.ArchitectWorkspaceModel;
 import net.minecraft.client.Minecraft;
@@ -17,6 +17,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
 
+import com.x64Dynamics.tfb.TerraFormaBuilder;
 @EventBusSubscriber(modid = "terraformabuilder", value = Dist.CLIENT)
 public final class TFBCommands {
     private TFBCommands() {}
@@ -33,39 +34,39 @@ public final class TFBCommands {
                     return 1;
                 }))
                 .then(Commands.literal("mode").executes(ctx -> {
-                    TFBClientController ctrl = TFBClientController.getInstance();
+                    ClientController ctrl = ClientController.getInstance();
                     ctrl.toggleArchitectMode();
                     boolean active = ctrl.isArchitectMode();
                     ctx.getSource().sendSystemMessage(Component.literal("§b[TFB] Architect Mode: " + (active ? "§aACTIVE" : "§cINACTIVE")));
                     return 1;
                 }))
                 .then(Commands.literal("flight").executes(ctx -> {
-                    TFBClientController ctrl = TFBClientController.getInstance();
+                    ClientController ctrl = ClientController.getInstance();
                     ctrl.toggleFlight();
                     boolean active = ctrl.isFlightActive();
                     ctx.getSource().sendSystemMessage(Component.literal("§b[TFB] Architect Flight: " + (active ? "§aENABLED" : "§cDISABLED")));
                     return 1;
                 }))
                 .then(Commands.literal("preview").executes(ctx -> {
-                    TFBClientController.getInstance().togglePreview();
-                    boolean active = TFBClientController.getInstance().isPreviewActive();
+                    ClientController.getInstance().togglePreview();
+                    boolean active = ClientController.getInstance().isPreviewActive();
                     ctx.getSource().sendSystemMessage(Component.literal("§b[TFB] Preview: " + (active ? "§aEnabled" : "§cDisabled")));
                     return 1;
                 }))
                 .then(Commands.literal("hud").executes(ctx -> {
-                    TFBClientController ctrl = TFBClientController.getInstance();
+                    ClientController ctrl = ClientController.getInstance();
                     ctrl.toggleHud();
                     ctx.getSource().sendSystemMessage(Component.literal("§b[TFB] In-World HUD: " + (ctrl.isHudVisible() ? "§aVISIBLE" : "§cMINIMIZED")));
                     return 1;
                 }))
                 .then(Commands.literal("banner").executes(ctx -> {
-                    TFBClientController ctrl = TFBClientController.getInstance();
+                    ClientController ctrl = ClientController.getInstance();
                     ctrl.toggleStudioBanner();
                     ctx.getSource().sendSystemMessage(Component.literal("§b[TFB] Studio Banner: " + (ctrl.isStudioBannerVisible() ? "§aVISIBLE" : "§cOFF")));
                     return 1;
                 }))
                 .then(Commands.literal("hotbar").executes(ctx -> {
-                    TFBClientController ctrl = TFBClientController.getInstance();
+                    ClientController ctrl = ClientController.getInstance();
                     ctrl.toggleBuilderHotbar();
                     ctx.getSource().sendSystemMessage(Component.literal("§b[TFB] Builder Hotbar: " + (ctrl.isBuilderHotbarVisible() ? "§aVISIBLE" : "§cOFF")));
                     return 1;
@@ -75,7 +76,7 @@ public final class TFBCommands {
                         String name = StringArgumentType.getString(ctx, "name");
                         IConstructionBrush brush = BrushRegistry.get(name);
                         if (brush != null) {
-                            TFBClientController.getInstance().model().setActiveBrush(brush);
+                            ClientController.getInstance().model().setActiveBrush(brush);
                             ctx.getSource().sendSystemMessage(Component.literal("§b[TFB] Selected tool: §f" + brush.displayName()));
                         } else {
                             ctx.getSource().sendSystemMessage(Component.literal("§c[TFB] Unknown tool: " + name));
@@ -88,7 +89,7 @@ public final class TFBCommands {
                         String presetStr = StringArgumentType.getString(ctx, "preset").toUpperCase();
                         try {
                             StylePreset preset = StylePreset.valueOf(presetStr);
-                            TFBClientController.getInstance().model().setStylePreset(preset);
+                            ClientController.getInstance().model().setStylePreset(preset);
                             ctx.getSource().sendSystemMessage(Component.literal("§b[TFB] Style preset set to: §e" + preset.displayName()));
                         } catch (IllegalArgumentException e) {
                             ctx.getSource().sendSystemMessage(Component.literal("§c[TFB] Unknown style preset: " + presetStr));
@@ -97,18 +98,18 @@ public final class TFBCommands {
                     }))
                 )
                 .then(Commands.literal("snap").executes(ctx -> {
-                    TFBClientController.getInstance().model().cycleGridSnap();
-                    int snap = TFBClientController.getInstance().model().selectionManager().gridSnap();
+                    ClientController.getInstance().model().cycleGridSnap();
+                    int snap = ClientController.getInstance().model().selectionManager().gridSnap();
                     ctx.getSource().sendSystemMessage(Component.literal("§b[TFB] Grid Snap: §f" + snap + " blocks"));
                     return 1;
                 }))
                 .then(Commands.literal("build").executes(ctx -> {
                     Minecraft mc = Minecraft.getInstance();
-                    TFBClientEvents.GameEvents.executeBuild(mc);
+                    ArchitectClientEvents.GameEvents.executeBuild(mc);
                     return 1;
                 }))
                 .then(Commands.literal("undo").executes(ctx -> {
-                    if (TFBClientController.getInstance().model().undo()) {
+                    if (ClientController.getInstance().model().undo()) {
                         ctx.getSource().sendSystemMessage(Component.literal("§e[TFB] Reverted last design operation."));
                     } else {
                         ctx.getSource().sendSystemMessage(Component.literal("§7[TFB] Nothing to undo."));
@@ -116,7 +117,7 @@ public final class TFBCommands {
                     return 1;
                 }))
                 .then(Commands.literal("redo").executes(ctx -> {
-                    if (TFBClientController.getInstance().model().redo()) {
+                    if (ClientController.getInstance().model().redo()) {
                         ctx.getSource().sendSystemMessage(Component.literal("§e[TFB] Restored undone design operation."));
                     } else {
                         ctx.getSource().sendSystemMessage(Component.literal("§7[TFB] Nothing to redo."));
@@ -124,7 +125,7 @@ public final class TFBCommands {
                     return 1;
                 }))
                 .then(Commands.literal("info").executes(ctx -> {
-                    ArchitectWorkspaceModel model = TFBClientController.getInstance().model();
+                    ArchitectWorkspaceModel model = ClientController.getInstance().model();
                     ctx.getSource().sendSystemMessage(Component.literal(
                         "§b[TerraFormaBuilder Info]\n" +
                         "§7Dimensions: §f" + model.width() + "x" + model.height() + "x" + model.depth() + "\n" +

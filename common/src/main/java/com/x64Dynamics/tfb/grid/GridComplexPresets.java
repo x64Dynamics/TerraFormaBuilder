@@ -1,6 +1,6 @@
 package com.x64Dynamics.tfb.grid;
 
-import com.x64Dynamics.tfb.architectural.RoofGenerator;
+import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
 import com.x64Dynamics.tfb.geometry.Direction;
 import com.x64Dynamics.tfb.material.StylePreset;
 

@@ -1,7 +1,7 @@
 package com.x64Dynamics.tfb.mixin;
 
 import com.x64Dynamics.tfb.client.ClientEntrypoint;
-import com.x64Dynamics.tfb.ui.TFBClientController;
+import com.x64Dynamics.tfb.ui.controller.ClientController;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -19,21 +19,21 @@ public abstract class GuiMixin {
 
     @Inject(method = "renderItemHotbar", at = @At("HEAD"), cancellable = true)
     private void tfb$cancelHotbar(GuiGraphicsExtractor guiGraphics, DeltaTracker deltaTracker, CallbackInfo ci) {
-        if (TFBClientController.getInstance().isArchitectMode()) {
+        if (ClientController.getInstance().isArchitectMode()) {
             ci.cancel();
         }
     }
 
     @Inject(method = "renderExperienceBar", at = @At("HEAD"), cancellable = true)
     private void tfb$cancelExperienceBar(GuiGraphicsExtractor guiGraphics, int x, CallbackInfo ci) {
-        if (TFBClientController.getInstance().isArchitectMode()) {
+        if (ClientController.getInstance().isArchitectMode()) {
             ci.cancel();
         }
     }
 
     @Inject(method = "renderSelectedItemName", at = @At("HEAD"), cancellable = true)
     private void tfb$cancelSelectedItemName(GuiGraphicsExtractor guiGraphics, CallbackInfo ci) {
-        if (TFBClientController.getInstance().isArchitectMode()) {
+        if (ClientController.getInstance().isArchitectMode()) {
             ci.cancel();
         }
     }

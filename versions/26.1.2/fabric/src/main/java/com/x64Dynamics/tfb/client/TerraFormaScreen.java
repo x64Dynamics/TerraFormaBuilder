@@ -1,6 +1,6 @@
 package com.x64Dynamics.tfb.client;
 
-import com.x64Dynamics.tfb.ui.TFBClientController;
+import com.x64Dynamics.tfb.ui.controller.ClientController;
 import com.x64Dynamics.tfb.ui.rendering.IGuiGraphicsContext;
 import com.x64Dynamics.tfb.ui.screen.ArchitectWorkspaceScreen;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -10,12 +10,13 @@ import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 
+import com.x64Dynamics.tfb.TerraFormaBuilder;
 public class TerraFormaScreen extends Screen {
     private final ArchitectWorkspaceScreen screen;
 
     public TerraFormaScreen() {
         super(Component.literal("TerraFormaBuilder Home Studio"));
-        this.screen = TFBClientController.getInstance().screen();
+        this.screen = ClientController.getInstance().screen();
     }
 
     @Override
@@ -28,9 +29,9 @@ public class TerraFormaScreen extends Screen {
             }
         });
         screen.init(this.width, this.height);
-        TFBClientController.getInstance().setArchitectMode(true);
+        ClientController.getInstance().setArchitectMode(true);
         if (this.minecraft != null && this.minecraft.player != null) {
-            com.x64Dynamics.tfb.ui.model.ArchitectWorkspaceModel model = TFBClientController.getInstance().model();
+            com.x64Dynamics.tfb.ui.model.ArchitectWorkspaceModel model = ClientController.getInstance().model();
             if (model.origin().x() == 0 && model.origin().y() == 64 && model.origin().z() == 0) {
                 net.minecraft.core.BlockPos playerPos = this.minecraft.player.blockPosition();
                 model.setOrigin(new com.x64Dynamics.tfb.geometry.Vec3i(playerPos.getX(), playerPos.getY(), playerPos.getZ()));
@@ -83,11 +84,11 @@ public class TerraFormaScreen extends Screen {
         if (screen.keyPressed(event.key(), event.scancode(), event.modifiers())) return true;
         if (this.minecraft != null && this.minecraft.hasControlDown()) {
             if (event.key() == 90) {
-                if (this.minecraft.hasShiftDown()) TFBClientController.getInstance().model().redo();
-                else TFBClientController.getInstance().model().undo();
+                if (this.minecraft.hasShiftDown()) ClientController.getInstance().model().redo();
+                else ClientController.getInstance().model().undo();
                 return true;
             } else if (event.key() == 89) {
-                TFBClientController.getInstance().model().redo();
+                ClientController.getInstance().model().redo();
                 return true;
             }
         }

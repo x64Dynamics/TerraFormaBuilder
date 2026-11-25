@@ -2,11 +2,12 @@ package com.x64Dynamics.tfb.ui.hotbar;
 
 import com.x64Dynamics.tfb.brush.BrushRegistry;
 import com.x64Dynamics.tfb.brush.IConstructionBrush;
-import com.x64Dynamics.tfb.ui.TFBClientController;
+import com.x64Dynamics.tfb.ui.controller.ClientController;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import com.x64Dynamics.tfb.geometry.Axis;
 public final class BuilderHotbarModel {
     private static final BuilderHotbarModel INSTANCE = new BuilderHotbarModel();
 
@@ -133,7 +134,7 @@ public final class BuilderHotbarModel {
     private void syncActiveSlot() {
         BuilderHotbarSlot slot = getActiveSlotData();
         if (slot != null && slot.brush() != null) {
-            TFBClientController.getInstance().model().setActiveBrush(slot.brush());
+            ClientController.getInstance().model().setActiveBrush(slot.brush());
         }
     }
 

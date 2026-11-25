@@ -62,14 +62,16 @@ public final class ServerTickBuildExecutor {
 
             while (!job.isComplete() && remainingBudget > 0) {
                 ScheduledBlockPlacement target = job.orderedTargets.get(job.cursor);
-                if (!job.player.isCreative() && !target.block().isAir()) {
-                    BlockIdentifier baseBlock = BlockIdentifier.of(target.block().namespacedId());
-                    if (!job.player.consumeResource(baseBlock, 1)) {
-                        break;
-                    }
+                boolean needsResource = !job.player.isCreative() && !target.block().isAir();
+                BlockIdentifier baseBlock = needsResource ? BlockIdentifier.of(target.block().namespacedId()) : null;
+                if (needsResource && !job.player.hasResource(baseBlock, 1)) {
+                    break;
                 }
                 BlockIdentifier previous = level.getBlockState(target.pos());
                 if (level.setBlockState(target.pos(), target.block())) {
+                    if (needsResource) {
+                        job.player.consumeResource(baseBlock, 1);
+                    }
                     changes.add(new WorldConstructionHistory.BlockChange(target.pos(), previous, target.block()));
                 }
                 job.cursor++;

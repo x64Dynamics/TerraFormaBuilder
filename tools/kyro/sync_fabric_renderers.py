@@ -15,7 +15,7 @@ import com.x64Dynamics.tfb.geometry.BoundingBox3i;
 import com.x64Dynamics.tfb.geometry.Vec3i;
 import com.x64Dynamics.tfb.preview.PreviewVoxel;
 import com.x64Dynamics.tfb.preview.WorldPreviewBuffer;
-import com.x64Dynamics.tfb.ui.TFBClientController;
+import com.x64Dynamics.tfb.ui.controller.ClientController;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
@@ -27,11 +27,11 @@ import net.minecraft.world.phys.Vec3;
 
 import java.util.List;
 
-public final class TFBClientRenderer {
-    private TFBClientRenderer() {}
+public final class ArchitectWorldRenderer {
+    private ArchitectWorldRenderer() {}
 
     public static void renderLevel(PoseStack poseStack, Camera camera) {
-        TFBClientController controller = TFBClientController.getInstance();
+        ClientController controller = ClientController.getInstance();
         if (!controller.isPreviewActive() || poseStack == null || camera == null) return;
 
         Minecraft mc = Minecraft.getInstance();
@@ -105,7 +105,7 @@ def level_renderer_mixin_for(ver: str) -> str:
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Matrix4f;
-import com.x64Dynamics.tfb.client.TFBClientRenderer;
+import com.x64Dynamics.tfb.client.ArchitectWorldRenderer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
@@ -128,7 +128,7 @@ public abstract class LevelRendererMixin {
             LightTexture lightTexture,
             Matrix4f projectionMatrix,
             CallbackInfo ci) {
-        TFBClientRenderer.renderLevel(poseStack, camera);
+        ArchitectWorldRenderer.renderLevel(poseStack, camera);
     }
 }
 """
@@ -136,7 +136,7 @@ public abstract class LevelRendererMixin {
         return """package com.x64Dynamics.tfb.mixin;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.x64Dynamics.tfb.client.TFBClientRenderer;
+import com.x64Dynamics.tfb.client.ArchitectWorldRenderer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
@@ -160,7 +160,7 @@ public abstract class LevelRendererMixin {
             LightTexture lightTexture,
             Matrix4f projectionMatrix,
             CallbackInfo ci) {
-        TFBClientRenderer.renderLevel(poseStack, camera);
+        ArchitectWorldRenderer.renderLevel(poseStack, camera);
     }
 }
 """
@@ -168,7 +168,7 @@ public abstract class LevelRendererMixin {
         return """package com.x64Dynamics.tfb.mixin;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.x64Dynamics.tfb.client.TFBClientRenderer;
+import com.x64Dynamics.tfb.client.ArchitectWorldRenderer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
@@ -194,7 +194,7 @@ public abstract class LevelRendererMixin {
             CallbackInfo ci) {
         PoseStack poseStack = new PoseStack();
         poseStack.mulPose(frustumMatrix);
-        TFBClientRenderer.renderLevel(poseStack, camera);
+        ArchitectWorldRenderer.renderLevel(poseStack, camera);
     }
 }
 """
@@ -202,7 +202,7 @@ public abstract class LevelRendererMixin {
         return """package com.x64Dynamics.tfb.mixin;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.x64Dynamics.tfb.client.TFBClientRenderer;
+import com.x64Dynamics.tfb.client.ArchitectWorldRenderer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.renderer.GameRenderer;
@@ -228,7 +228,7 @@ public abstract class LevelRendererMixin {
             CallbackInfo ci) {
         PoseStack poseStack = new PoseStack();
         poseStack.mulPose(frustumMatrix);
-        TFBClientRenderer.renderLevel(poseStack, camera);
+        ArchitectWorldRenderer.renderLevel(poseStack, camera);
     }
 }
 """
@@ -237,7 +237,7 @@ public abstract class LevelRendererMixin {
 
 import com.mojang.blaze3d.resource.GraphicsResourceAllocator;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.x64Dynamics.tfb.client.TFBClientRenderer;
+import com.x64Dynamics.tfb.client.ArchitectWorldRenderer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.renderer.GameRenderer;
@@ -264,7 +264,7 @@ public abstract class LevelRendererMixin {
             CallbackInfo ci) {
         PoseStack poseStack = new PoseStack();
         poseStack.mulPose(frustumMatrix);
-        TFBClientRenderer.renderLevel(poseStack, camera);
+        ArchitectWorldRenderer.renderLevel(poseStack, camera);
     }
 }
 """
@@ -272,7 +272,7 @@ public abstract class LevelRendererMixin {
 
 import com.mojang.blaze3d.resource.GraphicsResourceAllocator;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.x64Dynamics.tfb.client.TFBClientRenderer;
+import com.x64Dynamics.tfb.client.ArchitectWorldRenderer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.renderer.GameRenderer;
@@ -297,7 +297,7 @@ public abstract class LevelRendererMixin {
             CallbackInfo ci) {
         PoseStack poseStack = new PoseStack();
         poseStack.mulPose(frustumMatrix);
-        TFBClientRenderer.renderLevel(poseStack, camera);
+        ArchitectWorldRenderer.renderLevel(poseStack, camera);
     }
 }
 """
@@ -317,7 +317,7 @@ def on_mouse_button_method(use_null_to_empty: bool) -> str:
     public static boolean onMouseButton(int button, int action) {{
         Minecraft mc = Minecraft.getInstance();
         if (mc.screen != null || mc.player == null || mc.level == null) return false;
-        TFBClientController controller = TFBClientController.getInstance();
+        ClientController controller = ClientController.getInstance();
         if (!controller.isArchitectMode()) return false;
         if (action != 1) return false;
 
@@ -362,8 +362,8 @@ def main() -> None:
         mixin_dir = fabric_dir / "src/main/java/com/x64Dynamics/tfb/mixin"
         mixins_json = fabric_dir / "src/main/resources/terraformabuilder.mixins.json"
 
-        # 1. TFBClientRenderer.java
-        (client_dir / "TFBClientRenderer.java").write_text(TFB_CLIENT_RENDERER, encoding="utf-8")
+        # 1. ArchitectWorldRenderer.java
+        (client_dir / "ArchitectWorldRenderer.java").write_text(TFB_CLIENT_RENDERER, encoding="utf-8")
 
         # 2. LevelRendererMixin.java
         (mixin_dir / "LevelRendererMixin.java").write_text(level_renderer_mixin_for(ver), encoding="utf-8")

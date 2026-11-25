@@ -12,6 +12,8 @@ import java.util.List;
 
 import static org.junit.Assert.*;
 
+import com.x64Dynamics.tfb.architectural.facade.FacadeOrnamentGenerator;
+import com.x64Dynamics.tfb.architectural.roof.AdvancedRoofFeatures;
 public final class FacadeAndRoofFeaturesTest {
     private final MaterialPalette palette = StylePreset.MEDIEVAL.createPalette();
 

@@ -24,13 +24,13 @@ public final class MaterialPalette {
     }
 
     public BlockIdentifier get(MaterialRole role) {
-        BlockIdentifier found = mappings.get(role);
-        if (found != null) return found;
-
-        MaterialRole fallbackRole = role.fallback();
-        if (fallbackRole != role) {
-            found = mappings.get(fallbackRole);
+        MaterialRole cur = role;
+        for (int depth = 0; depth < 6 && cur != null; depth++) {
+            BlockIdentifier found = mappings.get(cur);
             if (found != null) return found;
+            MaterialRole next = cur.fallback();
+            if (next == cur) break;
+            cur = next;
         }
 
         BlockIdentifier primary = mappings.get(MaterialRole.WALL_PRIMARY);

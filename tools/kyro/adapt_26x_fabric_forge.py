@@ -10,8 +10,8 @@ VERSIONS = ["26.1", "26.1.1", "26.1.2", "26.2", "26.3"]
 SHARED_CLIENT_FILES = [
     "TerraFormaScreen.java",
     "ArchitectFlightController.java",
-    "TFBKeyMappings.java",
-    "TFBInWorldHud.java",
+    "ArchitectKeyMappings.java",
+    "ArchitectHudRenderer.java",
     "BlockStateParser.java",
 ]
 
@@ -68,18 +68,18 @@ def main() -> None:
                 if tfs.exists():
                     tfs.write_text(
                         tfs.read_text(encoding="utf-8").replace(
-                            "TFBClientEvents.ForgeEvents.executeBuild",
+                            "ArchitectClientEvents.ForgeEvents.executeBuild",
                             "ClientEntrypoint.executeBuild",
                         ),
                         encoding="utf-8",
                     )
-                km = base / "client/TFBKeyMappings.java"
+                km = base / "client/ArchitectKeyMappings.java"
                 if km.exists():
                     km_txt = km.read_text(encoding="utf-8")
                     if "registerAll(" not in km_txt:
                         km_txt = km_txt.replace(
-                            "    private TFBKeyMappings() {}",
-                            """    private TFBKeyMappings() {}
+                            "    private ArchitectKeyMappings() {}",
+                            """    private ArchitectKeyMappings() {}
 
     public static void registerAll(net.minecraft.client.Minecraft mc) {
         if (mc == null || mc.options == null) return;
@@ -116,12 +116,12 @@ def main() -> None:
                 if tfs.exists():
                     tfs.write_text(
                         tfs.read_text(encoding="utf-8").replace(
-                            "TFBClientEvents.ForgeEvents.executeBuild",
-                            "TFBClientEvents.ForgeBusEvents.executeBuild",
+                            "ArchitectClientEvents.ForgeEvents.executeBuild",
+                            "ArchitectClientEvents.ForgeBusEvents.executeBuild",
                         ),
                         encoding="utf-8",
                     )
-                te = base / "client/TFBClientEvents.java"
+                te = base / "client/ArchitectClientEvents.java"
                 if te.exists():
                     txt = adapt_common_26x(te.read_text(encoding="utf-8"))
                     txt = txt.replace(

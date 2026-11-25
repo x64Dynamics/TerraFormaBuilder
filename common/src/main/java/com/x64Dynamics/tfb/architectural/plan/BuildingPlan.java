@@ -1,7 +1,7 @@
 package com.x64Dynamics.tfb.architectural.plan;
 
 import com.x64Dynamics.tfb.architectural.PlacementTarget;
-import com.x64Dynamics.tfb.architectural.RoomType;
+import com.x64Dynamics.tfb.architectural.interior.RoomType;
 import com.x64Dynamics.tfb.geometry.BoundingBox3i;
 import com.x64Dynamics.tfb.geometry.Vec3i;
 

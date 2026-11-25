@@ -71,15 +71,25 @@ public final class ProceduralSettlementGenerator {
         for (Direction d : new Direction[]{Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST}) {
             if (plots.size() >= buildingCount) break;
 
-            Vec3i leftPlotOrigin = center.offset(d, 8).offset(d.rotateY(), 4);
-            BoundingBox3i plot1 = BoundingBox3i.fromOriginAndSize(leftPlotOrigin, plotWidth, plotHeight, plotDepth);
+            Vec3i leftAnchor = center.offset(d, 8).offset(d.rotateY(), 4);
+            Vec3i leftMin = new Vec3i(
+                d == Direction.WEST ? leftAnchor.x() - plotWidth + 1 : leftAnchor.x(),
+                leftAnchor.y(),
+                d == Direction.NORTH ? leftAnchor.z() - plotDepth + 1 : leftAnchor.z()
+            );
+            BoundingBox3i plot1 = BoundingBox3i.fromOriginAndSize(leftMin, plotWidth, plotHeight, plotDepth);
             plots.add(new SettlementBuildingPlot(plot1, types[index % types.length], d.rotateY().opposite()));
             index++;
 
             if (plots.size() >= buildingCount) break;
 
-            Vec3i rightPlotOrigin = center.offset(d, 8).offset(d.rotateY().opposite(), 4 + plotWidth);
-            BoundingBox3i plot2 = BoundingBox3i.fromOriginAndSize(rightPlotOrigin, plotWidth, plotHeight, plotDepth);
+            Vec3i rightAnchor = center.offset(d, 8).offset(d.rotateY().opposite(), 4 + plotWidth);
+            Vec3i rightMin = new Vec3i(
+                d == Direction.WEST ? rightAnchor.x() - plotWidth + 1 : rightAnchor.x(),
+                rightAnchor.y(),
+                d == Direction.NORTH ? rightAnchor.z() - plotDepth + 1 : rightAnchor.z()
+            );
+            BoundingBox3i plot2 = BoundingBox3i.fromOriginAndSize(rightMin, plotWidth, plotHeight, plotDepth);
             plots.add(new SettlementBuildingPlot(plot2, types[index % types.length], d.rotateY()));
             index++;
         }

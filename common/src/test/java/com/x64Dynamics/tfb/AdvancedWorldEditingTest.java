@@ -1,14 +1,14 @@
 package com.x64Dynamics.tfb;
 
-import com.x64Dynamics.tfb.architectural.LayeredFacadeComposer;
-import com.x64Dynamics.tfb.architectural.ParametricFootprint;
+import com.x64Dynamics.tfb.architectural.facade.LayeredFacadeComposer;
+import com.x64Dynamics.tfb.architectural.layout.ParametricFootprint;
 import com.x64Dynamics.tfb.architectural.PlacementTarget;
-import com.x64Dynamics.tfb.architectural.RoofGenerator;
-import com.x64Dynamics.tfb.architectural.RoomType;
-import com.x64Dynamics.tfb.architectural.WingConfiguration;
-import com.x64Dynamics.tfb.architectural.WingLayoutGenerator;
+import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
+import com.x64Dynamics.tfb.architectural.interior.RoomType;
+import com.x64Dynamics.tfb.architectural.layout.WingConfiguration;
+import com.x64Dynamics.tfb.architectural.layout.WingLayoutGenerator;
 import com.x64Dynamics.tfb.architectural.style.ArchitecturalStyleRuleSet;
-import com.x64Dynamics.tfb.architectural.style.ProceduralVariationEngine;
+import com.x64Dynamics.tfb.architectural.style.ProceduralVariator;
 import com.x64Dynamics.tfb.architectural.style.StyleRuleSetRegistry;
 import com.x64Dynamics.tfb.editing.ArchitecturalComponentType;
 import com.x64Dynamics.tfb.editing.ClipboardManager;
@@ -188,7 +188,7 @@ public class AdvancedWorldEditingTest {
             wall.add(new PlacementTarget(new Vec3i(i, 64, 0), BlockIdentifier.of("minecraft:stone_bricks"), MaterialRole.WALL_PRIMARY));
         }
 
-        List<PlacementTarget> varied = ProceduralVariationEngine.applyFacadeVariation(wall, palette, 12345L, 0.5f);
+        List<PlacementTarget> varied = ProceduralVariator.applyFacadeVariation(wall, palette, 12345L, 0.5f);
         assertEquals(wall.size(), varied.size());
     }
 

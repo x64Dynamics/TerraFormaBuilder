@@ -1,6 +1,6 @@
 package com.x64Dynamics.tfb.architectural.style;
 
-import com.x64Dynamics.tfb.architectural.RoofGenerator;
+import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
 
 public record ArchitecturalStyleRuleSet(
     String styleId,

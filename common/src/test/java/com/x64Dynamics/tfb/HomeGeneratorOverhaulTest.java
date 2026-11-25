@@ -2,8 +2,8 @@ package com.x64Dynamics.tfb;
 
 import com.x64Dynamics.tfb.architectural.IntelligentHomeGenerator;
 import com.x64Dynamics.tfb.architectural.PlacementTarget;
-import com.x64Dynamics.tfb.architectural.RoofGenerator;
-import com.x64Dynamics.tfb.architectural.WingConfiguration;
+import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
+import com.x64Dynamics.tfb.architectural.layout.WingConfiguration;
 import com.x64Dynamics.tfb.geometry.BoundingBox3i;
 import com.x64Dynamics.tfb.geometry.Direction;
 import com.x64Dynamics.tfb.geometry.Vec3i;
@@ -82,9 +82,9 @@ public class HomeGeneratorOverhaulTest {
 
     @Test
     public void testWallSegmentationArchedAndBalconyBays() {
-        var seg = com.x64Dynamics.tfb.architectural.WallSegmentationEngine.calculateRhythm(15, 6, false, 4, true, true);
-        assertTrue(seg.bays().stream().anyMatch(b -> b.type() == com.x64Dynamics.tfb.architectural.WallSegmentationEngine.BayType.BALCONY));
-        assertTrue(seg.bays().stream().anyMatch(b -> b.type() == com.x64Dynamics.tfb.architectural.WallSegmentationEngine.BayType.ARCHED_WINDOW));
+        var seg = com.x64Dynamics.tfb.architectural.facade.WallSegmenter.calculateRhythm(15, 6, false, 4, true, true);
+        assertTrue(seg.bays().stream().anyMatch(b -> b.type() == com.x64Dynamics.tfb.architectural.facade.WallSegmenter.BayType.BALCONY));
+        assertTrue(seg.bays().stream().anyMatch(b -> b.type() == com.x64Dynamics.tfb.architectural.facade.WallSegmenter.BayType.ARCHED_WINDOW));
     }
 
     @Test
@@ -95,7 +95,7 @@ public class HomeGeneratorOverhaulTest {
             2, 4, StylePreset.MEDIEVAL, Direction.SOUTH, WingConfiguration.SINGLE_RECTANGLE,
             false, false, false, 1.0f, 505L
         ));
-        var varied = com.x64Dynamics.tfb.architectural.style.ProceduralVariationEngine.applyFacadeVariation(
+        var varied = com.x64Dynamics.tfb.architectural.style.ProceduralVariator.applyFacadeVariation(
             res.targets(), StylePreset.MEDIEVAL.createPalette(), 505L, 0.5f
         );
         assertEquals(res.targets().size(), varied.size());
@@ -112,7 +112,7 @@ public class HomeGeneratorOverhaulTest {
         ));
         assertTrue("Tall gable roof on 13x13 home should include usable ATTIC_LOFT floor plan",
             res.plan().floors().stream().flatMap(f -> f.rooms().stream())
-                .anyMatch(r -> r.type() == com.x64Dynamics.tfb.architectural.RoomType.ATTIC_LOFT));
+                .anyMatch(r -> r.type() == com.x64Dynamics.tfb.architectural.interior.RoomType.ATTIC_LOFT));
         assertTrue("Attic loft should include ladder access from top story",
             res.targets().stream().anyMatch(t -> t.block().path().equals("ladder")));
     }

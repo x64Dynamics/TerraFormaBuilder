@@ -1,6 +1,6 @@
 package com.x64Dynamics.tfb.grid;
 
-import com.x64Dynamics.tfb.architectural.RoofGenerator;
+import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
 import com.x64Dynamics.tfb.geometry.Direction;
 import com.x64Dynamics.tfb.material.MaterialPalette;
 import com.x64Dynamics.tfb.material.StylePreset;
@@ -116,7 +116,12 @@ public final class GridBuilding {
     public void setFacing(Direction facing) {
         if (facing != null && facing != Direction.UP && facing != Direction.DOWN) this.facing = facing;
     }
-    public void rotateClockwise() { this.facing = this.facing.rotateY(); }
+    public void rotateClockwise() {
+        this.facing = this.facing.rotateY();
+        int tmp = this.width;
+        this.width = this.depth;
+        this.depth = tmp;
+    }
     public void setStyle(StylePreset style) {
         this.style = style;
         this.palette = style.createPalette();

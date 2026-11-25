@@ -1,8 +1,8 @@
 package com.x64Dynamics.tfb.architectural.editor;
 
-import com.x64Dynamics.tfb.architectural.AdvancedRoofFeatures;
+import com.x64Dynamics.tfb.architectural.roof.AdvancedRoofFeatures;
 import com.x64Dynamics.tfb.architectural.PlacementTarget;
-import com.x64Dynamics.tfb.architectural.RoofGenerator;
+import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
 import com.x64Dynamics.tfb.geometry.Axis;
 import com.x64Dynamics.tfb.geometry.BoundingBox3i;
 import com.x64Dynamics.tfb.geometry.Direction;
@@ -18,15 +18,15 @@ import java.util.*;
 
 /**
  * Generates VoxelDreamer-inspired architectural geometry and adaptive details
- * for an individual {@link BuildingSection}, responding to adjacent sections
+ * for an individual {@link EditableBuildingSection}, responding to adjacent sections
  * (walkable rooftop terraces, connecting doors) and live terrain.
  */
 public final class SectionComposer {
     private SectionComposer() {}
 
     public static List<PlacementTarget> compose(
-            BuildingSection section,
-            List<BuildingSection> allSections,
+            EditableBuildingSection section,
+            List<EditableBuildingSection> allSections,
             boolean hasTallerNeighbor,
             HeightmapGrid heightmap,
             FoundationStrategy foundationStrategy) {
@@ -34,11 +34,11 @@ public final class SectionComposer {
         MaterialPalette palette = section.style().createPalette();
         Map<Vec3i, PlacementTarget> map = new LinkedHashMap<>();
 
-        if (section.kind() == BuildingSection.SectionKind.PORCH) {
+        if (section.kind() == EditableBuildingSection.SectionKind.PORCH) {
             composePorch(b, section.facing(), palette, map);
             return new ArrayList<>(map.values());
         }
-        if (section.kind() == BuildingSection.SectionKind.STAIR_APPROACH) {
+        if (section.kind() == EditableBuildingSection.SectionKind.STAIR_APPROACH) {
             composeStairApproach(b, section.facing(), palette, heightmap, map);
             return new ArrayList<>(map.values());
         }
@@ -152,8 +152,8 @@ public final class SectionComposer {
         put(map, doorPos.add(-1, 1, outDz), lantern.withProperty("hanging", "true"), MaterialRole.LIGHT_SOURCE);
 
         // 4. Roof OR Walkable Rooftop Terrace (when a 1-story wing abuts a taller section)
-        boolean makeTerrace = section.kind() == BuildingSection.SectionKind.ROOFTOP_TERRACE
-            || (section.kind() == BuildingSection.SectionKind.SIDE_WING && stories == 1 && hasTallerNeighbor);
+        boolean makeTerrace = section.kind() == EditableBuildingSection.SectionKind.ROOFTOP_TERRACE
+            || (section.kind() == EditableBuildingSection.SectionKind.SIDE_WING && stories == 1 && hasTallerNeighbor);
 
         if (makeTerrace) {
             for (int x = minX; x <= maxX; x++) {
@@ -198,7 +198,7 @@ public final class SectionComposer {
                     put(map, dt.pos(), dt.block(), dt.role());
                 }
             }
-            if (section.kind() == BuildingSection.SectionKind.MAIN_WING) {
+            if (section.kind() == EditableBuildingSection.SectionKind.MAIN_WING) {
                 for (PlacementTarget ct : AdvancedRoofFeatures.generateChimney(new Vec3i(maxX - 2, wallTopY, minZ + 2), 4, palette)) {
                     put(map, ct.pos(), ct.block(), ct.role());
                 }

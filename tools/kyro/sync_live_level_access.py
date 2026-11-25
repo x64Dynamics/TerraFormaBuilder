@@ -9,7 +9,7 @@ HOOK_SNIPPET = """        if (mc.player == null) return;
         if (mc.level != null) {
             if (liveLevelAccess == null) {
                 liveLevelAccess = new {ACCESS_CLASS}(mc.level);
-                TFBClientController.getInstance().model().setLiveLevelAccess(liveLevelAccess);
+                ClientController.getInstance().model().setLiveLevelAccess(liveLevelAccess);
             } else {
                 liveLevelAccess.setLevel(mc.level);
             }
@@ -21,8 +21,8 @@ def main() -> None:
         if not vdir.is_dir():
             continue
         for loader, fname, cls in [
-            ("neoforge", "TFBClientEvents.java", "NeoForgeLevelAccess"),
-            ("forge", "TFBClientEvents.java", "ForgeLevelAccess"),
+            ("neoforge", "ArchitectClientEvents.java", "NeoForgeLevelAccess"),
+            ("forge", "ArchitectClientEvents.java", "ForgeLevelAccess"),
             ("fabric", "ClientEntrypoint.java", "FabricLevelAccess"),
         ]:
             fpath = vdir / loader / "src/main/java/com/x64Dynamics/tfb/client" / fname

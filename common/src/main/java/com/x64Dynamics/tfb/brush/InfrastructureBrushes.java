@@ -1,7 +1,7 @@
 package com.x64Dynamics.tfb.brush;
 
 import com.x64Dynamics.tfb.architectural.PlacementTarget;
-import com.x64Dynamics.tfb.architectural.RoadInfrastructureEngine;
+import com.x64Dynamics.tfb.architectural.RoadInfrastructurePlanner;
 import com.x64Dynamics.tfb.geometry.*;
 import com.x64Dynamics.tfb.material.BlockIdentifier;
 import com.x64Dynamics.tfb.material.MaterialPalette;
@@ -24,11 +24,11 @@ public final class InfrastructureBrushes {
             List<Vec3i> points = buildPathPoints(context);
             if (points.size() >= 2) {
                 SplinePath spline = SplinePath.fromIntegerPoints(SplinePath.SplineType.CATMULL_ROM, points, false);
-                RoadInfrastructureEngine.RoadProfile profile = new RoadInfrastructureEngine.RoadProfile(
-                    RoadInfrastructureEngine.RoadStyle.PAVED_STONE,
+                RoadInfrastructurePlanner.RoadProfile profile = new RoadInfrastructurePlanner.RoadProfile(
+                    RoadInfrastructurePlanner.RoadStyle.PAVED_STONE,
                     width, 1, true, false, true, 12, true, true
                 );
-                return RoadInfrastructureEngine.generateSplineRoad(spline, profile, palette);
+                return RoadInfrastructurePlanner.generateSplineRoad(spline, profile, palette);
             }
             return Collections.emptyList();
         }
@@ -126,11 +126,11 @@ public final class InfrastructureBrushes {
             List<Vec3i> points = buildPathPoints(context);
             if (points.size() >= 2) {
                 SplinePath spline = SplinePath.fromIntegerPoints(SplinePath.SplineType.CATMULL_ROM, points, false);
-                RoadInfrastructureEngine.RoadProfile profile = new RoadInfrastructureEngine.RoadProfile(
-                    RoadInfrastructureEngine.RoadStyle.ASPHALT_MODERN,
+                RoadInfrastructurePlanner.RoadProfile profile = new RoadInfrastructurePlanner.RoadProfile(
+                    RoadInfrastructurePlanner.RoadStyle.ASPHALT_MODERN,
                     width, 2, true, true, true, 14, true, true
                 );
-                return RoadInfrastructureEngine.generateSplineRoad(spline, profile, palette);
+                return RoadInfrastructurePlanner.generateSplineRoad(spline, profile, palette);
             }
             return Collections.emptyList();
         }

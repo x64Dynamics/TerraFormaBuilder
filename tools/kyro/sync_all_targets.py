@@ -73,14 +73,14 @@ SCANNER_LEGACY = SCANNER_BUILT_IN.replace(
 
 LEGACY_REG_VERSIONS = {"1.18.2", "1.19", "1.19.1", "1.19.2"}
 
-EXEC_STUB_OLD = """            while (TFBKeyMappings.EXECUTE_BUILD.consumeClick()) {
+EXEC_STUB_OLD = """            while (ArchitectKeyMappings.EXECUTE_BUILD.consumeClick()) {
                 mc.player.displayClientMessage(
                         Component.literal("§a[TFB] Build execution started..."),
                         true
                 );
             }"""
 
-EXEC_STUB_NEW = """            while (TFBKeyMappings.EXECUTE_BUILD.consumeClick()) {
+EXEC_STUB_NEW = """            while (ArchitectKeyMappings.EXECUTE_BUILD.consumeClick()) {
                 executeBuild(mc);
             }"""
 
@@ -88,7 +88,7 @@ EXEC_METHODS = """
         public static void executeBuild(Minecraft mc) {
             net.minecraft.world.level.Level level = mc.level;
             if (level == null || mc.player == null) return;
-            ArchitectWorkspaceModel model = TFBClientController.getInstance().model();
+            ArchitectWorkspaceModel model = ClientController.getInstance().model();
             java.util.List<com.x64Dynamics.tfb.architectural.PlacementTarget> targets = model.cachedPreviewTargets();
             if (targets.isEmpty()) {
                 mc.player.displayClientMessage(Component.literal("§c[TFB] Build failed: No preview blocks available!"), false);
@@ -168,7 +168,7 @@ def sync_all():
                 entry_count += 1
 
         # 3. executeBuild for stubbed 1.20-1.20.4 targets
-        events_file = pkg_dir / "client/TFBClientEvents.java"
+        events_file = pkg_dir / "client/ArchitectClientEvents.java"
         if events_file.exists():
             etxt = events_file.read_text(encoding="utf-8")
             if EXEC_STUB_OLD in etxt and "void executeBuild(" not in etxt:

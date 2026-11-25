@@ -1,6 +1,6 @@
 package com.x64Dynamics.tfb;
 
-import com.x64Dynamics.tfb.client.TFBClientEvents;
+import com.x64Dynamics.tfb.client.ArchitectClientEvents;
 import com.x64Dynamics.tfb.platform.DefaultLevelAccess;
 import com.x64Dynamics.tfb.platform.DefaultNetworkBridge;
 import com.x64Dynamics.tfb.platform.DefaultPlatformBridge;
@@ -34,9 +34,9 @@ public final class Entrypoint {
         if (FMLEnvironment.dist == Dist.CLIENT) {
             LOGGER.info(String.format("[%s] Initializing client subsystems on NeoForge (Preview renderer, Workspace UI, Keybindings)",
                     TerraFormaBuilder.MOD_ID));
-            modBus.register(TFBClientEvents.ModBusEvents.class);
-            NeoForge.EVENT_BUS.register(TFBClientEvents.ForgeBusEvents.class);
-            NeoForge.EVENT_BUS.register(com.x64Dynamics.tfb.client.TFBClientRenderer.class);
+            modBus.register(ArchitectClientEvents.ModBusEvents.class);
+            NeoForge.EVENT_BUS.register(ArchitectClientEvents.ForgeBusEvents.class);
+            NeoForge.EVENT_BUS.register(com.x64Dynamics.tfb.client.ArchitectWorldRenderer.class);
         }
 
         LOGGER.info(String.format("[%s] Successfully initialized on NeoForge platform.", TerraFormaBuilder.MOD_ID));

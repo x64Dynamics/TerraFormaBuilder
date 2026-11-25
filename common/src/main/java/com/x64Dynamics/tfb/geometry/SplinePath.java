@@ -46,7 +46,9 @@ public final class SplinePath {
         List<PathSample> samples = new ArrayList<>();
         if (controlPoints.size() < 2) return samples;
 
-        int numSegments = closedLoop ? controlPoints.size() : controlPoints.size() - 1;
+        int numSegments = type == SplineType.CUBIC_BEZIER
+            ? Math.max(1, (controlPoints.size() - 1) / 3)
+            : (closedLoop ? controlPoints.size() : controlPoints.size() - 1);
 
         for (int seg = 0; seg < numSegments; seg++) {
             int maxS = (seg == numSegments - 1 && !closedLoop) ? samplesPerSegment : samplesPerSegment - 1;

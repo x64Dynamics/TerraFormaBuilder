@@ -1,7 +1,7 @@
 package com.x64Dynamics.tfb.mixin;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.x64Dynamics.tfb.client.TFBClientRenderer;
+import com.x64Dynamics.tfb.client.ArchitectWorldRenderer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
@@ -25,6 +25,6 @@ public abstract class LevelRendererMixin {
             LightTexture lightTexture,
             Matrix4f projectionMatrix,
             CallbackInfo ci) {
-        TFBClientRenderer.renderLevel(poseStack, camera);
+        ArchitectWorldRenderer.renderLevel(poseStack, camera);
     }
 }

@@ -2,7 +2,7 @@ package com.x64Dynamics.tfb.client;
 
 import com.x64Dynamics.tfb.architectural.PlacementTarget;
 import com.x64Dynamics.tfb.geometry.Vec3i;
-import com.x64Dynamics.tfb.ui.TFBClientController;
+import com.x64Dynamics.tfb.ui.controller.ClientController;
 import com.x64Dynamics.tfb.ui.hotbar.BuilderHotbarModel;
 import com.x64Dynamics.tfb.ui.hotbar.BuilderHotbarSlot;
 import com.x64Dynamics.tfb.ui.model.ArchitectWorkspaceModel;
@@ -17,6 +17,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import java.util.List;
 import java.util.logging.Logger;
 
+import com.x64Dynamics.tfb.TerraFormaBuilder;
+import com.x64Dynamics.tfb.geometry.Rotation;
 public final class ClientEntrypoint implements ClientModInitializer {
     private static final Logger LOGGER = Logger.getLogger("terraformabuilder");
     private static boolean keysRegistered = false;
@@ -31,79 +33,79 @@ public final class ClientEntrypoint implements ClientModInitializer {
         if (mc.player == null || mc.level == null) return;
         if (liveLevelAccess == null) {
             liveLevelAccess = new FabricLevelAccess(mc.level);
-            TFBClientController.getInstance().model().setLiveLevelAccess(liveLevelAccess);
+            ClientController.getInstance().model().setLiveLevelAccess(liveLevelAccess);
         } else {
             liveLevelAccess.setLevel(mc.level);
         }
 
         if (!keysRegistered && mc.options != null) {
-            TFBKeyMappings.registerAll(mc);
+            ArchitectKeyMappings.registerAll(mc);
             keysRegistered = true;
         }
 
         ArchitectFlightController.tick(mc);
 
         if (mc.screen == null) {
-            while (TFBKeyMappings.OPEN_WORKSPACE.consumeClick()) {
+            while (ArchitectKeyMappings.OPEN_WORKSPACE.consumeClick()) {
                 mc.setScreen(new TerraFormaScreen());
             }
 
-            while (TFBKeyMappings.TOGGLE_FLIGHT.consumeClick()) {
-                TFBClientController.getInstance().toggleFlight();
-                boolean active = TFBClientController.getInstance().isFlightActive();
+            while (ArchitectKeyMappings.TOGGLE_FLIGHT.consumeClick()) {
+                ClientController.getInstance().toggleFlight();
+                boolean active = ClientController.getInstance().isFlightActive();
                 mc.player.displayClientMessage(
                     Component.literal("§b[TFB] Architect Flight: " + (active ? "§aEnabled" : "§cDisabled")),
                     true
                 );
             }
 
-            while (TFBKeyMappings.SPEED_UP.consumeClick()) {
-                TFBClientController.getInstance().adjustFlightSpeed(0.2f);
+            while (ArchitectKeyMappings.SPEED_UP.consumeClick()) {
+                ClientController.getInstance().adjustFlightSpeed(0.2f);
                 mc.player.displayClientMessage(
-                    Component.literal(String.format("§b[TFB] Flight Speed: §e%.1fx", TFBClientController.getInstance().getFlightSpeed())),
+                    Component.literal(String.format("§b[TFB] Flight Speed: §e%.1fx", ClientController.getInstance().getFlightSpeed())),
                     true
                 );
             }
 
-            while (TFBKeyMappings.SPEED_DOWN.consumeClick()) {
-                TFBClientController.getInstance().adjustFlightSpeed(-0.2f);
+            while (ArchitectKeyMappings.SPEED_DOWN.consumeClick()) {
+                ClientController.getInstance().adjustFlightSpeed(-0.2f);
                 mc.player.displayClientMessage(
-                    Component.literal(String.format("§b[TFB] Flight Speed: §e%.1fx", TFBClientController.getInstance().getFlightSpeed())),
+                    Component.literal(String.format("§b[TFB] Flight Speed: §e%.1fx", ClientController.getInstance().getFlightSpeed())),
                     true
                 );
             }
 
-            while (TFBKeyMappings.TOGGLE_PREVIEW.consumeClick()) {
-                TFBClientController.getInstance().togglePreview();
-                boolean active = TFBClientController.getInstance().isPreviewActive();
+            while (ArchitectKeyMappings.TOGGLE_PREVIEW.consumeClick()) {
+                ClientController.getInstance().togglePreview();
+                boolean active = ClientController.getInstance().isPreviewActive();
                 mc.player.displayClientMessage(
                     Component.literal("§b[TFB] In-World Preview: " + (active ? "§aEnabled" : "§cDisabled")),
                     true
                 );
             }
 
-            while (TFBKeyMappings.EXECUTE_BUILD.consumeClick()) {
+            while (ArchitectKeyMappings.EXECUTE_BUILD.consumeClick()) {
                 executeBuild(mc);
             }
 
-            while (TFBKeyMappings.UNDO.consumeClick()) {
-                if (TFBClientController.getInstance().model().undo()) {
+            while (ArchitectKeyMappings.UNDO.consumeClick()) {
+                if (ClientController.getInstance().model().undo()) {
                     mc.player.displayClientMessage(Component.literal("§e[TFB] Reverted last design operation."), true);
                 } else {
                     mc.player.displayClientMessage(Component.literal("§7[TFB] Nothing to undo."), true);
                 }
             }
 
-            while (TFBKeyMappings.REDO.consumeClick()) {
-                if (TFBClientController.getInstance().model().redo()) {
+            while (ArchitectKeyMappings.REDO.consumeClick()) {
+                if (ClientController.getInstance().model().redo()) {
                     mc.player.displayClientMessage(Component.literal("§e[TFB] Restored undone design operation."), true);
                 } else {
                     mc.player.displayClientMessage(Component.literal("§7[TFB] Nothing to redo."), true);
                 }
             }
 
-            while (TFBKeyMappings.ROTATE_TOOL.consumeClick()) {
-                ArchitectWorkspaceModel model = TFBClientController.getInstance().model();
+            while (ArchitectKeyMappings.ROTATE_TOOL.consumeClick()) {
+                ArchitectWorkspaceModel model = ClientController.getInstance().model();
                 com.x64Dynamics.tfb.geometry.Rotation next = switch (model.rotation()) {
                     case NONE -> com.x64Dynamics.tfb.geometry.Rotation.CLOCKWISE_90;
                     case CLOCKWISE_90 -> com.x64Dynamics.tfb.geometry.Rotation.CLOCKWISE_180;
@@ -118,7 +120,7 @@ public final class ClientEntrypoint implements ClientModInitializer {
             }
 
             // Builder Hotbar number keys 1–9
-            if (TFBClientController.getInstance().isArchitectMode()) {
+            if (ClientController.getInstance().isArchitectMode()) {
                 for (int i = 0; i < 9; i++) {
                     if (mc.options.keyHotbarSlots[i].consumeClick()) {
                         BuilderHotbarModel.getInstance().setSlot(i);
@@ -134,13 +136,13 @@ public final class ClientEntrypoint implements ClientModInitializer {
 
     public static void onRenderHud(GuiGraphics guiGraphics, float partialTick) {
         Minecraft mc = Minecraft.getInstance();
-        TFBInWorldHud.render(guiGraphics, mc);
+        ArchitectHudRenderer.render(guiGraphics, mc);
     }
 
     public static boolean onMouseScroll(double scrollDelta) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.screen != null || mc.player == null) return false;
-        if (!TFBClientController.getInstance().isArchitectMode()) return false;
+        if (!ClientController.getInstance().isArchitectMode()) return false;
         if (scrollDelta == 0) return false;
 
         BuilderHotbarModel hotbar = BuilderHotbarModel.getInstance();
@@ -163,7 +165,7 @@ public final class ClientEntrypoint implements ClientModInitializer {
     public static boolean onMouseButton(int button, int action) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.screen != null || mc.player == null || mc.level == null) return false;
-        TFBClientController controller = TFBClientController.getInstance();
+        ClientController controller = ClientController.getInstance();
         if (!controller.isArchitectMode()) return false;
         if (action != 1) return false;
 
@@ -210,7 +212,7 @@ public final class ClientEntrypoint implements ClientModInitializer {
         Level level = mc.level;
         if (level == null || mc.player == null) return;
 
-        ArchitectWorkspaceModel model = TFBClientController.getInstance().model();
+        ArchitectWorkspaceModel model = ClientController.getInstance().model();
         List<PlacementTarget> targets = model.cachedPreviewTargets();
             if (targets.isEmpty()) {
                 mc.player.displayClientMessage(

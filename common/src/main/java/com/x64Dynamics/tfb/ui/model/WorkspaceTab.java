@@ -1,6 +1,6 @@
 package com.x64Dynamics.tfb.ui.model;
 
-import com.x64Dynamics.tfb.i18n.TFBLocalization;
+import com.x64Dynamics.tfb.i18n.Localization;
 
 public enum WorkspaceTab {
     HOME("tfb.nav.home", "tfb.nav.home.desc"),
@@ -20,6 +20,6 @@ public enum WorkspaceTab {
         this.descKey = descKey;
     }
 
-    public String title() { return TFBLocalization.tr(titleKey); }
-    public String description() { return TFBLocalization.tr(descKey); }
+    public String title() { return Localization.tr(titleKey); }
+    public String description() { return Localization.tr(descKey); }
 }

@@ -11,11 +11,11 @@ public class Phase3TaxonomyHarmonyTest {
 
     @Test
     public void testModdedFurnitureAndLightSourceTagging() {
-        BlockTaxonomyEntry chair = BlockTaxonomyEngine.analyze(BlockIdentifier.of("cfm:oak_chair"));
+        BlockTaxonomyEntry chair = BlockTaxonomyClassifier.analyze(BlockIdentifier.of("cfm:oak_chair"));
         assertTrue(chair.traits().contains(BlockTrait.FURNITURE));
         assertTrue(chair.traits().contains(BlockTrait.DECORATIVE));
 
-        BlockTaxonomyEntry sconce = BlockTaxonomyEngine.analyze(BlockIdentifier.of("supplementaries:brass_sconce"));
+        BlockTaxonomyEntry sconce = BlockTaxonomyClassifier.analyze(BlockIdentifier.of("supplementaries:brass_sconce"));
         assertTrue(sconce.traits().contains(BlockTrait.LANTERN));
         assertTrue(sconce.traits().contains(BlockTrait.LIGHT_EMITTING));
         assertTrue(sconce.luminance() > 0);

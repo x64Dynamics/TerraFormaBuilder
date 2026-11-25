@@ -7,7 +7,7 @@ import com.x64Dynamics.tfb.geometry.Vec3d;
 import com.x64Dynamics.tfb.geometry.Vec3i;
 import com.x64Dynamics.tfb.material.StylePreset;
 import com.x64Dynamics.tfb.persistence.ParametricBlueprint;
-import com.x64Dynamics.tfb.ui.TFBClientController;
+import com.x64Dynamics.tfb.ui.controller.ClientController;
 import com.x64Dynamics.tfb.ui.interaction.RaycastUtil;
 import com.x64Dynamics.tfb.ui.interaction.SelectionHandle;
 import com.x64Dynamics.tfb.ui.model.ArchitectWorkspaceModel;
@@ -185,7 +185,7 @@ public class UISystemTest {
 
     @Test
     public void testClientController() {
-        TFBClientController controller = TFBClientController.getInstance();
+        ClientController controller = ClientController.getInstance();
         assertNotNull(controller.model());
         assertNotNull(controller.screen());
         assertTrue(controller.isPreviewActive());
@@ -199,10 +199,10 @@ public class UISystemTest {
 
     @Test
     public void testLocalizationAndAllStudioTabs() {
-        assertTrue(com.x64Dynamics.tfb.i18n.TFBLocalization.hasKey("tfb.home.welcome"));
-        assertTrue(com.x64Dynamics.tfb.i18n.TFBLocalization.hasKey("tfb.nav.home"));
-        assertTrue(com.x64Dynamics.tfb.i18n.TFBLocalization.hasKey("tfb.room.living_hall"));
-        assertEquals("Design", com.x64Dynamics.tfb.i18n.TFBLocalization.tr("tfb.nav.design"));
+        assertTrue(com.x64Dynamics.tfb.i18n.Localization.hasKey("tfb.home.welcome"));
+        assertTrue(com.x64Dynamics.tfb.i18n.Localization.hasKey("tfb.nav.home"));
+        assertTrue(com.x64Dynamics.tfb.i18n.Localization.hasKey("tfb.room.living_hall"));
+        assertEquals("Design", com.x64Dynamics.tfb.i18n.Localization.tr("tfb.nav.design"));
 
         ArchitectWorkspaceModel model = new ArchitectWorkspaceModel();
         ArchitectWorkspaceScreen screen = new ArchitectWorkspaceScreen(model);

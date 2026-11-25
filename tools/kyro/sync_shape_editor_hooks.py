@@ -72,8 +72,8 @@ def main() -> None:
             if not cdir.exists():
                 continue
 
-            # 1. TFBInWorldHud.java
-            hud_path = cdir / "TFBInWorldHud.java"
+            # 1. ArchitectHudRenderer.java
+            hud_path = cdir / "ArchitectHudRenderer.java"
             if hud_path.exists():
                 txt = hud_path.read_text(encoding="utf-8")
                 if "isShapeEditorMode()" not in txt and "// 2. Bottom Dedicated Builder Hotbar" in txt:
@@ -86,7 +86,7 @@ def main() -> None:
 
             # 2. Mouse sculpting hook
             if loader in ("neoforge", "forge"):
-                ev_path = cdir / "TFBClientEvents.java"
+                ev_path = cdir / "ArchitectClientEvents.java"
                 if ev_path.exists():
                     txt = ev_path.read_text(encoding="utf-8")
                     if "sculptAt(" not in txt and "if (event.getButton() == 0)" in txt:
@@ -114,9 +114,9 @@ def main() -> None:
                         ce_path.write_text(txt, encoding="utf-8")
                         mouse_count += 1
 
-            # 3. TFBClientRenderer.java (1.18.2 - 1.21.11)
+            # 3. ArchitectWorldRenderer.java (1.18.2 - 1.21.11)
             if not is_26:
-                ren_path = cdir / "TFBClientRenderer.java"
+                ren_path = cdir / "ArchitectWorldRenderer.java"
                 if ren_path.exists():
                     txt = ren_path.read_text(encoding="utf-8")
                     if "isShapeEditorMode()" not in txt and "WorldPreviewBuffer previewBuffer" in txt:

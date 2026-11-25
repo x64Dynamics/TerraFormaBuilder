@@ -10,8 +10,8 @@ import java.util.List;
 public final class StructurePlacementController {
     private final GridManager grid;
     private final BuildingRegistry registry;
-    private final PlacementRuleEngine ruleEngine;
-    private final ConnectionEngine connectionEngine;
+    private final PlacementValidator ruleEngine;
+    private final ComplexConnectionPlanner connectionEngine;
 
     private String selectedBuildingId;
     private GridManager.GridCoord selectedCell;
@@ -20,8 +20,8 @@ public final class StructurePlacementController {
     public StructurePlacementController(
         GridManager grid,
         BuildingRegistry registry,
-        PlacementRuleEngine ruleEngine,
-        ConnectionEngine connectionEngine
+        PlacementValidator ruleEngine,
+        ComplexConnectionPlanner connectionEngine
     ) {
         this.grid = grid;
         this.registry = registry;
@@ -31,15 +31,15 @@ public final class StructurePlacementController {
 
     public GridManager grid() { return grid; }
     public BuildingRegistry registry() { return registry; }
-    public PlacementRuleEngine ruleEngine() { return ruleEngine; }
-    public ConnectionEngine connectionEngine() { return connectionEngine; }
+    public PlacementValidator ruleEngine() { return ruleEngine; }
+    public ComplexConnectionPlanner connectionEngine() { return connectionEngine; }
     public String selectedBuildingId() { return selectedBuildingId; }
     public void selectBuilding(String id) { this.selectedBuildingId = id; }
     public GridManager.GridCoord selectedCell() { return selectedCell; }
     public void selectCell(GridManager.GridCoord cell) { this.selectedCell = cell; }
     public String lastValidationMessage() { return lastValidationMessage; }
 
-    public PlacementRuleEngine.ValidationResult placeBuilding(GridBuilding building) {
+    public PlacementValidator.ValidationResult placeBuilding(GridBuilding building) {
         var res = ruleEngine.validatePlacement(building, grid, registry);
         if (!res.valid()) {
             this.lastValidationMessage = String.join("; ", res.errors());
@@ -54,10 +54,10 @@ public final class StructurePlacementController {
         return res;
     }
 
-    public PlacementRuleEngine.ValidationResult moveBuilding(String id, int newGridX, int newGridZ, int newBaseY) {
+    public PlacementValidator.ValidationResult moveBuilding(String id, int newGridX, int newGridZ, int newBaseY) {
         GridBuilding b = registry.get(id).orElse(null);
         if (b == null) {
-            return PlacementRuleEngine.ValidationResult.fail(List.of("Unknown building: " + id), List.of());
+            return PlacementValidator.ValidationResult.fail(List.of("Unknown building: " + id), List.of());
         }
         int oldX = b.gridX(), oldZ = b.gridZ(), oldY = b.baseY();
         b.setPosition(newGridX, newGridZ, newBaseY);
@@ -76,15 +76,24 @@ public final class StructurePlacementController {
         GridBuilding b = registry.get(id).orElse(null);
         if (b == null) return false;
         b.rotateClockwise();
+        var res = ruleEngine.validatePlacement(b, grid, registry);
+        if (!res.valid()) {
+            // Roll back 90-degree clockwise rotation (3 more clockwise = 360)
+            b.rotateClockwise();
+            b.rotateClockwise();
+            b.rotateClockwise();
+            this.lastValidationMessage = String.join("; ", res.errors());
+            return false;
+        }
         rebuildOccupancyAndConnections();
         this.lastValidationMessage = "Rotated '" + id + "' to " + b.facing();
         return true;
     }
 
-    public PlacementRuleEngine.ValidationResult resizeBuilding(String id, int newWidth, int newDepth) {
+    public PlacementValidator.ValidationResult resizeBuilding(String id, int newWidth, int newDepth) {
         GridBuilding b = registry.get(id).orElse(null);
         if (b == null) {
-            return PlacementRuleEngine.ValidationResult.fail(List.of("Unknown building: " + id), List.of());
+            return PlacementValidator.ValidationResult.fail(List.of("Unknown building: " + id), List.of());
         }
         int oldW = b.width(), oldD = b.depth();
         b.setSize(newWidth, newDepth);
@@ -109,7 +118,7 @@ public final class StructurePlacementController {
         return removed;
     }
 
-    public void overrideConnection(String buildingA, String buildingB, ConnectionEngine.ConnectionType type) {
+    public void overrideConnection(String buildingA, String buildingB, ComplexConnectionPlanner.ConnectionType type) {
         connectionEngine.setManualOverride(buildingA, buildingB, type);
         rebuildOccupancyAndConnections();
     }

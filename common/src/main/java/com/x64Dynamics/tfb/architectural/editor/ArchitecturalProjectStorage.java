@@ -2,7 +2,7 @@ package com.x64Dynamics.tfb.architectural.editor;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.x64Dynamics.tfb.architectural.RoofGenerator;
+import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
 import com.x64Dynamics.tfb.geometry.BoundingBox3i;
 import com.x64Dynamics.tfb.geometry.Direction;
 import com.x64Dynamics.tfb.geometry.Vec3i;
@@ -35,7 +35,7 @@ public final class ArchitecturalProjectStorage {
         dto.id = project.id();
         dto.name = project.name();
         dto.sections = new ArrayList<>();
-        for (BuildingSection s : project.sections()) {
+        for (EditableBuildingSection s : project.sections()) {
             SectionDto sd = new SectionDto();
             sd.id = s.id();
             sd.kind = s.kind().name();
@@ -70,8 +70,8 @@ public final class ArchitecturalProjectStorage {
                     new Vec3i(sd.minX, sd.minY, sd.minZ),
                     new Vec3i(sd.maxX, sd.maxY, sd.maxZ)
                 );
-                BuildingSection sec = proj.addSection(
-                    BuildingSection.SectionKind.valueOf(sd.kind),
+                EditableBuildingSection sec = proj.addSection(
+                    EditableBuildingSection.SectionKind.valueOf(sd.kind),
                     box,
                     sd.stories,
                     StylePreset.valueOf(sd.style),

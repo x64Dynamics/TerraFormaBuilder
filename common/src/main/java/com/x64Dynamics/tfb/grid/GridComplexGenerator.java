@@ -10,15 +10,19 @@ import com.x64Dynamics.tfb.material.MaterialRole;
 
 import java.util.*;
 
+import com.x64Dynamics.tfb.architectural.layout.ConnectedBuildingComposer;
+import com.x64Dynamics.tfb.architectural.layout.StaircaseGenerator;
+import com.x64Dynamics.tfb.architectural.layout.TowerGenerator;
+import com.x64Dynamics.tfb.architectural.layout.WingConfiguration;
 /**
- * Compiles a complete BuildingRegistry and ConnectionEngine graph into deterministic
+ * Compiles a complete BuildingRegistry and ComplexConnectionPlanner graph into deterministic
  * PlacementTargets for preview or world construction, without modifying the Minecraft world.
  */
 public final class GridComplexGenerator {
     public record ComplexResult(
         List<PlacementTarget> targets,
         List<BuildingPlan> plans,
-        List<ConnectionEngine.BuildingConnection> connections
+        List<ComplexConnectionPlanner.BuildingConnection> connections
     ) { }
 
     private GridComplexGenerator() { }
@@ -26,18 +30,18 @@ public final class GridComplexGenerator {
     public static ComplexResult generate(
         GridManager grid,
         BuildingRegistry registry,
-        ConnectionEngine connectionEngine,
-        PlacementRuleEngine.PlacementRules rules
+        ComplexConnectionPlanner connectionEngine,
+        PlacementValidator.PlacementRules rules
     ) {
         Map<Vec3i, PlacementTarget> merged = new LinkedHashMap<>();
         List<BuildingPlan> plans = new ArrayList<>();
 
-        List<ConnectionEngine.BuildingConnection> connections = connectionEngine.analyzeConnections(grid, registry, rules);
+        List<ComplexConnectionPlanner.BuildingConnection> connections = connectionEngine.analyzeConnections(grid, registry, rules);
         List<GridBuilding> buildings = new ArrayList<>(registry.allBuildings());
 
         for (int i = 0; i < buildings.size(); i++) {
             GridBuilding b = buildings.get(i);
-            var spec = ArchitecturalVariationEngine.deriveSpec(b, i);
+            var spec = ComplexVariationPlanner.deriveSpec(b, i);
             BoundingBox3i box = grid.toWorldBounds(b);
             WingConfiguration wing = switch (b.footprint()) {
                 case L_SHAPED -> WingConfiguration.L_SHAPED;
@@ -85,8 +89,8 @@ public final class GridComplexGenerator {
 
         // Realize explicit architectural connections between buildings
         for (var conn : connections) {
-            if (conn.status() == ConnectionEngine.ConnectionStatus.PROHIBITED
-                || conn.type() == ConnectionEngine.ConnectionType.DELIBERATE_GAP) {
+            if (conn.status() == ComplexConnectionPlanner.ConnectionStatus.PROHIBITED
+                || conn.type() == ComplexConnectionPlanner.ConnectionType.DELIBERATE_GAP) {
                 continue;
             }
             GridBuilding from = registry.get(conn.fromBuildingId()).orElse(null);

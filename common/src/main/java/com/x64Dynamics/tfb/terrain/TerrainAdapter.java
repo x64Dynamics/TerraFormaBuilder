@@ -23,6 +23,9 @@ public final class TerrainAdapter {
         List<PlacementTarget> foundations = new ArrayList<>();
         List<Vec3i> excavations = new ArrayList<>();
         List<PlacementTarget> fills = new ArrayList<>();
+        if (heightmap == null || structureBounds == null || palette == null) {
+            return new TerrainAdaptationResult(foundations, excavations, fills);
+        }
 
         int floorY = structureBounds.min().y();
         int minX = structureBounds.min().x(), maxX = structureBounds.max().x();

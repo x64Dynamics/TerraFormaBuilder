@@ -8,7 +8,7 @@ import java.util.*;
  */
 public final class BuildingRegistry {
     private final Map<String, GridBuilding> buildings = new LinkedHashMap<>();
-    private final List<ConnectionEngine.BuildingConnection> connections = new ArrayList<>();
+    private final List<ComplexConnectionPlanner.BuildingConnection> connections = new ArrayList<>();
 
     public void register(GridBuilding building) {
         buildings.put(building.id(), building);
@@ -27,17 +27,17 @@ public final class BuildingRegistry {
         return Collections.unmodifiableCollection(buildings.values());
     }
 
-    public List<ConnectionEngine.BuildingConnection> connections() {
+    public List<ComplexConnectionPlanner.BuildingConnection> connections() {
         return Collections.unmodifiableList(connections);
     }
 
-    public void setConnections(List<ConnectionEngine.BuildingConnection> updated) {
+    public void setConnections(List<ComplexConnectionPlanner.BuildingConnection> updated) {
         connections.clear();
         connections.addAll(updated);
     }
 
-    public List<ConnectionEngine.BuildingConnection> connectionsFor(String buildingId) {
-        List<ConnectionEngine.BuildingConnection> list = new ArrayList<>();
+    public List<ComplexConnectionPlanner.BuildingConnection> connectionsFor(String buildingId) {
+        List<ComplexConnectionPlanner.BuildingConnection> list = new ArrayList<>();
         for (var c : connections) {
             if (c.fromBuildingId().equals(buildingId) || c.toBuildingId().equals(buildingId)) {
                 list.add(c);

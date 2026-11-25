@@ -1,8 +1,8 @@
-"""Propagate 3D block preview renderer (TFBClientRenderer) across NeoForge and Forge targets."""
+"""Propagate 3D block preview renderer (ArchitectWorldRenderer) across NeoForge and Forge targets."""
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-SRC_NEO = ROOT / "versions/1.21.1/neoforge/src/main/java/com/x64Dynamics/tfb/client/TFBClientRenderer.java"
+SRC_NEO = ROOT / "versions/1.21.1/neoforge/src/main/java/com/x64Dynamics/tfb/client/ArchitectWorldRenderer.java"
 
 def sync():
     neo_src = SRC_NEO.read_text(encoding="utf-8")
@@ -21,16 +21,16 @@ def sync():
         mc = d.parts[-2]
         if mc.startswith("26."):
             continue
-        dest = d / "src/main/java/com/x64Dynamics/tfb/client/TFBClientRenderer.java"
+        dest = d / "src/main/java/com/x64Dynamics/tfb/client/ArchitectWorldRenderer.java"
         if mc in ("1.20.2", "1.20.3", "1.20.4"):
             dest.write_text(neo_early, encoding="utf-8", newline="\n")
             ep = d / "src/main/java/com/x64Dynamics/tfb/Entrypoint.java"
             if ep.exists():
                 ep_txt = ep.read_text(encoding="utf-8")
-                if "TFBClientRenderer.class" not in ep_txt:
+                if "ArchitectWorldRenderer.class" not in ep_txt:
                     ep_txt = ep_txt.replace(
-                        "NeoForge.EVENT_BUS.register(TFBClientEvents.ForgeBusEvents.class);",
-                        "NeoForge.EVENT_BUS.register(TFBClientEvents.ForgeBusEvents.class);\n            NeoForge.EVENT_BUS.register(com.x64Dynamics.tfb.client.TFBClientRenderer.class);"
+                        "NeoForge.EVENT_BUS.register(ArchitectClientEvents.ForgeBusEvents.class);",
+                        "NeoForge.EVENT_BUS.register(ArchitectClientEvents.ForgeBusEvents.class);\n            NeoForge.EVENT_BUS.register(com.x64Dynamics.tfb.client.ArchitectWorldRenderer.class);"
                     )
                     ep.write_text(ep_txt, encoding="utf-8", newline="\n")
         else:
@@ -55,11 +55,11 @@ def sync():
         mc = d.parts[-2]
         if mc == "1.18.2" or mc.startswith("26."):
             continue
-        dest = d / "src/main/java/com/x64Dynamics/tfb/client/TFBClientRenderer.java"
+        dest = d / "src/main/java/com/x64Dynamics/tfb/client/ArchitectWorldRenderer.java"
         dest.write_text(forge_src, encoding="utf-8", newline="\n")
         forge_count += 1
 
-    print(f"Synced TFBClientRenderer to {neo_count} NeoForge targets and {forge_count} Forge targets.")
+    print(f"Synced ArchitectWorldRenderer to {neo_count} NeoForge targets and {forge_count} Forge targets.")
 
 if __name__ == "__main__":
     sync()

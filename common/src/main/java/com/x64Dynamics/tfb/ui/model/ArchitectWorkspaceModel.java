@@ -1,19 +1,19 @@
 package com.x64Dynamics.tfb.ui.model;
 
-import com.x64Dynamics.tfb.architectural.AdvancedRoofFeatures;
-import com.x64Dynamics.tfb.architectural.FacadeOrnamentGenerator;
-import com.x64Dynamics.tfb.architectural.FloorGenerator;
-import com.x64Dynamics.tfb.architectural.InteriorFloorPlanner;
-import com.x64Dynamics.tfb.architectural.InteriorFurnishingGenerator;
-import com.x64Dynamics.tfb.architectural.InteriorRoom;
-import com.x64Dynamics.tfb.architectural.LayeredFacadeComposer;
-import com.x64Dynamics.tfb.architectural.ParametricFootprint;
+import com.x64Dynamics.tfb.architectural.roof.AdvancedRoofFeatures;
+import com.x64Dynamics.tfb.architectural.facade.FacadeOrnamentGenerator;
+import com.x64Dynamics.tfb.architectural.layout.FloorGenerator;
+import com.x64Dynamics.tfb.architectural.interior.InteriorFloorPlanner;
+import com.x64Dynamics.tfb.architectural.interior.InteriorFurnishingGenerator;
+import com.x64Dynamics.tfb.architectural.interior.InteriorRoom;
+import com.x64Dynamics.tfb.architectural.facade.LayeredFacadeComposer;
+import com.x64Dynamics.tfb.architectural.layout.ParametricFootprint;
 import com.x64Dynamics.tfb.architectural.PlacementTarget;
-import com.x64Dynamics.tfb.architectural.RoofGenerator;
-import com.x64Dynamics.tfb.architectural.WingConfiguration;
-import com.x64Dynamics.tfb.architectural.WingLayoutGenerator;
+import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
+import com.x64Dynamics.tfb.architectural.layout.WingConfiguration;
+import com.x64Dynamics.tfb.architectural.layout.WingLayoutGenerator;
 import com.x64Dynamics.tfb.architectural.style.ArchitecturalStyleRuleSet;
-import com.x64Dynamics.tfb.architectural.style.ProceduralVariationEngine;
+import com.x64Dynamics.tfb.architectural.style.ProceduralVariator;
 import com.x64Dynamics.tfb.architectural.style.StyleRuleSetRegistry;
 import com.x64Dynamics.tfb.brush.ArchitecturalBrushes;
 import com.x64Dynamics.tfb.brush.BrushCategory;
@@ -196,7 +196,7 @@ public class ArchitectWorkspaceModel {
         if (enabled && activeArchProject.sections().isEmpty()) {
             BoundingBox3i initial = BoundingBox3i.fromOriginAndSize(origin, Math.max(9, width), 1, Math.max(9, depth));
             var sec = activeArchProject.addSection(
-                com.x64Dynamics.tfb.architectural.editor.BuildingSection.SectionKind.MAIN_WING,
+                com.x64Dynamics.tfb.architectural.editor.EditableBuildingSection.SectionKind.MAIN_WING,
                 initial, 2, stylePreset, roofShape, Direction.SOUTH, proceduralSeed
             );
             selectedSectionId = sec.id();
@@ -223,8 +223,8 @@ public class ArchitectWorkspaceModel {
         new com.x64Dynamics.tfb.grid.StructurePlacementController(
             com.x64Dynamics.tfb.grid.GridManager.defaultProjectGrid(new Vec3i(0, 64, 0)),
             new com.x64Dynamics.tfb.grid.BuildingRegistry(),
-            new com.x64Dynamics.tfb.grid.PlacementRuleEngine(com.x64Dynamics.tfb.grid.PlacementRuleEngine.PlacementRules.defaults()),
-            new com.x64Dynamics.tfb.grid.ConnectionEngine()
+            new com.x64Dynamics.tfb.grid.PlacementValidator(com.x64Dynamics.tfb.grid.PlacementValidator.PlacementRules.defaults()),
+            new com.x64Dynamics.tfb.grid.ComplexConnectionPlanner()
         );
     private final com.x64Dynamics.tfb.ui.camera.ArchitectCameraController cameraController =
         new com.x64Dynamics.tfb.ui.camera.ArchitectCameraController();
@@ -240,10 +240,10 @@ public class ArchitectWorkspaceModel {
         return result.targets().size();
     }
 
-    public synchronized com.x64Dynamics.tfb.architectural.AutoArchitectEngine.AutoDesignReport runAutoModeDesign() {
+    public synchronized com.x64Dynamics.tfb.architectural.AutonomousArchitect.AutoDesignReport runAutoModeDesign() {
         this.cityMode = false;
         this.shapeEditorMode = false;
-        var report = com.x64Dynamics.tfb.architectural.AutoArchitectEngine.autoDesign(
+        var report = com.x64Dynamics.tfb.architectural.AutonomousArchitect.autoDesign(
             origin, boundingBox(), liveLevelAccess, null, proceduralSeed
         );
         this.stylePreset = report.chosenStyle();
@@ -256,10 +256,10 @@ public class ArchitectWorkspaceModel {
         return report;
     }
 
-    public synchronized com.x64Dynamics.tfb.architectural.AutoArchitectEngine.AutoDesignReport runAutoModeComplex() {
+    public synchronized com.x64Dynamics.tfb.architectural.AutonomousArchitect.AutoDesignReport runAutoModeComplex() {
         this.cityMode = false;
         this.shapeEditorMode = false;
-        var report = com.x64Dynamics.tfb.architectural.AutoArchitectEngine.autoPopulateComplex(
+        var report = com.x64Dynamics.tfb.architectural.AutonomousArchitect.autoPopulateComplex(
             origin, gridPlacement, liveLevelAccess, null, proceduralSeed
         );
         this.stylePreset = report.chosenStyle();
@@ -288,7 +288,7 @@ public class ArchitectWorkspaceModel {
     public synchronized int generateConnectedEstate() {
         this.cityMode = false;
         this.shapeEditorMode = false;
-        List<PlacementTarget> estate = com.x64Dynamics.tfb.architectural.ConnectedBuildingComposer.generateConnectedEstate(origin, activePalette());
+        List<PlacementTarget> estate = com.x64Dynamics.tfb.architectural.layout.ConnectedBuildingComposer.generateConnectedEstate(origin, activePalette());
         this.cachedPreviewTargets = estate;
         this.cachedBuildPlan = new ProgressiveBuildPlan(estate);
         this.previewBuffer.updateFromTargets(estate, liveLevelAccess);
@@ -348,11 +348,11 @@ public class ArchitectWorkspaceModel {
                         origin.add(gx * 8, 0, gz * 8), 8, 1, 8
                     );
                     var kind = "corner_pillar".equals(mod)
-                        ? com.x64Dynamics.tfb.architectural.editor.BuildingSection.SectionKind.TOWER
+                        ? com.x64Dynamics.tfb.architectural.editor.EditableBuildingSection.SectionKind.TOWER
                         : (gx == 1 && gz == 1)
-                            ? com.x64Dynamics.tfb.architectural.editor.BuildingSection.SectionKind.MAIN_WING
-                            : com.x64Dynamics.tfb.architectural.editor.BuildingSection.SectionKind.SIDE_WING;
-                    int stories = kind == com.x64Dynamics.tfb.architectural.editor.BuildingSection.SectionKind.TOWER ? 3 : (kind == com.x64Dynamics.tfb.architectural.editor.BuildingSection.SectionKind.MAIN_WING ? 2 : 1);
+                            ? com.x64Dynamics.tfb.architectural.editor.EditableBuildingSection.SectionKind.MAIN_WING
+                            : com.x64Dynamics.tfb.architectural.editor.EditableBuildingSection.SectionKind.SIDE_WING;
+                    int stories = kind == com.x64Dynamics.tfb.architectural.editor.EditableBuildingSection.SectionKind.TOWER ? 3 : (kind == com.x64Dynamics.tfb.architectural.editor.EditableBuildingSection.SectionKind.MAIN_WING ? 2 : 1);
                     var sec = activeArchProject.addSection(kind, cellBox, stories, stylePreset, roofShape, Direction.SOUTH, proceduralSeed + gx * 31L + gz);
                     selectedSectionId = sec.id();
                 }
@@ -390,9 +390,9 @@ public class ArchitectWorkspaceModel {
                         new Vec3i(hitPos.x() - 4, hitPos.y(), hitPos.z() - 4), 9, 1, 9
                     );
                     var kind = activeArchProject.sections().isEmpty()
-                        ? com.x64Dynamics.tfb.architectural.editor.BuildingSection.SectionKind.MAIN_WING
-                        : com.x64Dynamics.tfb.architectural.editor.BuildingSection.SectionKind.SIDE_WING;
-                    var sec = activeArchProject.addSection(kind, footprint, kind == com.x64Dynamics.tfb.architectural.editor.BuildingSection.SectionKind.MAIN_WING ? 2 : 1, stylePreset, roofShape, outFace, proceduralSeed + activeArchProject.sections().size());
+                        ? com.x64Dynamics.tfb.architectural.editor.EditableBuildingSection.SectionKind.MAIN_WING
+                        : com.x64Dynamics.tfb.architectural.editor.EditableBuildingSection.SectionKind.SIDE_WING;
+                    var sec = activeArchProject.addSection(kind, footprint, kind == com.x64Dynamics.tfb.architectural.editor.EditableBuildingSection.SectionKind.MAIN_WING ? 2 : 1, stylePreset, roofShape, outFace, proceduralSeed + activeArchProject.sections().size());
                     selectedSectionId = sec.id();
                     msg = "Added " + kind.name() + " (" + sec.id() + ")";
                 }
@@ -409,7 +409,7 @@ public class ArchitectWorkspaceModel {
                         new Vec3i(hitPos.x() - 3, hitPos.y(), hitPos.z() - 3), 7, 1, 7
                     );
                     var sec = activeArchProject.addSection(
-                        com.x64Dynamics.tfb.architectural.editor.BuildingSection.SectionKind.TOWER,
+                        com.x64Dynamics.tfb.architectural.editor.EditableBuildingSection.SectionKind.TOWER,
                         footprint, 3, stylePreset, roofShape, outFace, proceduralSeed + 77
                     );
                     selectedSectionId = sec.id();
@@ -421,7 +421,7 @@ public class ArchitectWorkspaceModel {
                     new Vec3i(hitPos.x() - 2, hitPos.y(), hitPos.z() - 2), 5, 1, 5
                 );
                 var sec = activeArchProject.addSection(
-                    com.x64Dynamics.tfb.architectural.editor.BuildingSection.SectionKind.PORCH,
+                    com.x64Dynamics.tfb.architectural.editor.EditableBuildingSection.SectionKind.PORCH,
                     footprint, 1, stylePreset, RoofGenerator.RoofType.FLAT, outFace, proceduralSeed + 33
                 );
                 if (hitSecOpt.isPresent()) sec.setParentSectionId(hitSecOpt.get().id());
@@ -433,7 +433,7 @@ public class ArchitectWorkspaceModel {
                     new Vec3i(hitPos.x() - 1, hitPos.y(), hitPos.z()), 3, 1, 4
                 );
                 var sec = activeArchProject.addSection(
-                    com.x64Dynamics.tfb.architectural.editor.BuildingSection.SectionKind.STAIR_APPROACH,
+                    com.x64Dynamics.tfb.architectural.editor.EditableBuildingSection.SectionKind.STAIR_APPROACH,
                     footprint, 1, stylePreset, RoofGenerator.RoofType.FLAT, outFace, proceduralSeed + 55
                 );
                 selectedSectionId = sec.id();
@@ -677,7 +677,7 @@ public class ArchitectWorkspaceModel {
             this.settlementPattern = pattern;
             if (cityMode && activeCityProject != null) {
                 activeCityProject.setPattern(pattern);
-                com.x64Dynamics.tfb.city.CityPlannerEngine.planCity(activeCityProject);
+                com.x64Dynamics.tfb.city.CityPlanner.planCity(activeCityProject);
                 generatePreview();
             }
         }
@@ -708,14 +708,14 @@ public class ArchitectWorkspaceModel {
             this.stylePreset,
             this.proceduralSeed
         );
-        com.x64Dynamics.tfb.city.CityPlannerEngine.planCity(this.activeCityProject, sampleLiveHeightmap(boundingBox()));
+        com.x64Dynamics.tfb.city.CityPlanner.planCity(this.activeCityProject, sampleLiveHeightmap(boundingBox()));
         generatePreview();
     }
 
     public synchronized boolean regenerateSelectedParcel() {
         if (!cityMode || activeCityProject == null || selectedParcelId == null) return false;
         long nextSeed = (proceduralSeed * 6364136223846793005L + System.nanoTime()) & 0x7FFFFFFFL;
-        boolean ok = com.x64Dynamics.tfb.city.CityPlannerEngine.regenerateParcel(activeCityProject, selectedParcelId, nextSeed);
+        boolean ok = com.x64Dynamics.tfb.city.CityPlanner.regenerateParcel(activeCityProject, selectedParcelId, nextSeed);
         if (ok) generatePreview();
         return ok;
     }
@@ -742,7 +742,7 @@ public class ArchitectWorkspaceModel {
         this.height = project.bounds().sizeY();
         this.depth = project.bounds().sizeZ();
         this.proceduralSeed = project.seed();
-        com.x64Dynamics.tfb.city.CityPlannerEngine.planCity(project);
+        com.x64Dynamics.tfb.city.CityPlanner.planCity(project);
         generatePreview();
     }
 
@@ -763,14 +763,14 @@ public class ArchitectWorkspaceModel {
             com.x64Dynamics.tfb.terrain.HeightmapGrid secHeight = sampleLiveHeightmap(sampleBox);
             activeArchProject.regenerateDirtySections(secHeight, foundationStrategy);
             targets.addAll(activeArchProject.resolveAllTargets());
-            this.generatedStories = activeArchProject.sections().stream().mapToInt(com.x64Dynamics.tfb.architectural.editor.BuildingSection::stories).max().orElse(1);
+            this.generatedStories = activeArchProject.sections().stream().mapToInt(com.x64Dynamics.tfb.architectural.editor.EditableBuildingSection::stories).max().orElse(1);
             this.generatedRoomCount = activeArchProject.sections().size();
         } else if (cityMode && activeCityProject != null) {
             activeCityProject.setBounds(box);
             activeCityProject.setPrimaryStyle(stylePreset);
             activeCityProject.setSeed(proceduralSeed);
             if (activeCityProject.districts().isEmpty()) {
-                com.x64Dynamics.tfb.city.CityPlannerEngine.planCity(activeCityProject, liveHeightmap);
+                com.x64Dynamics.tfb.city.CityPlanner.planCity(activeCityProject, liveHeightmap);
             }
             if (buildScope == BuildScope.SELECTED_PARCEL && selectedParcelId != null) {
                 targets.addAll(activeCityProject.resolveParcelTargets(selectedParcelId));
@@ -886,7 +886,7 @@ public class ArchitectWorkspaceModel {
 
         // 4. Procedural texture variation
         if (proceduralVariation > 0.0f) {
-            targets = ProceduralVariationEngine.applyFacadeVariation(targets, activePalette, proceduralSeed, proceduralVariation);
+            targets = ProceduralVariator.applyFacadeVariation(targets, activePalette, proceduralSeed, proceduralVariation);
         }
 
         // 5. Transforms (rotation & mirror)

@@ -13,6 +13,9 @@ import java.util.List;
 
 import static org.junit.Assert.*;
 
+import com.x64Dynamics.tfb.architectural.facade.FacadeOrnamentGenerator;
+import com.x64Dynamics.tfb.architectural.layout.StaircaseGenerator;
+import com.x64Dynamics.tfb.architectural.layout.TowerGenerator;
 public class Phase2ArchitectureTest {
 
     @Test
@@ -50,8 +53,8 @@ public class Phase2ArchitectureTest {
     @Test
     public void testUrbanIntersectionCrosswalksAndTrafficLights() {
         MaterialPalette palette = StylePreset.MODERN.createPalette();
-        List<PlacementTarget> fourWay = RoadInfrastructureEngine.generateIntersection(
-            Vec3i.ZERO, RoadInfrastructureEngine.IntersectionType.FOUR_WAY, RoadInfrastructureEngine.RoadProfile.defaultUrban(), palette
+        List<PlacementTarget> fourWay = RoadInfrastructurePlanner.generateIntersection(
+            Vec3i.ZERO, RoadInfrastructurePlanner.IntersectionType.FOUR_WAY, RoadInfrastructurePlanner.RoadProfile.defaultUrban(), palette
         );
         assertTrue("Urban intersection should include white concrete crosswalks",
             fourWay.stream().anyMatch(t -> t.block().asString().contains("white_concrete")));

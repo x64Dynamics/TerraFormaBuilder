@@ -11,6 +11,13 @@ import java.util.*;
 
 import static org.junit.Assert.*;
 
+import com.x64Dynamics.tfb.architectural.facade.WallSegmenter;
+import com.x64Dynamics.tfb.architectural.interior.InteriorFloorPlanner;
+import com.x64Dynamics.tfb.architectural.interior.InteriorFurnishingGenerator;
+import com.x64Dynamics.tfb.architectural.interior.InteriorRoom;
+import com.x64Dynamics.tfb.architectural.layout.BuildingSection;
+import com.x64Dynamics.tfb.architectural.layout.ConnectedBuildingComposer;
+import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
 public final class ProceduralArchitectureAndInfrastructureTest {
     private final MaterialPalette palette = StylePreset.MEDIEVAL.createPalette();
 
@@ -66,8 +73,8 @@ public final class ProceduralArchitectureAndInfrastructureTest {
         }
 
         // Generate full spline road with curbs and sidewalks
-        RoadInfrastructureEngine.RoadProfile profile = RoadInfrastructureEngine.RoadProfile.defaultUrban();
-        List<PlacementTarget> roadTargets = RoadInfrastructureEngine.generateSplineRoad(path, profile, palette);
+        RoadInfrastructurePlanner.RoadProfile profile = RoadInfrastructurePlanner.RoadProfile.defaultUrban();
+        List<PlacementTarget> roadTargets = RoadInfrastructurePlanner.generateSplineRoad(path, profile, palette);
         assertFalse(roadTargets.isEmpty());
         // Road surface floor targets must be present
         assertTrue(roadTargets.stream().anyMatch(t -> t.role() == MaterialRole.FLOOR));
@@ -76,10 +83,10 @@ public final class ProceduralArchitectureAndInfrastructureTest {
     @Test
     public void testRoundaboutIntersectionGeneration() {
         Vec3i center = new Vec3i(50, 64, 50);
-        RoadInfrastructureEngine.RoadProfile profile = RoadInfrastructureEngine.RoadProfile.defaultUrban();
-        List<PlacementTarget> roundabout = RoadInfrastructureEngine.generateIntersection(
+        RoadInfrastructurePlanner.RoadProfile profile = RoadInfrastructurePlanner.RoadProfile.defaultUrban();
+        List<PlacementTarget> roundabout = RoadInfrastructurePlanner.generateIntersection(
             center,
-            RoadInfrastructureEngine.IntersectionType.ROUNDABOUT,
+            RoadInfrastructurePlanner.IntersectionType.ROUNDABOUT,
             profile,
             palette
         );
@@ -118,7 +125,7 @@ public final class ProceduralArchitectureAndInfrastructureTest {
     @Test
     public void testWallSegmentationAndRhythm() {
         // Test rhythm for a 19-block wall (as requested in user prompt)
-        WallSegmentationEngine.FacadeSegmentation segmentation = WallSegmentationEngine.calculateRhythm(19, 8, true);
+        WallSegmenter.FacadeSegmentation segmentation = WallSegmenter.calculateRhythm(19, 8, true);
 
         assertEquals(19, segmentation.wallLength());
         assertFalse(segmentation.bays().isEmpty());
@@ -127,10 +134,10 @@ public final class ProceduralArchitectureAndInfrastructureTest {
         assertTrue(segmentation.pillarOffsets().contains(18));
 
         // Must have a central entrance door bay
-        assertTrue(segmentation.bays().stream().anyMatch(b -> b.isCenterBay() && b.type() == WallSegmentationEngine.BayType.ENTRANCE_DOOR));
+        assertTrue(segmentation.bays().stream().anyMatch(b -> b.isCenterBay() && b.type() == WallSegmenter.BayType.ENTRANCE_DOOR));
 
         // Generate full 3D facade
-        List<PlacementTarget> facade = WallSegmentationEngine.composeFacade(
+        List<PlacementTarget> facade = WallSegmenter.composeFacade(
             new Vec3i(0, 64, 0),
             Direction.EAST,
             Direction.SOUTH,

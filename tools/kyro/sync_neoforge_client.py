@@ -2,8 +2,8 @@
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-SRC_RENDERER = ROOT / 'versions/1.21.1/neoforge/src/main/java/com/x64Dynamics/tfb/client/TFBClientRenderer.java'
-SRC_EVENTS = ROOT / 'versions/1.21.1/neoforge/src/main/java/com/x64Dynamics/tfb/client/TFBClientEvents.java'
+SRC_RENDERER = ROOT / 'versions/1.21.1/neoforge/src/main/java/com/x64Dynamics/tfb/client/ArchitectWorldRenderer.java'
+SRC_EVENTS = ROOT / 'versions/1.21.1/neoforge/src/main/java/com/x64Dynamics/tfb/client/ArchitectClientEvents.java'
 SRC_SCANNER = ROOT / 'versions/1.21.1/neoforge/src/main/java/com/x64Dynamics/tfb/BlockRegistryScanner.java'
 SRC_ENTRYPOINT = ROOT / 'versions/1.21.1/neoforge/src/main/java/com/x64Dynamics/tfb/Entrypoint.java'
 
@@ -16,8 +16,8 @@ def sync():
     entry_content = SRC_ENTRYPOINT.read_text(encoding='utf-8')
 
     for v in TARGET_VERSIONS:
-        dest_renderer = ROOT / f'versions/{v}/neoforge/src/main/java/com/x64Dynamics/tfb/client/TFBClientRenderer.java'
-        dest_events = ROOT / f'versions/{v}/neoforge/src/main/java/com/x64Dynamics/tfb/client/TFBClientEvents.java'
+        dest_renderer = ROOT / f'versions/{v}/neoforge/src/main/java/com/x64Dynamics/tfb/client/ArchitectWorldRenderer.java'
+        dest_events = ROOT / f'versions/{v}/neoforge/src/main/java/com/x64Dynamics/tfb/client/ArchitectClientEvents.java'
         dest_scanner = ROOT / f'versions/{v}/neoforge/src/main/java/com/x64Dynamics/tfb/BlockRegistryScanner.java'
         dest_entry = ROOT / f'versions/{v}/neoforge/src/main/java/com/x64Dynamics/tfb/Entrypoint.java'
 

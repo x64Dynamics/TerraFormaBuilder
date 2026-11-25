@@ -16,6 +16,20 @@ import com.x64Dynamics.tfb.material.StylePreset;
 
 import java.util.*;
 
+import com.x64Dynamics.tfb.architectural.facade.FacadeOrnamentGenerator;
+import com.x64Dynamics.tfb.architectural.facade.WallSegmenter;
+import com.x64Dynamics.tfb.architectural.interior.InteriorFloorPlanner;
+import com.x64Dynamics.tfb.architectural.interior.InteriorFurnishingGenerator;
+import com.x64Dynamics.tfb.architectural.interior.InteriorRoom;
+import com.x64Dynamics.tfb.architectural.interior.RoomType;
+import com.x64Dynamics.tfb.architectural.layout.ParametricFootprint;
+import com.x64Dynamics.tfb.architectural.layout.StaircaseGenerator;
+import com.x64Dynamics.tfb.architectural.layout.WingConfiguration;
+import com.x64Dynamics.tfb.architectural.layout.WingLayoutGenerator;
+import com.x64Dynamics.tfb.architectural.roof.AdvancedRoofFeatures;
+import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
+import com.x64Dynamics.tfb.architectural.style.ProceduralVariator;
+import com.x64Dynamics.tfb.architectural.wfc.WfcSolver;
 /**
  * Unified procedural home generator that builds a validated BuildingPlan
  * respecting exact selection bounds, configurable story heights, architectural style rules,
@@ -175,19 +189,19 @@ public final class IntelligentHomeGenerator {
                 int storyY = minY + 1 + (s * storyHeight);
                 boolean isGround = (s == 0);
 
-                for (PlacementTarget t : WallSegmentationEngine.composeFacade(
+                for (PlacementTarget t : WallSegmenter.composeFacade(
                     new Vec3i(minX, storyY, maxZ), Direction.EAST, Direction.SOUTH, width, storyHeight, isGround && facing == Direction.SOUTH, palette, rules)) {
                     put(map, t.pos(), t.block(), t.role());
                 }
-                for (PlacementTarget t : WallSegmentationEngine.composeFacade(
+                for (PlacementTarget t : WallSegmenter.composeFacade(
                     new Vec3i(maxX, storyY, minZ), Direction.WEST, Direction.NORTH, width, storyHeight, isGround && facing == Direction.NORTH, palette, rules)) {
                     put(map, t.pos(), t.block(), t.role());
                 }
-                for (PlacementTarget t : WallSegmentationEngine.composeFacade(
+                for (PlacementTarget t : WallSegmenter.composeFacade(
                     new Vec3i(maxX, storyY, maxZ), Direction.NORTH, Direction.EAST, depth, storyHeight, isGround && facing == Direction.EAST, palette, rules)) {
                     put(map, t.pos(), t.block(), t.role());
                 }
-                for (PlacementTarget t : WallSegmentationEngine.composeFacade(
+                for (PlacementTarget t : WallSegmenter.composeFacade(
                     new Vec3i(minX, storyY, minZ), Direction.SOUTH, Direction.WEST, depth, storyHeight, isGround && facing == Direction.WEST, palette, rules)) {
                     put(map, t.pos(), t.block(), t.role());
                 }
@@ -457,7 +471,7 @@ public final class IntelligentHomeGenerator {
                 lantern.withProperty("hanging", "true"), MaterialRole.LIGHT_SOURCE);
 
             if (facing == Direction.SOUTH) {
-                for (PlacementTarget lt : com.x64Dynamics.tfb.terrain.ExteriorLandscapingEngine.generateTerrainApproachAndYard(
+                for (PlacementTarget lt : com.x64Dynamics.tfb.terrain.ExteriorLandscaper.generateTerrainApproachAndYard(
                         bounds, frontDoorPos.x(), maxZ, heightmap, palette, def.style(), def.seed())) {
                     put(map, lt.pos(), lt.block(), lt.role());
                 }
@@ -495,7 +509,7 @@ public final class IntelligentHomeGenerator {
             }
         }
 
-        // 9. WFC Ornament & Variation Pass (connects WfcSolver + ProceduralVariationEngine to live pipeline)
+        // 9. WFC Ornament & Variation Pass (connects WfcSolver + ProceduralVariator to live pipeline)
         if (rules.ornamentDensity() >= 0.5f && width >= 11 && depth >= 11) {
             var wfcRes = com.x64Dynamics.tfb.architectural.wfc.WfcSolver.solve(
                 3, 1, 3,

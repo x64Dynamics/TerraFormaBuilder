@@ -4,7 +4,7 @@ import com.x64Dynamics.tfb.config.ModConfig;
 import com.x64Dynamics.tfb.persistence.BlueprintManager;
 import com.x64Dynamics.tfb.platform.IPlatformBridge;
 import com.x64Dynamics.tfb.platform.Platform;
-import com.x64Dynamics.tfb.platform.TFBPlatform;
+import com.x64Dynamics.tfb.platform.PlatformBridgeRegistry;
 
 import java.io.IOException;
 import java.util.logging.Logger;
@@ -30,7 +30,7 @@ public final class TerraFormaBuilder {
     }
 
     public static void initializeWithBridge(IPlatformBridge bridge) {
-        TFBPlatform.set(bridge);
+        PlatformBridgeRegistry.set(bridge);
         try {
             config = ModConfig.load(bridge.configDirectory());
             blueprintManager = new BlueprintManager(bridge.configDirectory());

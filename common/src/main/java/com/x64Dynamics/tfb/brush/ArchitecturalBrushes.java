@@ -7,6 +7,14 @@ import com.x64Dynamics.tfb.terrain.TerrainAdapter;
 
 import java.util.*;
 
+import com.x64Dynamics.tfb.architectural.facade.OpeningGenerator;
+import com.x64Dynamics.tfb.architectural.facade.PillarGenerator;
+import com.x64Dynamics.tfb.architectural.facade.WallGenerator;
+import com.x64Dynamics.tfb.architectural.facade.WallSegmenter;
+import com.x64Dynamics.tfb.architectural.layout.FloorGenerator;
+import com.x64Dynamics.tfb.architectural.layout.TowerGenerator;
+import com.x64Dynamics.tfb.architectural.layout.WingConfiguration;
+import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
 public final class ArchitecturalBrushes {
     private ArchitecturalBrushes() { }
 
@@ -86,10 +94,10 @@ public final class ArchitecturalBrushes {
             int lenZ = bounds.sizeZ();
 
             // Composed Multi-Story Facades
-            targets.addAll(WallSegmentationEngine.composeFacade(new Vec3i(minX, y, maxZ), Direction.EAST, Direction.SOUTH, lenX, totalWallHeight, true, palette));
-            targets.addAll(WallSegmentationEngine.composeFacade(new Vec3i(maxX, y, minZ), Direction.WEST, Direction.NORTH, lenX, totalWallHeight, false, palette));
-            targets.addAll(WallSegmentationEngine.composeFacade(new Vec3i(maxX, y, maxZ), Direction.NORTH, Direction.EAST, lenZ, totalWallHeight, false, palette));
-            targets.addAll(WallSegmentationEngine.composeFacade(new Vec3i(minX, y, minZ), Direction.SOUTH, Direction.WEST, lenZ, totalWallHeight, false, palette));
+            targets.addAll(WallSegmenter.composeFacade(new Vec3i(minX, y, maxZ), Direction.EAST, Direction.SOUTH, lenX, totalWallHeight, true, palette));
+            targets.addAll(WallSegmenter.composeFacade(new Vec3i(maxX, y, minZ), Direction.WEST, Direction.NORTH, lenX, totalWallHeight, false, palette));
+            targets.addAll(WallSegmenter.composeFacade(new Vec3i(maxX, y, maxZ), Direction.NORTH, Direction.EAST, lenZ, totalWallHeight, false, palette));
+            targets.addAll(WallSegmenter.composeFacade(new Vec3i(minX, y, minZ), Direction.SOUTH, Direction.WEST, lenZ, totalWallHeight, false, palette));
 
             // Interior floors for each story
             for (int s = 0; s < stories; s++) {

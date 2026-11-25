@@ -63,7 +63,7 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.resources.Identifier;
 import org.lwjgl.glfw.GLFW;
 
-public final class TFBKeyMappings {
+public final class ArchitectKeyMappings {
     public static final KeyMapping.Category CATEGORY =
         new KeyMapping.Category(Identifier.fromNamespaceAndPath("terraformabuilder", "general"));
 
@@ -91,13 +91,13 @@ public final class TFBKeyMappings {
         TOGGLE_FLIGHT, SPEED_UP, SPEED_DOWN, ROTATE_TOOL
     };
 
-    private TFBKeyMappings() {}
+    private ArchitectKeyMappings() {}
 }
 """
 
 TERRAFORMA_SCREEN_26 = """package com.x64Dynamics.tfb.client;
 
-import com.x64Dynamics.tfb.ui.TFBClientController;
+import com.x64Dynamics.tfb.ui.controller.ClientController;
 import com.x64Dynamics.tfb.ui.rendering.IGuiGraphicsContext;
 import com.x64Dynamics.tfb.ui.screen.ArchitectWorkspaceScreen;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -112,7 +112,7 @@ public class TerraFormaScreen extends Screen {
 
     public TerraFormaScreen() {
         super(Component.literal("TerraFormaBuilder Home Studio"));
-        this.screen = TFBClientController.getInstance().screen();
+        this.screen = ClientController.getInstance().screen();
     }
 
     @Override
@@ -121,13 +121,13 @@ public class TerraFormaScreen extends Screen {
         screen.setCloseCallback(this::onClose);
         screen.setBuildCallback(() -> {
             if (this.minecraft != null) {
-                TFBClientEvents.ForgeEvents.executeBuild(this.minecraft);
+                ArchitectClientEvents.ForgeEvents.executeBuild(this.minecraft);
             }
         });
         screen.init(this.width, this.height);
-        TFBClientController.getInstance().setArchitectMode(true);
+        ClientController.getInstance().setArchitectMode(true);
         if (this.minecraft != null && this.minecraft.player != null) {
-            com.x64Dynamics.tfb.ui.model.ArchitectWorkspaceModel model = TFBClientController.getInstance().model();
+            com.x64Dynamics.tfb.ui.model.ArchitectWorkspaceModel model = ClientController.getInstance().model();
             if (model.origin().x() == 0 && model.origin().y() == 64 && model.origin().z() == 0) {
                 net.minecraft.core.BlockPos playerPos = this.minecraft.player.blockPosition();
                 model.setOrigin(new com.x64Dynamics.tfb.geometry.Vec3i(playerPos.getX(), playerPos.getY(), playerPos.getZ()));
@@ -180,11 +180,11 @@ public class TerraFormaScreen extends Screen {
         if (screen.keyPressed(event.key(), event.scancode(), event.modifiers())) return true;
         if (this.minecraft != null && this.minecraft.hasControlDown()) {
             if (event.key() == 90) {
-                if (this.minecraft.hasShiftDown()) TFBClientController.getInstance().model().redo();
-                else TFBClientController.getInstance().model().undo();
+                if (this.minecraft.hasShiftDown()) ClientController.getInstance().model().redo();
+                else ClientController.getInstance().model().undo();
                 return true;
             } else if (event.key() == 89) {
-                TFBClientController.getInstance().model().redo();
+                ClientController.getInstance().model().redo();
                 return true;
             }
         }
@@ -210,7 +210,7 @@ def adapt():
             continue
 
         (cdir / "BlockStateParser.java").write_text(BLOCK_STATE_PARSER_26, encoding="utf-8", newline="\n")
-        (cdir / "TFBKeyMappings.java").write_text(TFB_KEY_MAPPINGS_26, encoding="utf-8", newline="\n")
+        (cdir / "ArchitectKeyMappings.java").write_text(TFB_KEY_MAPPINGS_26, encoding="utf-8", newline="\n")
         (cdir / "TerraFormaScreen.java").write_text(TERRAFORMA_SCREEN_26, encoding="utf-8", newline="\n")
 
         # Entrypoint.java
@@ -229,8 +229,8 @@ def adapt():
             t = t.replace("mc.player.hasImpulse = true;", "mc.player.needsSync = true;")
             fc.write_text(t, encoding="utf-8", newline="\n")
 
-        # TFBInWorldHud.java
-        hud = cdir / "TFBInWorldHud.java"
+        # ArchitectHudRenderer.java
+        hud = cdir / "ArchitectHudRenderer.java"
         if hud.exists():
             t = hud.read_text(encoding="utf-8")
             t = t.replace("import net.minecraft.client.gui.GuiGraphics;", "import net.minecraft.client.gui.GuiGraphicsExtractor;")
@@ -243,8 +243,8 @@ def adapt():
             t = t.replace("BuiltInRegistries.ITEM.get(", "BuiltInRegistries.ITEM.getValue(")
             hud.write_text(t, encoding="utf-8", newline="\n")
 
-        # TFBClientEvents.java
-        ev = cdir / "TFBClientEvents.java"
+        # ArchitectClientEvents.java
+        ev = cdir / "ArchitectClientEvents.java"
         if ev.exists():
             t = ev.read_text(encoding="utf-8")
             t = t.replace("import net.minecraft.resources.ResourceLocation;", "import net.minecraft.resources.Identifier;")
@@ -253,8 +253,8 @@ def adapt():
             t = t.replace("Screen.hasShiftDown()", "mc.hasShiftDown()")
             t = t.replace("private static void executeBuild(", "public static void executeBuild(")
             t = t.replace(
-                "for (var key : TFBKeyMappings.ALL) {",
-                "event.registerCategory(TFBKeyMappings.CATEGORY);\n            for (var key : TFBKeyMappings.ALL) {"
+                "for (var key : ArchitectKeyMappings.ALL) {",
+                "event.registerCategory(ArchitectKeyMappings.CATEGORY);\n            for (var key : ArchitectKeyMappings.ALL) {"
             )
             t = t.replace("mc.player.displayClientMessage(", "mc.player.sendOverlayMessage(")
             t = re.sub(

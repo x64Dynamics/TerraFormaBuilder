@@ -45,6 +45,9 @@ public final class SchematicExporter {
     public static SchematicPayload loadJson(java.nio.file.Path inFile) throws java.io.IOException {
         com.google.gson.Gson gson = new com.google.gson.Gson();
         PayloadDto dto = gson.fromJson(java.nio.file.Files.readString(inFile), PayloadDto.class);
+        if (dto == null) {
+            throw new java.io.IOException("Invalid or empty schematic JSON: " + inFile);
+        }
         return dto.toPayload();
     }
 

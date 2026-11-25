@@ -2,8 +2,8 @@ package com.x64Dynamics.tfb;
 
 import com.x64Dynamics.tfb.architectural.IntelligentHomeGenerator;
 import com.x64Dynamics.tfb.architectural.PlacementTarget;
-import com.x64Dynamics.tfb.architectural.RoofGenerator;
-import com.x64Dynamics.tfb.architectural.WingConfiguration;
+import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
+import com.x64Dynamics.tfb.architectural.layout.WingConfiguration;
 import com.x64Dynamics.tfb.construction.DependencyAwareScheduler;
 import com.x64Dynamics.tfb.construction.ScheduledBlockPlacement;
 import com.x64Dynamics.tfb.geometry.BoundingBox3i;

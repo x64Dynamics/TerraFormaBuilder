@@ -13,6 +13,10 @@ import java.util.List;
 
 import static org.junit.Assert.*;
 
+import com.x64Dynamics.tfb.architectural.facade.WallGenerator;
+import com.x64Dynamics.tfb.architectural.layout.FloorGenerator;
+import com.x64Dynamics.tfb.architectural.layout.StaircaseGenerator;
+import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
 public final class ArchitecturalTest {
     private final MaterialPalette palette = StylePreset.MEDIEVAL.createPalette();
 

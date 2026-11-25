@@ -1,18 +1,19 @@
 package com.x64Dynamics.tfb.client;
 
-import com.x64Dynamics.tfb.ui.TFBClientController;
+import com.x64Dynamics.tfb.ui.controller.ClientController;
 import com.x64Dynamics.tfb.ui.rendering.IGuiGraphicsContext;
 import com.x64Dynamics.tfb.ui.screen.ArchitectWorkspaceScreen;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
+import com.x64Dynamics.tfb.TerraFormaBuilder;
 public class TerraFormaScreen extends Screen {
     private final ArchitectWorkspaceScreen screen;
 
     public TerraFormaScreen() {
         super(Component.literal("TerraFormaBuilder Architect Workspace"));
-        this.screen = TFBClientController.getInstance().screen();
+        this.screen = ClientController.getInstance().screen();
     }
 
     @Override
@@ -20,9 +21,9 @@ public class TerraFormaScreen extends Screen {
         super.init();
         screen.setCloseCallback(this::onClose);
         screen.init(this.width, this.height);
-        TFBClientController.getInstance().setArchitectMode(true);
+        ClientController.getInstance().setArchitectMode(true);
         if (this.minecraft != null && this.minecraft.player != null) {
-            com.x64Dynamics.tfb.ui.model.ArchitectWorkspaceModel model = TFBClientController.getInstance().model();
+            com.x64Dynamics.tfb.ui.model.ArchitectWorkspaceModel model = ClientController.getInstance().model();
             if (model.origin().x() == 0 && model.origin().y() == 64 && model.origin().z() == 0) {
                 net.minecraft.core.BlockPos playerPos = this.minecraft.player.blockPosition();
                 com.x64Dynamics.tfb.geometry.Vec3i newOrigin = new com.x64Dynamics.tfb.geometry.Vec3i(playerPos.getX(), playerPos.getY(), playerPos.getZ());
@@ -120,13 +121,13 @@ public class TerraFormaScreen extends Screen {
         if (hasControlDown()) {
             if (keyCode == 90) {
                 if (hasShiftDown()) {
-                    TFBClientController.getInstance().model().redo();
+                    ClientController.getInstance().model().redo();
                 } else {
-                    TFBClientController.getInstance().model().undo();
+                    ClientController.getInstance().model().undo();
                 }
                 return true;
             } else if (keyCode == 89) {
-                TFBClientController.getInstance().model().redo();
+                ClientController.getInstance().model().redo();
                 return true;
             }
         }

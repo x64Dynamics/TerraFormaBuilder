@@ -14,6 +14,7 @@ import java.util.List;
 
 import static org.junit.Assert.*;
 
+import com.x64Dynamics.tfb.architectural.plan.BuildingPlan;
 public class CityDesignerTest {
 
     @Test
@@ -24,7 +25,7 @@ public class CityDesignerTest {
             SettlementPattern.MEDIEVAL_TOWN, StylePreset.MEDIEVAL, 12345L
         );
 
-        CityPlannerEngine.planCity(project);
+        CityPlanner.planCity(project);
 
         assertEquals(4, project.districts().size());
         assertFalse("Road network must have arterial segments", project.roadNetwork().segments().isEmpty());
@@ -50,7 +51,7 @@ public class CityDesignerTest {
             "lock-test", "Riverbend", "KyroXova", bounds,
             SettlementPattern.PLANNED_GRID, StylePreset.MODERN, 777L
         );
-        CityPlannerEngine.planCity(project);
+        CityPlanner.planCity(project);
 
         CityParcel firstParcel = project.districts().stream()
             .flatMap(d -> d.parcels().stream())
@@ -61,12 +62,12 @@ public class CityDesignerTest {
         firstParcel.setLocked(true);
 
         // Locked parcel must refuse regeneration
-        assertFalse(CityPlannerEngine.regenerateParcel(project, firstParcel.id(), 9999L));
+        assertFalse(CityPlanner.regenerateParcel(project, firstParcel.id(), 9999L));
         assertEquals(originalSeed, firstParcel.seed());
 
         // Unlock and regenerate
         firstParcel.setLocked(false);
-        assertTrue(CityPlannerEngine.regenerateParcel(project, firstParcel.id(), 9999L));
+        assertTrue(CityPlanner.regenerateParcel(project, firstParcel.id(), 9999L));
         assertEquals(9999L, firstParcel.seed());
     }
 
@@ -129,7 +130,7 @@ public class CityDesignerTest {
             "hillside-town", "Terrace", "KyroXova", bounds,
             SettlementPattern.MEDIEVAL_TOWN, StylePreset.MEDIEVAL, 555L
         );
-        CityPlannerEngine.planCity(project, grid);
+        CityPlanner.planCity(project, grid);
         assertFalse(project.districts().isEmpty());
         int minParcelY = project.districts().stream()
             .flatMap(d -> d.parcels().stream())
