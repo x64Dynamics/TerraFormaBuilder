@@ -1,6 +1,7 @@
 package com.x64Dynamics.tfb.client;
 
 import com.x64Dynamics.tfb.material.BlockIdentifier;
+import com.x64Dynamics.tfb.material.BlockStateNormalizer;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
@@ -25,7 +26,8 @@ public final class BlockStateParser {
         }
 
         BlockState state = block.defaultBlockState();
-        for (Map.Entry<String, String> entry : id.properties().entrySet()) {
+        BlockIdentifier norm = BlockStateNormalizer.normalize(id, com.x64Dynamics.tfb.geometry.Direction.SOUTH);
+        for (Map.Entry<String, String> entry : norm.properties().entrySet()) {
             String propName = entry.getKey();
             String propValue = entry.getValue();
 
