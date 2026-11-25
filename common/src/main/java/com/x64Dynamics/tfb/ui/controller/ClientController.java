@@ -18,6 +18,7 @@ public final class ClientController {
     private boolean flightActive = true;
     private float flightSpeed = 1.0f;
     private boolean noclip = false;
+    private boolean gridMouseDetached = false;
 
     // HUD Customization & Visibility
     private boolean hudVisible = true;
@@ -39,8 +40,17 @@ public final class ClientController {
     public void togglePreview() { this.previewActive = !this.previewActive; }
 
     public boolean isArchitectMode() { return architectMode; }
-    public void setArchitectMode(boolean active) { this.architectMode = active; }
-    public void toggleArchitectMode() { this.architectMode = !this.architectMode; }
+    public void setArchitectMode(boolean active) {
+        this.architectMode = active;
+        if (!active) {
+            this.gridMouseDetached = false;
+        }
+    }
+    public void toggleArchitectMode() { setArchitectMode(!this.architectMode); }
+
+    public boolean isGridMouseDetached() { return gridMouseDetached; }
+    public void setGridMouseDetached(boolean detached) { this.gridMouseDetached = detached; }
+    public void toggleGridMouseDetached() { this.gridMouseDetached = !this.gridMouseDetached; }
 
     public boolean isFlightActive() { return flightActive; }
     public void setFlightActive(boolean active) { this.flightActive = active; }

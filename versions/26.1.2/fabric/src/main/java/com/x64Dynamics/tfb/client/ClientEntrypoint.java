@@ -44,6 +44,7 @@ public final class ClientEntrypoint implements ClientModInitializer {
         }
 
         ArchitectFlightController.tick(mc);
+        ArchitectWorldRenderer.renderGizmos();
 
         if (mc.screen == null) {
             while (ArchitectKeyMappings.OPEN_WORKSPACE.consumeClick()) {

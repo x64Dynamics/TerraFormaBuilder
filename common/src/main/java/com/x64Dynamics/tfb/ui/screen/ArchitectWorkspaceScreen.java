@@ -642,6 +642,10 @@ public class ArchitectWorkspaceScreen {
                 tabWidgets.add(new UIGridComplexCanvas(new UIBounds(contentX, canvasY, canvasSize, canvasSize), gp, (gx, gz) -> {
                     setStatus("Cell (" + gx + "," + gz + ") | " + gp.lastValidationMessage());
                     rebuildTabWidgets();
+                }, (minGx, minGz, selW, selD) -> {
+                    model.setWidth(Math.max(5, selW));
+                    model.setDepth(Math.max(5, selD));
+                    setStatus("Selected area (" + minGx + "," + minGz + ") " + selW + "x" + selD + " -> footprint " + model.width() + "x" + model.depth());
                 }));
 
                 int sideX = contentX + canvasSize + 8;
@@ -1011,7 +1015,8 @@ public class ArchitectWorkspaceScreen {
                 tabWidgets.add(new UIToggleButton(new UIBounds(contentX + (contentWidth / 3) * 2, contentY, contentWidth / 3 - 6, rowHeight), "Noclip Camera", ClientController.getInstance().isNoclip(), ClientController.getInstance()::setNoclip));
 
                 tabWidgets.add(new UISlider(new UIBounds(contentX, contentY + 28, contentWidth / 3 - 6, rowHeight), Localization.tr("tfb.ui.grid_snap"), 1, 16, model.selectionManager().gridSnap(), model.selectionManager()::setGridSnap));
-                tabWidgets.add(new UIButton(new UIBounds(contentX + contentWidth / 3, contentY + 28, (contentWidth * 2) / 3 - 6, rowHeight), "B=Studio | H=Flight | P=Preview | G=Build | Ctrl+Z/Y=Undo/Redo", b -> {}));
+                tabWidgets.add(new UIToggleButton(new UIBounds(contentX + contentWidth / 3, contentY + 28, contentWidth / 3 - 6, rowHeight), "Detached Grid Mouse", ClientController.getInstance().isGridMouseDetached(), ClientController.getInstance()::setGridMouseDetached));
+                tabWidgets.add(new UIButton(new UIBounds(contentX + (contentWidth / 3) * 2, contentY + 28, contentWidth / 3 - 6, rowHeight), "B=Studio | H=Flight | P=Preview | G=Build", b -> {}));
             }
         }
     }

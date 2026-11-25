@@ -60,6 +60,7 @@ public final class ArchitectClientEvents {
             }
 
             ArchitectFlightController.tick(mc);
+            ArchitectWorldRenderer.renderGizmos();
 
             while (ArchitectKeyMappings.OPEN_WORKSPACE.consumeClick()) {
                 if (mc.gui.screen() instanceof TerraFormaScreen) {

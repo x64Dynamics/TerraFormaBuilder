@@ -204,4 +204,41 @@ public class RegressionAndCleanupTest {
         );
         assertFalse(targets.stream().anyMatch(t -> t.block().property("half") != null && t.role() == MaterialRole.SLAB));
     }
+
+    @Test
+    public void testGridCanvasHoldAndDragSelectsAreaAndMouseDetachResets() {
+        GridManager grid = GridManager.defaultProjectGrid(new Vec3i(0, 64, 0));
+        StructurePlacementController ctrl = new StructurePlacementController(
+            grid, new BuildingRegistry(),
+            new PlacementValidator(PlacementValidator.PlacementRules.defaults()),
+            new ComplexConnectionPlanner()
+        );
+        int[] captured = new int[4];
+        var canvas = new com.x64Dynamics.tfb.ui.widget.UIGridComplexCanvas(
+            new com.x64Dynamics.tfb.ui.widget.UIBounds(0, 0, 128, 128),
+            ctrl,
+            null,
+            (minGx, minGz, w, d) -> {
+                captured[0] = minGx;
+                captured[1] = minGz;
+                captured[2] = w;
+                captured[3] = d;
+            }
+        );
+        // 128px / 32 cells = 4px per cell
+        assertTrue(canvas.mouseClicked(8, 12, 0));   // cell (2, 3)
+        assertTrue(canvas.mouseDragged(40, 32, 0, 32, 20)); // cell (10, 8)
+        assertTrue(canvas.mouseReleased(40, 32, 0));
+        assertEquals(2, captured[0]);
+        assertEquals(3, captured[1]);
+        assertEquals(9, captured[2]); // 10 - 2 + 1
+        assertEquals(6, captured[3]); // 8 - 3 + 1
+
+        var cc = com.x64Dynamics.tfb.ui.controller.ClientController.getInstance();
+        cc.setArchitectMode(true);
+        cc.setGridMouseDetached(true);
+        assertTrue(cc.isGridMouseDetached());
+        cc.setArchitectMode(false);
+        assertFalse(cc.isGridMouseDetached());
+    }
 }

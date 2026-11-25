@@ -7,6 +7,7 @@ import net.minecraft.network.chat.Component;
 
 public final class ArchitectFlightController {
     private static boolean wasInArchitectMode = false;
+    private static boolean wasGridMouseDetached = false;
     private static boolean hadMayFly = false;
     private static boolean hadFlying = false;
 
@@ -19,6 +20,13 @@ public final class ArchitectFlightController {
         boolean architectMode = controller.isArchitectMode();
         controller.model().cameraController().setActive(architectMode);
         if (architectMode) controller.model().cameraController().tick(0.05f);
+        boolean detachMouse = architectMode && controller.isGridMouseDetached() && mc.gui.screen() == null;
+        if (detachMouse && mc.mouseHandler.isMouseGrabbed()) {
+            mc.mouseHandler.releaseMouse();
+        } else if (!detachMouse && wasGridMouseDetached && mc.gui.screen() == null && !mc.mouseHandler.isMouseGrabbed()) {
+            mc.mouseHandler.grabMouse();
+        }
+        wasGridMouseDetached = detachMouse;
         boolean flightActive = controller.isFlightActive();
 
         if (architectMode && !wasInArchitectMode) {

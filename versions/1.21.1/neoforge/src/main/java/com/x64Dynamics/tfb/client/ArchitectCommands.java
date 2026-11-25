@@ -17,10 +17,9 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
 
-import com.x64Dynamics.tfb.TerraFormaBuilder;
 @EventBusSubscriber(modid = "terraformabuilder", value = Dist.CLIENT)
-public final class TFBCommands {
-    private TFBCommands() {}
+public final class ArchitectCommands {
+    private ArchitectCommands() {}
 
     @SubscribeEvent
     public static void onRegisterClientCommands(RegisterClientCommandsEvent event) {

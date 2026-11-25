@@ -12,17 +12,37 @@ import java.util.function.BiConsumer;
  * and connection graph lines. Clicking selects a cell or building.
  */
 public class UIGridComplexCanvas extends UIWidget {
+    @FunctionalInterface
+    public interface AreaSelectionListener {
+        void onAreaSelected(int minGx, int minGz, int width, int depth);
+    }
+
     private final StructurePlacementController controller;
     private final BiConsumer<Integer, Integer> onCellClicked;
+    private final AreaSelectionListener onAreaSelected;
+
+    private GridManager.GridCoord dragStartCell;
+    private GridManager.GridCoord dragEndCell;
+    private boolean dragging = false;
 
     public UIGridComplexCanvas(
         UIBounds bounds,
         StructurePlacementController controller,
         BiConsumer<Integer, Integer> onCellClicked
     ) {
+        this(bounds, controller, onCellClicked, null);
+    }
+
+    public UIGridComplexCanvas(
+        UIBounds bounds,
+        StructurePlacementController controller,
+        BiConsumer<Integer, Integer> onCellClicked,
+        AreaSelectionListener onAreaSelected
+    ) {
         super(bounds);
         this.controller = controller;
         this.onCellClicked = onCellClicked;
+        this.onAreaSelected = onAreaSelected;
     }
 
     @Override
@@ -84,6 +104,25 @@ public class UIGridComplexCanvas extends UIWidget {
             graphics.drawBorder(ox + sc.gx() * cellPx, oz + sc.gz() * cellPx, cellPx, cellPx, 0xFFFACC15);
         }
 
+        // Draw hold-and-drag area selection rectangle
+        if (dragStartCell != null && dragEndCell != null) {
+            int minGx = Math.min(dragStartCell.gx(), dragEndCell.gx());
+            int maxGx = Math.max(dragStartCell.gx(), dragEndCell.gx());
+            int minGz = Math.min(dragStartCell.gz(), dragEndCell.gz());
+            int maxGz = Math.max(dragStartCell.gz(), dragEndCell.gz());
+            int sx = ox + minGx * cellPx;
+            int sz = oz + minGz * cellPx;
+            int sw = (maxGx - minGx + 1) * cellPx;
+            int sd = (maxGz - minGz + 1) * cellPx;
+            graphics.fill(sx, sz, sx + sw, sz + sd, dragging ? 0x5538BDF8 : 0x3338BDF8);
+            graphics.drawBorder(sx, sz, sw, sd, 0xFF38BDF8);
+            int selW = maxGx - minGx + 1;
+            int selD = maxGz - minGz + 1;
+            if (selW > 1 || selD > 1) {
+                graphics.drawText(selW + "x" + selD, sx + 2, sz + 2, 0xFFFFFFFF, true);
+            }
+        }
+
         // Hover highlight
         if (bounds.contains(mouseX, mouseY)) {
             int hx = (mouseX - ox) / cellPx;
@@ -97,20 +136,77 @@ public class UIGridComplexCanvas extends UIWidget {
     @Override
     public boolean mouseClicked(int mouseX, int mouseY, int button) {
         if (!super.mouseClicked(mouseX, mouseY, button)) return false;
+        GridManager.GridCoord cell = toGridCoord(mouseX, mouseY);
+        if (cell == null) return false;
+
+        this.dragStartCell = cell;
+        this.dragEndCell = cell;
+        this.dragging = true;
+
+        controller.selectCell(cell);
+        var owners = controller.grid().ownersAt(cell.gx(), cell.gz());
+        if (!owners.isEmpty()) {
+            controller.selectBuilding(owners.iterator().next());
+        }
+        if (onCellClicked != null) onCellClicked.accept(cell.gx(), cell.gz());
+        return true;
+    }
+
+    @Override
+    public boolean mouseDragged(int mouseX, int mouseY, int button, double dragX, double dragY) {
+        if (!visible || !enabled || !dragging) return false;
+        GridManager.GridCoord cell = toGridCoordClamped(mouseX, mouseY);
+        if (cell != null) {
+            this.dragEndCell = cell;
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean mouseReleased(int mouseX, int mouseY, int button) {
+        if (!dragging) return false;
+        this.dragging = false;
+        GridManager.GridCoord cell = toGridCoordClamped(mouseX, mouseY);
+        if (cell != null) {
+            this.dragEndCell = cell;
+        }
+        if (dragStartCell != null && dragEndCell != null) {
+            int minGx = Math.min(dragStartCell.gx(), dragEndCell.gx());
+            int maxGx = Math.max(dragStartCell.gx(), dragEndCell.gx());
+            int minGz = Math.min(dragStartCell.gz(), dragEndCell.gz());
+            int maxGz = Math.max(dragStartCell.gz(), dragEndCell.gz());
+            int selW = maxGx - minGx + 1;
+            int selD = maxGz - minGz + 1;
+            controller.selectCell(new GridManager.GridCoord(minGx, minGz));
+            if (onAreaSelected != null && (selW > 1 || selD > 1)) {
+                onAreaSelected.onAreaSelected(minGx, minGz, selW, selD);
+            }
+        }
+        return true;
+    }
+
+    public GridManager.GridCoord dragStartCell() { return dragStartCell; }
+    public GridManager.GridCoord dragEndCell() { return dragEndCell; }
+
+    private GridManager.GridCoord toGridCoord(int mouseX, int mouseY) {
         int viewCells = 32;
         int cellPx = Math.max(3, Math.min(bounds.width() / viewCells, bounds.height() / viewCells));
         int ox = bounds.x() + (bounds.width() - cellPx * viewCells) / 2;
         int oz = bounds.y() + (bounds.height() - cellPx * viewCells) / 2;
         int gx = (mouseX - ox) / cellPx;
         int gz = (mouseY - oz) / cellPx;
-        if (gx < 0 || gx >= viewCells || gz < 0 || gz >= viewCells) return false;
+        if (gx < 0 || gx >= viewCells || gz < 0 || gz >= viewCells) return null;
+        return new GridManager.GridCoord(gx, gz);
+    }
 
-        controller.selectCell(new GridManager.GridCoord(gx, gz));
-        var owners = controller.grid().ownersAt(gx, gz);
-        if (!owners.isEmpty()) {
-            controller.selectBuilding(owners.iterator().next());
-        }
-        if (onCellClicked != null) onCellClicked.accept(gx, gz);
-        return true;
+    private GridManager.GridCoord toGridCoordClamped(int mouseX, int mouseY) {
+        int viewCells = 32;
+        int cellPx = Math.max(3, Math.min(bounds.width() / viewCells, bounds.height() / viewCells));
+        int ox = bounds.x() + (bounds.width() - cellPx * viewCells) / 2;
+        int oz = bounds.y() + (bounds.height() - cellPx * viewCells) / 2;
+        int gx = Math.max(0, Math.min(viewCells - 1, (mouseX - ox) / cellPx));
+        int gz = Math.max(0, Math.min(viewCells - 1, (mouseY - oz) / cellPx));
+        return new GridManager.GridCoord(gx, gz);
     }
 }
