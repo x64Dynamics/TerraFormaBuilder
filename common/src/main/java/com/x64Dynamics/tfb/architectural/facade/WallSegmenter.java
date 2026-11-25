@@ -151,6 +151,7 @@ public final class WallSegmenter {
         int optBay = styleRules != null ? Math.max(2, styleRules.windowSpacing() + 1) : 4;
         boolean allowArch = styleRules != null && styleRules.allowPilasters();
         boolean allowBalcony = styleRules != null && styleRules.allowBalconies() && !isEntranceFacade;
+        boolean allowDepth = styleRules == null || styleRules.allowCornice() || styleRules.allowPilasters();
         FacadeSegmentation segmentation = calculateRhythm(length, height, isEntranceFacade, optBay, allowBalcony, allowArch);
 
         BlockIdentifier wallBlock = palette.get(MaterialRole.WALL_PRIMARY);
@@ -164,12 +165,19 @@ public final class WallSegmenter {
         int stringCourseY = (height >= 8) ? wallStart.y() + height / 2 : -1;
         int corniceY = wallStart.y() + height - 1;
 
-        // 1. Compose Structural Pillars
+        // 1. Compose Structural Pillars with 3D base plinth & top corbel relief
         for (int pOffset : segmentation.pillarOffsets()) {
             for (int y = 0; y < height; y++) {
                 Vec3i pillarPos = wallStart.offset(wallFacing, pOffset).add(0, y, 0);
                 BlockIdentifier blk = (y < plinthHeight) ? plinthBlock : pillarBlock;
                 map.put(pillarPos, new PlacementTarget(pillarPos, blk, MaterialRole.PILLAR));
+                if (allowDepth && y == 0) {
+                    Vec3i outBase = pillarPos.offset(outwardFacing, 1);
+                    map.put(outBase, new PlacementTarget(outBase, stairBlock.withProperty("facing", outwardFacing.opposite().name().toLowerCase()).withProperty("half", "bottom"), MaterialRole.SUB_FOUNDATION));
+                } else if (allowDepth && y == corniceY) {
+                    Vec3i outCap = pillarPos.offset(outwardFacing, 1);
+                    map.put(outCap, new PlacementTarget(outCap, stairBlock.withProperty("facing", outwardFacing.opposite().name().toLowerCase()).withProperty("half", "top"), MaterialRole.BEAM));
+                }
             }
         }
 
@@ -207,14 +215,19 @@ public final class WallSegmenter {
 
             switch (bay.type()) {
                 case ENTRANCE_DOOR -> {
-                    // Carve 1x2 or 2x2 entrance doorway
-                    int doorY = wallStart.y() + plinthHeight;
+                    // Carve 1x2 entrance doorway with protruding step, lintel & porch lantern
                     Vec3i doorBase = bayCenterBase.add(0, plinthHeight, 0);
                     map.put(doorBase, new PlacementTarget(doorBase, BlockIdentifier.of("minecraft:air"), MaterialRole.AIR));
                     map.put(doorBase.add(0, 1, 0), new PlacementTarget(doorBase.add(0, 1, 0), BlockIdentifier.of("minecraft:air"), MaterialRole.AIR));
+                    if (allowDepth) {
+                        Vec3i stepOut = bayCenterBase.add(0, Math.max(0, plinthHeight - 1), 0).offset(outwardFacing, 1);
+                        map.put(stepOut, new PlacementTarget(stepOut, slabBlock.withProperty("type", "bottom"), MaterialRole.SLAB));
+                        Vec3i lampOut = doorBase.add(0, 2, 0).offset(outwardFacing, 1);
+                        map.put(lampOut, new PlacementTarget(lampOut, palette.get(MaterialRole.LIGHT_SOURCE).withProperty("hanging", "false"), MaterialRole.LIGHT_SOURCE));
+                    }
 
                     // Lintel stair above door
-                    map.put(doorBase.add(0, 2, 0), new PlacementTarget(doorBase.add(0, 2, 0), stairBlock.withProperty("facing", outwardFacing.opposite().name().toLowerCase()), MaterialRole.STAIR));
+                    map.put(doorBase.add(0, 2, 0), new PlacementTarget(doorBase.add(0, 2, 0), stairBlock.withProperty("facing", outwardFacing.opposite().name().toLowerCase()).withProperty("half", "top"), MaterialRole.STAIR));
                 }
                 case WINDOW_SINGLE -> {
                     int relWinY = plinthHeight + 1;
@@ -227,8 +240,19 @@ public final class WallSegmenter {
                         map.put(sillPos, new PlacementTarget(sillPos, stairBlock.withProperty("facing", outwardFacing.name().toLowerCase()).withProperty("half", "top"), MaterialRole.STAIR));
                         map.put(glass1, new PlacementTarget(glass1, glassBlock, MaterialRole.WINDOW));
                         map.put(glass2, new PlacementTarget(glass2, glassBlock, MaterialRole.WINDOW));
+                        if (allowDepth) {
+                            Vec3i outSill = glass1.add(0, -1, 0).offset(outwardFacing, 1);
+                            map.put(outSill, new PlacementTarget(outSill, slabBlock.withProperty("type", "top"), MaterialRole.SLAB));
+                            if (bayWidth >= 3) {
+                                BlockIdentifier shutter = BlockIdentifier.of("minecraft:spruce_trapdoor[facing=" + outwardFacing.name().toLowerCase() + ",half=bottom,open=true]");
+                                Vec3i leftShutter = glass1.offset(wallFacing, -1).offset(outwardFacing, 1);
+                                Vec3i rightShutter = glass1.offset(wallFacing, 1).offset(outwardFacing, 1);
+                                map.put(leftShutter, new PlacementTarget(leftShutter, shutter, MaterialRole.DECORATION));
+                                map.put(rightShutter, new PlacementTarget(rightShutter, shutter, MaterialRole.DECORATION));
+                            }
+                        }
                         if (wallStart.y() + relWinY + 2 < corniceY) {
-                            map.put(lintelPos, new PlacementTarget(lintelPos, stairBlock.withProperty("facing", outwardFacing.opposite().name().toLowerCase()).withProperty("half", "bottom"), MaterialRole.STAIR));
+                            map.put(lintelPos, new PlacementTarget(lintelPos, stairBlock.withProperty("facing", outwardFacing.opposite().name().toLowerCase()).withProperty("half", "top"), MaterialRole.STAIR));
                         }
                     }
                 }
@@ -238,6 +262,10 @@ public final class WallSegmenter {
                         Vec3i leftBase = wallStart.offset(wallFacing, midBayOffset - 1);
                         Vec3i rightBase = wallStart.offset(wallFacing, midBayOffset);
 
+                        if (allowDepth) {
+                            map.put(leftBase.add(0, relWinY - 1, 0).offset(outwardFacing, 1), new PlacementTarget(leftBase.add(0, relWinY - 1, 0).offset(outwardFacing, 1), slabBlock.withProperty("type", "top"), MaterialRole.SLAB));
+                            map.put(rightBase.add(0, relWinY - 1, 0).offset(outwardFacing, 1), new PlacementTarget(rightBase.add(0, relWinY - 1, 0).offset(outwardFacing, 1), slabBlock.withProperty("type", "top"), MaterialRole.SLAB));
+                        }
                         map.put(leftBase.add(0, relWinY, 0), new PlacementTarget(leftBase.add(0, relWinY, 0), glassBlock, MaterialRole.WINDOW));
                         map.put(leftBase.add(0, relWinY + 1, 0), new PlacementTarget(leftBase.add(0, relWinY + 1, 0), glassBlock, MaterialRole.WINDOW));
                         map.put(rightBase.add(0, relWinY, 0), new PlacementTarget(rightBase.add(0, relWinY, 0), glassBlock, MaterialRole.WINDOW));

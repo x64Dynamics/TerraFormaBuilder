@@ -107,10 +107,12 @@ public final class RoofGenerator {
                 if (zLeft < zRight) {
                     BlockIdentifier northStair = stair.withProperty("facing", "south").withProperty("half", "bottom");
                     BlockIdentifier southStair = stair.withProperty("facing", "north").withProperty("half", "bottom");
+                    BlockIdentifier trimBlock = palette.get(MaterialRole.ROOF_OVERHANG);
 
                     for (int x = minX; x <= maxX; x++) {
-                        targets.add(new PlacementTarget(new Vec3i(x, y, zLeft), northStair, MaterialRole.ROOF_SLOPE));
-                        targets.add(new PlacementTarget(new Vec3i(x, y, zRight), southStair, MaterialRole.ROOF_SLOPE));
+                        boolean bargeboard = (x == minX || x == maxX);
+                        targets.add(new PlacementTarget(new Vec3i(x, y, zLeft), bargeboard ? trimBlock : northStair, bargeboard ? MaterialRole.ROOF_OVERHANG : MaterialRole.ROOF_SLOPE));
+                        targets.add(new PlacementTarget(new Vec3i(x, y, zRight), bargeboard ? trimBlock : southStair, bargeboard ? MaterialRole.ROOF_OVERHANG : MaterialRole.ROOF_SLOPE));
                     }
                     // Fill gable pediments on both ends
                     if (maxX - minX >= 2) {
@@ -198,7 +200,8 @@ public final class RoofGenerator {
                 break;
             }
 
-            for (int x = curMinX; x <= curMaxX; x++) {
+            BlockIdentifier cornerTrim = palette.get(MaterialRole.ROOF_OVERHANG);
+            for (int x = curMinX + 1; x < curMaxX; x++) {
                 targets.add(new PlacementTarget(new Vec3i(x, y, curMinZ), stair.withProperty("facing", "south").withProperty("half", "bottom"), MaterialRole.ROOF_SLOPE));
                 targets.add(new PlacementTarget(new Vec3i(x, y, curMaxZ), stair.withProperty("facing", "north").withProperty("half", "bottom"), MaterialRole.ROOF_SLOPE));
             }
@@ -206,6 +209,10 @@ public final class RoofGenerator {
                 targets.add(new PlacementTarget(new Vec3i(curMinX, y, z), stair.withProperty("facing", "east").withProperty("half", "bottom"), MaterialRole.ROOF_SLOPE));
                 targets.add(new PlacementTarget(new Vec3i(curMaxX, y, z), stair.withProperty("facing", "west").withProperty("half", "bottom"), MaterialRole.ROOF_SLOPE));
             }
+            targets.add(new PlacementTarget(new Vec3i(curMinX, y, curMinZ), cornerTrim, MaterialRole.ROOF_OVERHANG));
+            targets.add(new PlacementTarget(new Vec3i(curMaxX, y, curMinZ), cornerTrim, MaterialRole.ROOF_OVERHANG));
+            targets.add(new PlacementTarget(new Vec3i(curMinX, y, curMaxZ), cornerTrim, MaterialRole.ROOF_OVERHANG));
+            targets.add(new PlacementTarget(new Vec3i(curMaxX, y, curMaxZ), cornerTrim, MaterialRole.ROOF_OVERHANG));
         }
         return targets;
     }
