@@ -216,6 +216,72 @@ public class ArchitectWorkspaceModel {
     public String selectedSectionId() { return selectedSectionId; }
     public void setSelectedSectionId(String id) { this.selectedSectionId = id; }
 
+    public synchronized com.x64Dynamics.tfb.architectural.assets.AuthoredAsset captureSelectionAsAsset(String name) throws java.io.IOException {
+        String assetName = (name != null && !name.isBlank()) ? name.trim() : "captured_asset";
+        String id = assetName.toLowerCase(java.util.Locale.ROOT).replaceAll("[^a-z0-9_-]", "_");
+        BoundingBox3i box = boundingBox();
+        var asset = com.x64Dynamics.tfb.architectural.assets.AuthoredAsset.captureFromWorld(
+            id, assetName, box, box.min().y(),
+            com.x64Dynamics.tfb.architectural.assets.AuthoredAsset.AssetCategory.BUILDING,
+            Direction.SOUTH, liveLevelAccess
+        );
+        com.x64Dynamics.tfb.architectural.assets.AuthoredAssetRegistry.getInstance().save(asset);
+        return asset;
+    }
+
+    public synchronized java.nio.file.Path exportCurrentSchematic(String name) throws java.io.IOException {
+        String safe = ((name != null && !name.isBlank()) ? name.trim() : "tfb_export").replaceAll("[^a-zA-Z0-9_-]", "_");
+        java.nio.file.Path dir = java.nio.file.Path.of("config", "terraformabuilder", "schematics");
+        java.nio.file.Path gz = dir.resolve(safe + ".schem.gz");
+        com.x64Dynamics.tfb.persistence.SchematicExporter.saveCompressedSchematic(gz, boundingBox(), cachedPreviewTargets);
+        com.x64Dynamics.tfb.persistence.SchematicExporter.saveJson(dir.resolve(safe + ".json"), boundingBox(), cachedPreviewTargets);
+        return gz;
+    }
+
+    public synchronized int importObjToPreview(java.nio.file.Path objPath, int targetHeight, boolean solidFill) throws java.io.IOException {
+        var mesh = com.x64Dynamics.tfb.geometry.ObjMeshImporter.loadObj(objPath);
+        var vol = com.x64Dynamics.tfb.geometry.MeshVoxelizer.voxelize(mesh, targetHeight, solidFill, 12.0f, origin);
+        List<PlacementTarget> imported = vol.toPlacementTargets(MaterialRole.WALL_PRIMARY);
+        this.cachedPreviewTargets = imported;
+        this.cachedBuildPlan = new ProgressiveBuildPlan(imported);
+        this.previewBuffer.updateFromTargets(imported, liveLevelAccess);
+        return imported.size();
+    }
+
+    public synchronized void generateWfcCompound() {
+        this.cityMode = false;
+        this.shapeEditorMode = true;
+        var res = com.x64Dynamics.tfb.architectural.wfc.WfcSolver.solve(
+            3, 1, 3,
+            com.x64Dynamics.tfb.architectural.wfc.WfcSolver.defaultArchitecturalGrammar(),
+            java.util.Map.of("1,0,1", new com.x64Dynamics.tfb.architectural.wfc.WfcSolver.ModuleVariant("interior_hall", 0)),
+            proceduralSeed, 8
+        );
+        for (var s : new ArrayList<>(activeArchProject.sections())) {
+            if (!s.isLocked()) activeArchProject.removeSection(s.id());
+        }
+        if (res.success()) {
+            for (int gx = 0; gx < 3; gx++) {
+                for (int gz = 0; gz < 3; gz++) {
+                    String mod = res.grid()[gx][0][gz].moduleId();
+                    if ("air".equals(mod) || "courtyard".equals(mod)) continue;
+                    BoundingBox3i cellBox = BoundingBox3i.fromOriginAndSize(
+                        origin.add(gx * 8, 0, gz * 8), 8, 1, 8
+                    );
+                    var kind = "corner_pillar".equals(mod)
+                        ? com.x64Dynamics.tfb.architectural.editor.BuildingSection.SectionKind.TOWER
+                        : (gx == 1 && gz == 1)
+                            ? com.x64Dynamics.tfb.architectural.editor.BuildingSection.SectionKind.MAIN_WING
+                            : com.x64Dynamics.tfb.architectural.editor.BuildingSection.SectionKind.SIDE_WING;
+                    int stories = kind == com.x64Dynamics.tfb.architectural.editor.BuildingSection.SectionKind.TOWER ? 3 : (kind == com.x64Dynamics.tfb.architectural.editor.BuildingSection.SectionKind.MAIN_WING ? 2 : 1);
+                    var sec = activeArchProject.addSection(kind, cellBox, stories, stylePreset, roofShape, Direction.SOUTH, proceduralSeed + gx * 31L + gz);
+                    selectedSectionId = sec.id();
+                }
+            }
+        }
+        generatePreview();
+    }
+
     public synchronized String sculptAt(Vec3i hitPos, Direction face, boolean primaryClick) {
         if (!shapeEditorMode) setShapeEditorMode(true);
         Direction outFace = face != null ? face : Direction.SOUTH;

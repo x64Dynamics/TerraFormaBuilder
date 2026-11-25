@@ -718,6 +718,30 @@ public class ArchitectWorkspaceScreen {
                 } else {
                     tabWidgets.add(new UIButton(new UIBounds(contentX, contentY + 28, contentWidth - 6, rowHeight), TFBLocalization.tr("tfb.home.no_saved"), b -> {}));
                 }
+
+                int pBtnW = contentWidth / 3 - 4;
+                tabWidgets.add(new UIButton(new UIBounds(contentX, contentY + 86, pBtnW, rowHeight), "Capture World Asset", b -> {
+                    try {
+                        var asset = model.captureSelectionAsAsset(blueprintNameField.text());
+                        setStatus("Captured asset '" + asset.id() + "' (" + asset.blocks().size() + " blocks)");
+                    } catch (Exception ex) {
+                        setStatus("Asset capture failed: " + ex.getMessage());
+                    }
+                }));
+                tabWidgets.add(new UIButton(new UIBounds(contentX + pBtnW + 4, contentY + 86, pBtnW, rowHeight), "Export .schem.gz", b -> {
+                    try {
+                        var path = model.exportCurrentSchematic(blueprintNameField.text());
+                        setStatus("Exported schematic: " + path.getFileName());
+                    } catch (Exception ex) {
+                        setStatus("Export failed: " + ex.getMessage());
+                    }
+                }));
+                tabWidgets.add(new UIButton(new UIBounds(contentX + (pBtnW + 4) * 2, contentY + 86, pBtnW, rowHeight), "WFC Compound", b -> {
+                    model.generateWfcCompound();
+                    refreshHierarchy();
+                    setStatus("Generated WFC compound (" + model.activeArchProject().sections().size() + " sections)");
+                    tabBar.setActiveTab(WorkspaceTab.ARCHITECTURE);
+                }));
             }
 
             case SETTINGS -> {
