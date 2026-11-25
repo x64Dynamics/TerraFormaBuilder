@@ -264,6 +264,26 @@ public class ArchitectWorkspaceModel {
         return targets.size();
     }
 
+    public synchronized com.x64Dynamics.tfb.architectural.LocalAIBuilder.AIBuildResult runAIDesign(String prompt) {
+        this.cityMode = false;
+        this.shapeEditorMode = false;
+        var res = com.x64Dynamics.tfb.architectural.LocalAIBuilder.designAndBuild(
+            origin, prompt, liveLevelAccess, proceduralSeed
+        );
+        this.stylePreset = res.intent().style();
+        this.roofShape = res.intent().roofType();
+        this.wingConfiguration = res.intent().wings();
+        this.requestedStories = res.intent().stories();
+        this.width = res.intent().width();
+        this.depth = res.intent().depth();
+        this.addPorchAndGarden = res.intent().addPorch();
+        this.addChimney = res.intent().addChimney();
+        this.cachedPreviewTargets = res.targets();
+        this.cachedBuildPlan = new ProgressiveBuildPlan(res.targets());
+        this.previewBuffer.updateFromTargets(res.targets(), liveLevelAccess);
+        return res;
+    }
+
     private final com.x64Dynamics.tfb.grid.StructurePlacementController gridPlacement =
         new com.x64Dynamics.tfb.grid.StructurePlacementController(
             com.x64Dynamics.tfb.grid.GridManager.defaultProjectGrid(new Vec3i(0, 64, 0)),

@@ -62,6 +62,7 @@ public class ArchitectWorkspaceScreen {
     private UITextField blueprintNameField;
     private UITextField blueprintAuthorField;
     private UITextField materialSearchField;
+    private UITextField aiPromptField;
     private MaterialRole selectedMaterialRole = MaterialRole.WALL_PRIMARY;
     private com.x64Dynamics.tfb.grid.GridBuilding.BuildingFunction selectedGridFunction = com.x64Dynamics.tfb.grid.GridBuilding.BuildingFunction.RESIDENTIAL;
     private com.x64Dynamics.tfb.grid.GridBuilding.FootprintShape selectedGridShape = com.x64Dynamics.tfb.grid.GridBuilding.FootprintShape.RECTANGLE;
@@ -619,6 +620,25 @@ public class ArchitectWorkspaceScreen {
                     model.clearSelection();
                     rebuildTabWidgets();
                 }));
+
+                // Row 5: Local AI Architectural Builder
+                int aiFieldW = (contentWidth * 2) / 3 - 4;
+                aiPromptField = new UITextField(
+                    new UIBounds(contentX, contentY + 104, aiFieldW, rowHeight),
+                    aiPromptField != null ? aiPromptField.text() : "",
+                    "AI Prompt (e.g. 2-story medieval tavern with chimney)",
+                    null
+                );
+                tabWidgets.add(aiPromptField);
+                tabWidgets.add(new UIButton(
+                    new UIBounds(contentX + aiFieldW + 4, contentY + 104, contentWidth - aiFieldW - 4, rowHeight),
+                    "AI Design & Build",
+                    b -> {
+                        var aiRes = model.runAIDesign(aiPromptField.text());
+                        refreshHierarchy();
+                        setStatus(aiRes.summary());
+                    }
+                ));
             }
 
             case COMPLEX -> {
