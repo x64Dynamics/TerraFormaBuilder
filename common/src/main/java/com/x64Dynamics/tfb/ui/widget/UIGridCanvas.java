@@ -1,7 +1,7 @@
 package com.x64Dynamics.tfb.ui.widget;
 
 import com.x64Dynamics.tfb.geometry.Direction;
-import com.x64Dynamics.tfb.architectural.grid.*;
+import com.x64Dynamics.tfb.architectural.builds.grid.*;
 import com.x64Dynamics.tfb.ui.rendering.IGuiGraphicsContext;
 
 import java.util.function.BiConsumer;

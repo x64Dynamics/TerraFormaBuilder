@@ -223,7 +223,7 @@ public final class ArchitectClientEvents {
             net.minecraft.world.level.Level level = mc.level;
             if (level == null || mc.player == null) return;
             ArchitectWorkspaceModel model = ClientController.getInstance().model();
-            java.util.List<com.x64Dynamics.tfb.architectural.PlacementTarget> targets = model.cachedPreviewTargets();
+            java.util.List<com.x64Dynamics.tfb.architectural.builds.PlacementTarget> targets = model.cachedPreviewTargets();
             if (targets.isEmpty()) {
                 mc.player.displayClientMessage(Component.literal("§c[TFB] Build failed: No preview blocks available!"), false);
                 return;

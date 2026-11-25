@@ -7,7 +7,7 @@ import com.x64Dynamics.tfb.material.BlockIdentifier;
 import com.x64Dynamics.tfb.material.MaterialPalette;
 import com.x64Dynamics.tfb.material.MaterialRole;
 import com.x64Dynamics.tfb.material.StylePreset;
-import com.x64Dynamics.tfb.architectural.terrain.FoundationStrategy;
+import com.x64Dynamics.tfb.architectural.exterior.terrain.FoundationStrategy;
 
 import java.util.*;
 

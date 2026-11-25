@@ -1,6 +1,6 @@
 package com.x64Dynamics.tfb.construction.editing;
 
-import com.x64Dynamics.tfb.architectural.PlacementTarget;
+import com.x64Dynamics.tfb.architectural.builds.PlacementTarget;
 import com.x64Dynamics.tfb.geometry.BoundingBox3i;
 import com.x64Dynamics.tfb.geometry.Vec3i;
 

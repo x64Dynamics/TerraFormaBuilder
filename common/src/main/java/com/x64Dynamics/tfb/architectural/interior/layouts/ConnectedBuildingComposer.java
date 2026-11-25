@@ -11,8 +11,8 @@ import com.x64Dynamics.tfb.material.MaterialRole;
 
 import java.util.*;
 
-import com.x64Dynamics.tfb.architectural.PlacementTarget;
-import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
+import com.x64Dynamics.tfb.architectural.builds.PlacementTarget;
+import com.x64Dynamics.tfb.architectural.exterior.roof.RoofGenerator;
 public final class ConnectedBuildingComposer {
     private ConnectedBuildingComposer() { }
 

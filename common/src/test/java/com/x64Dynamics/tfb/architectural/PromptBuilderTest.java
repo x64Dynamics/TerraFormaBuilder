@@ -1,12 +1,15 @@
 package com.x64Dynamics.tfb.architectural;
 
+import com.x64Dynamics.tfb.architectural.builds.AutoArchitect;
+import com.x64Dynamics.tfb.architectural.builds.PromptBuilder;
+
 import com.x64Dynamics.tfb.geometry.Direction;
 import com.x64Dynamics.tfb.geometry.Vec3i;
 import com.x64Dynamics.tfb.material.BlockIdentifier;
 import com.x64Dynamics.tfb.material.MaterialRole;
 import com.x64Dynamics.tfb.material.StylePreset;
 import com.x64Dynamics.tfb.platform.ILevelAccess;
-import com.x64Dynamics.tfb.architectural.terrain.FoundationStrategy;
+import com.x64Dynamics.tfb.architectural.exterior.terrain.FoundationStrategy;
 import org.junit.Test;
 
 import static org.junit.Assert.*;

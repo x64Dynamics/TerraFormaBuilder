@@ -1,15 +1,15 @@
 package com.x64Dynamics.tfb;
 
-import com.x64Dynamics.tfb.architectural.interior.facades.LayeredFacadeComposer;
+import com.x64Dynamics.tfb.architectural.exterior.facades.LayeredFacadeComposer;
 import com.x64Dynamics.tfb.architectural.interior.layouts.ParametricFootprint;
-import com.x64Dynamics.tfb.architectural.PlacementTarget;
-import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
-import com.x64Dynamics.tfb.architectural.interior.RoomType;
+import com.x64Dynamics.tfb.architectural.builds.PlacementTarget;
+import com.x64Dynamics.tfb.architectural.exterior.roof.RoofGenerator;
+import com.x64Dynamics.tfb.architectural.interior.decor.RoomType;
 import com.x64Dynamics.tfb.architectural.interior.layouts.WingConfiguration;
 import com.x64Dynamics.tfb.architectural.interior.layouts.WingLayoutGenerator;
-import com.x64Dynamics.tfb.architectural.style.ArchitecturalStyleRuleSet;
-import com.x64Dynamics.tfb.architectural.style.ProceduralVariator;
-import com.x64Dynamics.tfb.architectural.style.StyleRuleSetRegistry;
+import com.x64Dynamics.tfb.architectural.builds.style.ArchitecturalStyleRuleSet;
+import com.x64Dynamics.tfb.architectural.builds.style.ProceduralVariator;
+import com.x64Dynamics.tfb.architectural.builds.style.StyleRuleSetRegistry;
 import com.x64Dynamics.tfb.construction.editing.ArchitecturalComponentType;
 import com.x64Dynamics.tfb.construction.editing.ClipboardManager;
 import com.x64Dynamics.tfb.construction.editing.SelectableComponent;
@@ -33,7 +33,7 @@ import com.x64Dynamics.tfb.material.taxonomy.ColorTone;
 import com.x64Dynamics.tfb.material.taxonomy.MaterialSubstance;
 import com.x64Dynamics.tfb.material.taxonomy.PaletteHarmonizer;
 import com.x64Dynamics.tfb.material.taxonomy.SearchableTaxonomyBrowser;
-import com.x64Dynamics.tfb.architectural.terrain.LandscapeAdapter;
+import com.x64Dynamics.tfb.architectural.exterior.terrain.LandscapeAdapter;
 import org.junit.Test;
 
 import java.util.ArrayList;

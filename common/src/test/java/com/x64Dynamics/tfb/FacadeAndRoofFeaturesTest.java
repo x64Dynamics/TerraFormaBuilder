@@ -1,5 +1,7 @@
 package com.x64Dynamics.tfb;
 
+import com.x64Dynamics.tfb.architectural.builds.PlacementTarget;
+
 import com.x64Dynamics.tfb.architectural.*;
 import com.x64Dynamics.tfb.geometry.BoundingBox3i;
 import com.x64Dynamics.tfb.geometry.Direction;
@@ -12,8 +14,8 @@ import java.util.List;
 
 import static org.junit.Assert.*;
 
-import com.x64Dynamics.tfb.architectural.interior.facades.FacadeOrnamentGenerator;
-import com.x64Dynamics.tfb.architectural.roof.RoofFeatures;
+import com.x64Dynamics.tfb.architectural.exterior.facades.FacadeOrnamentGenerator;
+import com.x64Dynamics.tfb.architectural.exterior.roof.RoofFeatures;
 public final class FacadeAndRoofFeaturesTest {
     private final MaterialPalette palette = StylePreset.MEDIEVAL.createPalette();
 

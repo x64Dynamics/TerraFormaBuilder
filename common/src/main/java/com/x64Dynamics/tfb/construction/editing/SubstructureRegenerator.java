@@ -1,14 +1,14 @@
 package com.x64Dynamics.tfb.construction.editing;
 
-import com.x64Dynamics.tfb.architectural.roof.RoofFeatures;
-import com.x64Dynamics.tfb.architectural.interior.facades.FacadeOrnamentGenerator;
+import com.x64Dynamics.tfb.architectural.exterior.roof.RoofFeatures;
+import com.x64Dynamics.tfb.architectural.exterior.facades.FacadeOrnamentGenerator;
 import com.x64Dynamics.tfb.architectural.interior.floor.FloorGenerator;
 import com.x64Dynamics.tfb.architectural.interior.floor.InteriorFloorPlanner;
-import com.x64Dynamics.tfb.architectural.interior.InteriorFurnishingGenerator;
-import com.x64Dynamics.tfb.architectural.interior.InteriorRoom;
-import com.x64Dynamics.tfb.architectural.PlacementTarget;
-import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
-import com.x64Dynamics.tfb.architectural.interior.wall.WallGenerator;
+import com.x64Dynamics.tfb.architectural.interior.decor.InteriorFurnishingGenerator;
+import com.x64Dynamics.tfb.architectural.interior.decor.InteriorRoom;
+import com.x64Dynamics.tfb.architectural.builds.PlacementTarget;
+import com.x64Dynamics.tfb.architectural.exterior.roof.RoofGenerator;
+import com.x64Dynamics.tfb.architectural.exterior.wall.WallGenerator;
 import com.x64Dynamics.tfb.geometry.Axis;
 import com.x64Dynamics.tfb.geometry.BoundingBox3i;
 import com.x64Dynamics.tfb.geometry.Direction;

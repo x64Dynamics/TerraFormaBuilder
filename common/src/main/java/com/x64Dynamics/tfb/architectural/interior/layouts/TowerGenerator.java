@@ -8,7 +8,7 @@ import com.x64Dynamics.tfb.material.MaterialRole;
 
 import java.util.*;
 
-import com.x64Dynamics.tfb.architectural.PlacementTarget;
+import com.x64Dynamics.tfb.architectural.builds.PlacementTarget;
 // Generates multi-segment circular and polygonal towers with stepped plinths,
 // intermediate floor plates, arrow-slit windows, corbelled parapets, battlements,
 // and optional curtain-wall connections.

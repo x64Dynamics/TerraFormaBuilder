@@ -1,17 +1,17 @@
 package com.x64Dynamics.tfb;
 
-import com.x64Dynamics.tfb.architectural.PlacementTarget;
-import com.x64Dynamics.tfb.architectural.assets.AuthoredAsset;
-import com.x64Dynamics.tfb.architectural.assets.AuthoredAssetRegistry;
-import com.x64Dynamics.tfb.architectural.wfc.WfcSolver;
-import com.x64Dynamics.tfb.architectural.city.TerrainRoadPathfinder;
+import com.x64Dynamics.tfb.architectural.builds.PlacementTarget;
+import com.x64Dynamics.tfb.architectural.builds.assets.AuthoredAsset;
+import com.x64Dynamics.tfb.architectural.builds.assets.AuthoredAssetRegistry;
+import com.x64Dynamics.tfb.architectural.builds.wfc.WfcSolver;
+import com.x64Dynamics.tfb.architectural.builds.city.TerrainRoadPathfinder;
 import com.x64Dynamics.tfb.geometry.*;
 import com.x64Dynamics.tfb.material.BlockIdentifier;
 import com.x64Dynamics.tfb.material.MaterialRole;
 import com.x64Dynamics.tfb.material.StylePreset;
 import com.x64Dynamics.tfb.platform.persistence.SchematicExporter;
 import com.x64Dynamics.tfb.platform.ILevelAccess;
-import com.x64Dynamics.tfb.architectural.terrain.HeightmapGrid;
+import com.x64Dynamics.tfb.architectural.exterior.terrain.HeightmapGrid;
 import org.junit.Test;
 
 import java.nio.file.Files;

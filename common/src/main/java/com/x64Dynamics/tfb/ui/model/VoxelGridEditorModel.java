@@ -1,6 +1,6 @@
 package com.x64Dynamics.tfb.ui.model;
 
-import com.x64Dynamics.tfb.architectural.PlacementTarget;
+import com.x64Dynamics.tfb.architectural.builds.PlacementTarget;
 import com.x64Dynamics.tfb.geometry.Vec3i;
 import com.x64Dynamics.tfb.geometry.VoxelVolume;
 import com.x64Dynamics.tfb.material.BlockIdentifier;
@@ -203,22 +203,22 @@ public final class VoxelGridEditorModel {
         }
     }
 
-    public com.x64Dynamics.tfb.architectural.assets.AuthoredAsset toAuthoredAsset(String id, String name, MaterialPalette palette) {
-        List<com.x64Dynamics.tfb.architectural.assets.AuthoredAsset.RelativeBlock> blocks = new ArrayList<>();
+    public com.x64Dynamics.tfb.architectural.builds.assets.AuthoredAsset toAuthoredAsset(String id, String name, MaterialPalette palette) {
+        List<com.x64Dynamics.tfb.architectural.builds.assets.AuthoredAsset.RelativeBlock> blocks = new ArrayList<>();
         for (var e : cells.entrySet()) {
             Vec3i p = e.getKey();
-            blocks.add(new com.x64Dynamics.tfb.architectural.assets.AuthoredAsset.RelativeBlock(
+            blocks.add(new com.x64Dynamics.tfb.architectural.builds.assets.AuthoredAsset.RelativeBlock(
                 p.x(), p.y(), p.z(), palette.get(e.getValue()).asString(), e.getValue().name()
             ));
         }
-        return new com.x64Dynamics.tfb.architectural.assets.AuthoredAsset(
-            id, name, com.x64Dynamics.tfb.architectural.assets.AuthoredAsset.AssetCategory.BUILDING,
+        return new com.x64Dynamics.tfb.architectural.builds.assets.AuthoredAsset(
+            id, name, com.x64Dynamics.tfb.architectural.builds.assets.AuthoredAsset.AssetCategory.BUILDING,
             width, height, depth, 0,
             com.x64Dynamics.tfb.geometry.Direction.SOUTH, true, blocks
         );
     }
 
-    public void loadAuthoredAsset(com.x64Dynamics.tfb.architectural.assets.AuthoredAsset asset) {
+    public void loadAuthoredAsset(com.x64Dynamics.tfb.architectural.builds.assets.AuthoredAsset asset) {
         if (asset == null) return;
         pushUndoSnapshot();
         cells.clear();

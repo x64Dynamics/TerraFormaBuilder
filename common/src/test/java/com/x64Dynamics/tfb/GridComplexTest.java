@@ -1,10 +1,10 @@
 package com.x64Dynamics.tfb;
 
-import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
+import com.x64Dynamics.tfb.architectural.exterior.roof.RoofGenerator;
 import com.x64Dynamics.tfb.geometry.BoundingBox3i;
 import com.x64Dynamics.tfb.geometry.Direction;
 import com.x64Dynamics.tfb.geometry.Vec3i;
-import com.x64Dynamics.tfb.architectural.grid.*;
+import com.x64Dynamics.tfb.architectural.builds.grid.*;
 import com.x64Dynamics.tfb.material.StylePreset;
 import com.x64Dynamics.tfb.ui.camera.ArchitectCameraController;
 import org.junit.Test;

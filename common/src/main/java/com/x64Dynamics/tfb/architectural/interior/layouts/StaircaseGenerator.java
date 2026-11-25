@@ -9,7 +9,7 @@ import com.x64Dynamics.tfb.material.MaterialRole;
 
 import java.util.*;
 
-import com.x64Dynamics.tfb.architectural.PlacementTarget;
+import com.x64Dynamics.tfb.architectural.builds.PlacementTarget;
 public final class StaircaseGenerator {
     public enum StaircaseStyle {
         STRAIGHT,

@@ -1,6 +1,6 @@
 package com.x64Dynamics.tfb;
 
-import com.x64Dynamics.tfb.architectural.PlacementTarget;
+import com.x64Dynamics.tfb.architectural.builds.PlacementTarget;
 import com.x64Dynamics.tfb.construction.editing.ConstructionTransforms;
 import com.x64Dynamics.tfb.construction.editing.DesignHistorySnapshot;
 import com.x64Dynamics.tfb.construction.editing.DesignHistoryStack;
@@ -10,7 +10,7 @@ import com.x64Dynamics.tfb.geometry.Rotation;
 import com.x64Dynamics.tfb.geometry.Vec3i;
 import com.x64Dynamics.tfb.material.BlockIdentifier;
 import com.x64Dynamics.tfb.material.MaterialRole;
-import com.x64Dynamics.tfb.architectural.terrain.FoundationStrategy;
+import com.x64Dynamics.tfb.architectural.exterior.terrain.FoundationStrategy;
 import org.junit.Test;
 
 import java.util.List;

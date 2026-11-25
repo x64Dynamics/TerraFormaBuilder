@@ -1,6 +1,6 @@
 package com.x64Dynamics.tfb;
 
-import com.x64Dynamics.tfb.architectural.PlacementTarget;
+import com.x64Dynamics.tfb.architectural.builds.PlacementTarget;
 import com.x64Dynamics.tfb.construction.ConstructionQueue;
 import com.x64Dynamics.tfb.construction.ProgressiveBuildPlan;
 import com.x64Dynamics.tfb.construction.ScheduledBlockPlacement;

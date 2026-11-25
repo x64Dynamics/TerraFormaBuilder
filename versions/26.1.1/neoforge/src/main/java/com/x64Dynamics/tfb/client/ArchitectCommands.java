@@ -2,8 +2,8 @@ package com.x64Dynamics.tfb.client;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
-import com.x64Dynamics.tfb.architectural.brush.BrushRegistry;
-import com.x64Dynamics.tfb.architectural.brush.IConstructionBrush;
+import com.x64Dynamics.tfb.architectural.builds.brush.BrushRegistry;
+import com.x64Dynamics.tfb.architectural.builds.brush.IConstructionBrush;
 import com.x64Dynamics.tfb.material.StylePreset;
 import com.x64Dynamics.tfb.ui.controller.ClientController;
 import com.x64Dynamics.tfb.ui.model.ArchitectWorkspaceModel;

@@ -1,7 +1,7 @@
 package com.x64Dynamics.tfb;
 
-import com.x64Dynamics.tfb.architectural.brush.ArchitecturalBrushes;
-import com.x64Dynamics.tfb.architectural.brush.BrushCategory;
+import com.x64Dynamics.tfb.architectural.builds.brush.ArchitecturalBrushes;
+import com.x64Dynamics.tfb.architectural.builds.brush.BrushCategory;
 import com.x64Dynamics.tfb.geometry.BoundingBox3i;
 import com.x64Dynamics.tfb.geometry.Vec3d;
 import com.x64Dynamics.tfb.geometry.Vec3i;

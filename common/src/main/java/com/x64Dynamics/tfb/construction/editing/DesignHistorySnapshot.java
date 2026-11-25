@@ -1,7 +1,7 @@
 package com.x64Dynamics.tfb.construction.editing;
 
 import com.x64Dynamics.tfb.geometry.BoundingBox3i;
-import com.x64Dynamics.tfb.architectural.terrain.FoundationStrategy;
+import com.x64Dynamics.tfb.architectural.exterior.terrain.FoundationStrategy;
 
 import java.util.Collections;
 import java.util.Map;

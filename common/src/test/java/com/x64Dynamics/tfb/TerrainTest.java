@@ -4,9 +4,9 @@ import com.x64Dynamics.tfb.geometry.BoundingBox3i;
 import com.x64Dynamics.tfb.geometry.Vec3i;
 import com.x64Dynamics.tfb.material.MaterialPalette;
 import com.x64Dynamics.tfb.material.StylePreset;
-import com.x64Dynamics.tfb.architectural.terrain.FoundationStrategy;
-import com.x64Dynamics.tfb.architectural.terrain.HeightmapGrid;
-import com.x64Dynamics.tfb.architectural.terrain.TerrainAdapter;
+import com.x64Dynamics.tfb.architectural.exterior.terrain.FoundationStrategy;
+import com.x64Dynamics.tfb.architectural.exterior.terrain.HeightmapGrid;
+import com.x64Dynamics.tfb.architectural.exterior.terrain.TerrainAdapter;
 import org.junit.Test;
 
 import static org.junit.Assert.*;

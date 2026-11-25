@@ -1,8 +1,8 @@
 package com.x64Dynamics.tfb;
 
-import com.x64Dynamics.tfb.architectural.AutoArchitect;
+import com.x64Dynamics.tfb.architectural.builds.AutoArchitect;
 import com.x64Dynamics.tfb.geometry.Vec3i;
-import com.x64Dynamics.tfb.architectural.grid.*;
+import com.x64Dynamics.tfb.architectural.builds.grid.*;
 import com.x64Dynamics.tfb.material.BlockIdentifier;
 import com.x64Dynamics.tfb.material.StylePreset;
 import com.x64Dynamics.tfb.platform.ILevelAccess;

@@ -1,6 +1,6 @@
 package com.x64Dynamics.tfb.construction;
 
-import com.x64Dynamics.tfb.architectural.PlacementTarget;
+import com.x64Dynamics.tfb.architectural.builds.PlacementTarget;
 
 import java.util.*;
 

@@ -2,7 +2,7 @@ package com.x64Dynamics.tfb.architectural.interior.layouts;
 
 import com.x64Dynamics.tfb.geometry.BoundingBox3i;
 
-import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
+import com.x64Dynamics.tfb.architectural.exterior.roof.RoofGenerator;
 public record BuildingSection(
     String id,
     BoundingBox3i bounds,

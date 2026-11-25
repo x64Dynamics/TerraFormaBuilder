@@ -7,9 +7,9 @@ import com.x64Dynamics.tfb.material.MaterialPalette;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.x64Dynamics.tfb.architectural.PlacementTarget;
-import com.x64Dynamics.tfb.architectural.interior.facades.OpeningGenerator;
-import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
+import com.x64Dynamics.tfb.architectural.builds.PlacementTarget;
+import com.x64Dynamics.tfb.architectural.exterior.facades.OpeningGenerator;
+import com.x64Dynamics.tfb.architectural.exterior.roof.RoofGenerator;
 public final class WingLayoutGenerator {
     private WingLayoutGenerator() {}
 

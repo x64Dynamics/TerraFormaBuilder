@@ -1,8 +1,8 @@
 package com.x64Dynamics.tfb;
 
-import com.x64Dynamics.tfb.architectural.HomeGenerator;
-import com.x64Dynamics.tfb.architectural.PlacementTarget;
-import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
+import com.x64Dynamics.tfb.architectural.builds.HomeGenerator;
+import com.x64Dynamics.tfb.architectural.builds.PlacementTarget;
+import com.x64Dynamics.tfb.architectural.exterior.roof.RoofGenerator;
 import com.x64Dynamics.tfb.architectural.interior.layouts.WingConfiguration;
 import com.x64Dynamics.tfb.construction.BuildScheduler;
 import com.x64Dynamics.tfb.construction.ScheduledBlockPlacement;
@@ -107,11 +107,11 @@ public class IntelligentHomeGeneratorTest {
         BoundingBox3i bounds = BoundingBox3i.fromOriginAndSize(new Vec3i(0, 64, 0), 17, 14, 17);
         MaterialPalette palette = StylePreset.NORDIC.createPalette();
 
-        var def1 = new com.x64Dynamics.tfb.architectural.plan.BuildingDefinition(
+        var def1 = new com.x64Dynamics.tfb.architectural.builds.plan.BuildingDefinition(
             "seed1", bounds, WingConfiguration.SINGLE_RECTANGLE, StylePreset.NORDIC,
             palette, RoofGenerator.RoofType.GABLE, 2, true, true, true, 1.0f, 101L
         );
-        var def2 = new com.x64Dynamics.tfb.architectural.plan.BuildingDefinition(
+        var def2 = new com.x64Dynamics.tfb.architectural.builds.plan.BuildingDefinition(
             "seed2", bounds, WingConfiguration.SINGLE_RECTANGLE, StylePreset.NORDIC,
             palette, RoofGenerator.RoofType.GABLE, 2, true, true, true, 1.0f, 9999L
         );
@@ -127,7 +127,7 @@ public class IntelligentHomeGeneratorTest {
             plan1.floors().get(0).rooms(), plan2.floors().get(0).rooms());
 
         // Multi-wing L_SHAPED home
-        var lDef = new com.x64Dynamics.tfb.architectural.plan.BuildingDefinition(
+        var lDef = new com.x64Dynamics.tfb.architectural.builds.plan.BuildingDefinition(
             "lwing", bounds, WingConfiguration.L_SHAPED, StylePreset.TRADITIONAL,
             StylePreset.TRADITIONAL.createPalette(), RoofGenerator.RoofType.GABLE, 2, true, true, true, 1.0f, 42L
         );
@@ -176,7 +176,7 @@ public class IntelligentHomeGeneratorTest {
         var model = new com.x64Dynamics.tfb.ui.model.ArchitectWorkspaceModel();
         model.setLiveLevelAccess(slopedLevel);
         model.setStylePreset(StylePreset.NORDIC);
-        model.setFoundationStrategy(com.x64Dynamics.tfb.architectural.terrain.FoundationStrategy.PILLARS_STILTS);
+        model.setFoundationStrategy(com.x64Dynamics.tfb.architectural.exterior.terrain.FoundationStrategy.PILLARS_STILTS);
         model.setShapeEditorMode(true);
         assertFalse(model.cachedPreviewTargets().isEmpty());
 
@@ -198,9 +198,9 @@ public class IntelligentHomeGeneratorTest {
         assertTrue("Unlocked section should extend", model.activeArchProject().extendSection(mainId, com.x64Dynamics.tfb.geometry.Direction.EAST, 2));
 
         java.nio.file.Path tempDir = java.nio.file.Files.createTempDirectory("tfb_arch_proj_test");
-        com.x64Dynamics.tfb.architectural.editor.ArchitecturalProjectStorage.setStorageDir(tempDir);
-        com.x64Dynamics.tfb.architectural.editor.ArchitecturalProjectStorage.save(model.activeArchProject());
-        var loaded = com.x64Dynamics.tfb.architectural.editor.ArchitecturalProjectStorage.load(model.activeArchProject().name()).orElseThrow();
+        com.x64Dynamics.tfb.architectural.builds.editor.ArchitecturalProjectStorage.setStorageDir(tempDir);
+        com.x64Dynamics.tfb.architectural.builds.editor.ArchitecturalProjectStorage.save(model.activeArchProject());
+        var loaded = com.x64Dynamics.tfb.architectural.builds.editor.ArchitecturalProjectStorage.load(model.activeArchProject().name()).orElseThrow();
         assertEquals(model.activeArchProject().sections().size(), loaded.sections().size());
     }
 }

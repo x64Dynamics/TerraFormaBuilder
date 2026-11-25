@@ -1,5 +1,7 @@
 package com.x64Dynamics.tfb;
 
+import com.x64Dynamics.tfb.architectural.builds.PlacementTarget;
+
 import com.x64Dynamics.tfb.architectural.*;
 import com.x64Dynamics.tfb.geometry.Axis;
 import com.x64Dynamics.tfb.geometry.BoundingBox3i;
@@ -13,10 +15,10 @@ import java.util.List;
 
 import static org.junit.Assert.*;
 
-import com.x64Dynamics.tfb.architectural.interior.wall.WallGenerator;
+import com.x64Dynamics.tfb.architectural.exterior.wall.WallGenerator;
 import com.x64Dynamics.tfb.architectural.interior.floor.FloorGenerator;
 import com.x64Dynamics.tfb.architectural.interior.layouts.StaircaseGenerator;
-import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
+import com.x64Dynamics.tfb.architectural.exterior.roof.RoofGenerator;
 public final class ArchitecturalTest {
     private final MaterialPalette palette = StylePreset.MEDIEVAL.createPalette();
 

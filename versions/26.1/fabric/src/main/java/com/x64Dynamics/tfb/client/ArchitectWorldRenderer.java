@@ -61,7 +61,7 @@ public final class ArchitectWorldRenderer {
 
         var gp = controller.model().gridPlacement();
         if (controller.model().isInWorldGridMode() || !gp.registry().allBuildings().isEmpty()) {
-            var batch = com.x64Dynamics.tfb.architectural.grid.GridRendererModel.buildBatch(
+            var batch = com.x64Dynamics.tfb.architectural.builds.grid.GridRendererModel.buildBatch(
                 gp.grid(), gp.registry(), gp.selectedCell(), gp.selectedBuildingId(), gp.grid().origin().y()
             );
             for (var line : batch.lines()) {

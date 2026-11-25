@@ -1,7 +1,7 @@
 package com.x64Dynamics.tfb.ui.widget;
 
-import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
-import com.x64Dynamics.tfb.architectural.grid.ModularGridSession;
+import com.x64Dynamics.tfb.architectural.exterior.roof.RoofGenerator;
+import com.x64Dynamics.tfb.architectural.builds.grid.ModularGridSession;
 import com.x64Dynamics.tfb.material.MaterialPalette;
 import com.x64Dynamics.tfb.material.StylePreset;
 import com.x64Dynamics.tfb.ui.rendering.IGuiGraphicsContext;

@@ -1,8 +1,8 @@
 package com.x64Dynamics.tfb.architectural.interior.floor;
 
-import com.x64Dynamics.tfb.architectural.interior.InteriorRoom;
-import com.x64Dynamics.tfb.architectural.interior.RoomType;
-import com.x64Dynamics.tfb.architectural.plan.BuildingPlan;
+import com.x64Dynamics.tfb.architectural.interior.decor.InteriorRoom;
+import com.x64Dynamics.tfb.architectural.interior.decor.RoomType;
+import com.x64Dynamics.tfb.architectural.builds.plan.BuildingPlan;
 import com.x64Dynamics.tfb.geometry.BoundingBox3i;
 import com.x64Dynamics.tfb.geometry.Direction;
 import com.x64Dynamics.tfb.geometry.Vec3i;
@@ -12,7 +12,7 @@ import com.x64Dynamics.tfb.material.MaterialRole;
 
 import java.util.*;
 
-import com.x64Dynamics.tfb.architectural.PlacementTarget;
+import com.x64Dynamics.tfb.architectural.builds.PlacementTarget;
 public final class InteriorFloorPlanner {
     private InteriorFloorPlanner() { }
 

@@ -2,9 +2,9 @@ package com.x64Dynamics.tfb.client;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
-import com.x64Dynamics.tfb.architectural.PlacementTarget;
-import com.x64Dynamics.tfb.architectural.brush.BrushRegistry;
-import com.x64Dynamics.tfb.architectural.brush.IConstructionBrush;
+import com.x64Dynamics.tfb.architectural.builds.PlacementTarget;
+import com.x64Dynamics.tfb.architectural.builds.brush.BrushRegistry;
+import com.x64Dynamics.tfb.architectural.builds.brush.IConstructionBrush;
 import com.x64Dynamics.tfb.construction.BuildScheduler;
 import com.x64Dynamics.tfb.construction.ScheduledBlockPlacement;
 import com.x64Dynamics.tfb.construction.editing.WorldConstructionHistory;

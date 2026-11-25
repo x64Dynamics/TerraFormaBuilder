@@ -1,5 +1,7 @@
 package com.x64Dynamics.tfb;
 
+import com.x64Dynamics.tfb.architectural.builds.PlacementTarget;
+
 import com.x64Dynamics.tfb.architectural.*;
 import com.x64Dynamics.tfb.geometry.BoundingBox3i;
 import com.x64Dynamics.tfb.geometry.Vec3i;
@@ -12,9 +14,9 @@ import java.util.List;
 import static org.junit.Assert.*;
 
 import com.x64Dynamics.tfb.architectural.interior.floor.InteriorFloorPlanner;
-import com.x64Dynamics.tfb.architectural.interior.InteriorFurnishingGenerator;
-import com.x64Dynamics.tfb.architectural.interior.InteriorRoom;
-import com.x64Dynamics.tfb.architectural.interior.RoomType;
+import com.x64Dynamics.tfb.architectural.interior.decor.InteriorFurnishingGenerator;
+import com.x64Dynamics.tfb.architectural.interior.decor.InteriorRoom;
+import com.x64Dynamics.tfb.architectural.interior.decor.RoomType;
 public final class InteriorTest {
     private final MaterialPalette palette = StylePreset.MEDIEVAL.createPalette();
 

@@ -1,12 +1,12 @@
 package com.x64Dynamics.tfb.ui.screen;
 
-import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
+import com.x64Dynamics.tfb.architectural.exterior.roof.RoofGenerator;
 import com.x64Dynamics.tfb.architectural.interior.layouts.WingConfiguration;
-import com.x64Dynamics.tfb.architectural.plan.BuildingPlan;
-import com.x64Dynamics.tfb.architectural.brush.ArchitecturalBrushes;
-import com.x64Dynamics.tfb.architectural.brush.BrushCategory;
-import com.x64Dynamics.tfb.architectural.brush.BrushRegistry;
-import com.x64Dynamics.tfb.architectural.brush.IConstructionBrush;
+import com.x64Dynamics.tfb.architectural.builds.plan.BuildingPlan;
+import com.x64Dynamics.tfb.architectural.builds.brush.ArchitecturalBrushes;
+import com.x64Dynamics.tfb.architectural.builds.brush.BrushCategory;
+import com.x64Dynamics.tfb.architectural.builds.brush.BrushRegistry;
+import com.x64Dynamics.tfb.architectural.builds.brush.IConstructionBrush;
 import com.x64Dynamics.tfb.construction.editing.SelectionManager;
 import com.x64Dynamics.tfb.platform.i18n.Localization;
 import com.x64Dynamics.tfb.material.MaterialRole;
@@ -62,8 +62,8 @@ public class ArchitectWorkspaceScreen {
     private UITextField materialSearchField;
     private UITextField aiPromptField;
     private MaterialRole selectedMaterialRole = MaterialRole.WALL_PRIMARY;
-    private com.x64Dynamics.tfb.architectural.grid.GridBuilding.BuildingFunction selectedGridFunction = com.x64Dynamics.tfb.architectural.grid.GridBuilding.BuildingFunction.RESIDENTIAL;
-    private com.x64Dynamics.tfb.architectural.grid.GridBuilding.FootprintShape selectedGridShape = com.x64Dynamics.tfb.architectural.grid.GridBuilding.FootprintShape.RECTANGLE;
+    private com.x64Dynamics.tfb.architectural.builds.grid.GridBuilding.BuildingFunction selectedGridFunction = com.x64Dynamics.tfb.architectural.builds.grid.GridBuilding.BuildingFunction.RESIDENTIAL;
+    private com.x64Dynamics.tfb.architectural.builds.grid.GridBuilding.FootprintShape selectedGridShape = com.x64Dynamics.tfb.architectural.builds.grid.GridBuilding.FootprintShape.RECTANGLE;
 
     // Callbacks
     private Runnable closeCallback;
@@ -430,7 +430,7 @@ public class ArchitectWorkspaceScreen {
             case ARCHITECTURE -> {
                 if (model.isShapeEditorMode()) {
                     String sid = model.selectedSectionId();
-                    var selOpt = sid != null ? model.activeArchProject().findSection(sid) : java.util.Optional.<com.x64Dynamics.tfb.architectural.editor.EditableBuildingSection>empty();
+                    var selOpt = sid != null ? model.activeArchProject().findSection(sid) : java.util.Optional.<com.x64Dynamics.tfb.architectural.builds.editor.EditableBuildingSection>empty();
                     int bw = contentWidth / 4 - 4;
                     tabWidgets.add(new UIButton(new UIBounds(contentX, contentY, bw, rowHeight), "Extend N +2", b -> {
                         if (sid != null && model.activeArchProject().extendSection(sid, com.x64Dynamics.tfb.geometry.Direction.NORTH, 2)) {
@@ -498,18 +498,18 @@ public class ArchitectWorkspaceScreen {
                     // City Designer Controls
                     tabWidgets.add(new UISlider(new UIBounds(contentX, contentY, contentWidth / 2 - 6, rowHeight), "City Width", 24, 96, model.width(), w -> {
                         model.setWidth(w);
-                        if (model.activeCityProject() != null) com.x64Dynamics.tfb.architectural.city.CityPlanner.planCity(model.activeCityProject(), model.sampleLiveHeightmap(model.boundingBox()));
+                        if (model.activeCityProject() != null) com.x64Dynamics.tfb.architectural.builds.city.CityPlanner.planCity(model.activeCityProject(), model.sampleLiveHeightmap(model.boundingBox()));
                         model.generatePreview();
                         refreshHierarchy();
                     }));
                     tabWidgets.add(new UISlider(new UIBounds(contentX + contentWidth / 2, contentY, contentWidth / 2 - 6, rowHeight), "City Depth", 24, 96, model.depth(), d -> {
                         model.setDepth(d);
-                        if (model.activeCityProject() != null) com.x64Dynamics.tfb.architectural.city.CityPlanner.planCity(model.activeCityProject(), model.sampleLiveHeightmap(model.boundingBox()));
+                        if (model.activeCityProject() != null) com.x64Dynamics.tfb.architectural.builds.city.CityPlanner.planCity(model.activeCityProject(), model.sampleLiveHeightmap(model.boundingBox()));
                         model.generatePreview();
                         refreshHierarchy();
                     }));
 
-                    List<com.x64Dynamics.tfb.architectural.city.SettlementPattern> patterns = Arrays.asList(com.x64Dynamics.tfb.architectural.city.SettlementPattern.values());
+                    List<com.x64Dynamics.tfb.architectural.builds.city.SettlementPattern> patterns = Arrays.asList(com.x64Dynamics.tfb.architectural.builds.city.SettlementPattern.values());
                     tabWidgets.add(new UIDropdown<>(new UIBounds(contentX, contentY + 26, contentWidth / 2 - 6, rowHeight), Localization.tr("tfb.city.pattern"), patterns, patterns.indexOf(model.settlementPattern()), p -> {
                         model.setSettlementPattern(p);
                         refreshHierarchy();
@@ -518,14 +518,14 @@ public class ArchitectWorkspaceScreen {
                     List<StylePreset> styles = Arrays.asList(StylePreset.values());
                     tabWidgets.add(new UIDropdown<>(new UIBounds(contentX + contentWidth / 2, contentY + 26, contentWidth / 2 - 6, rowHeight), Localization.tr("tfb.ui.style"), styles, styles.indexOf(model.stylePreset()), st -> {
                         model.setStylePreset(st);
-                        if (model.activeCityProject() != null) com.x64Dynamics.tfb.architectural.city.CityPlanner.planCity(model.activeCityProject(), model.sampleLiveHeightmap(model.boundingBox()));
+                        if (model.activeCityProject() != null) com.x64Dynamics.tfb.architectural.builds.city.CityPlanner.planCity(model.activeCityProject(), model.sampleLiveHeightmap(model.boundingBox()));
                         model.generatePreview();
                         refreshHierarchy();
                     }));
 
                     tabWidgets.add(new UIButton(new UIBounds(contentX, contentY + 52, contentWidth / 4 - 4, rowHeight), Localization.tr("tfb.city.regen_city"), b -> {
                         model.randomizeSeed();
-                        com.x64Dynamics.tfb.architectural.city.CityPlanner.planCity(model.activeCityProject());
+                        com.x64Dynamics.tfb.architectural.builds.city.CityPlanner.planCity(model.activeCityProject());
                         model.generatePreview();
                         refreshHierarchy();
                         setStatus("Regenerated city layout.");
@@ -679,9 +679,9 @@ public class ArchitectWorkspaceScreen {
                 int pitch = 21;
 
                 tabWidgets.add(new UIButton(new UIBounds(sideX, canvasY, halfW, btnH), "+ " + selectedGridFunction.name().substring(0, 4), b -> {
-                    var sc = gp.selectedCell() != null ? gp.selectedCell() : new com.x64Dynamics.tfb.architectural.grid.GridManager.GridCoord(2, 2);
+                    var sc = gp.selectedCell() != null ? gp.selectedCell() : new com.x64Dynamics.tfb.architectural.builds.grid.GridManager.GridCoord(2, 2);
                     String id = "b_" + (gp.registry().allBuildings().size() + 1);
-                    var bld = new com.x64Dynamics.tfb.architectural.grid.GridBuilding(
+                    var bld = new com.x64Dynamics.tfb.architectural.builds.grid.GridBuilding(
                         id, sc.gx(), sc.gz(), model.origin().y(), model.width(), model.depth(),
                         Math.max(1, model.requestedStories()), 5,
                         selectedGridShape,
@@ -698,7 +698,7 @@ public class ArchitectWorkspaceScreen {
                     rebuildTabWidgets();
                 }));
                 tabWidgets.add(new UIButton(new UIBounds(sideX + halfW + 4, canvasY, halfW, btnH), "Shape: " + selectedGridShape.name().substring(0, 4), b -> {
-                    var shapes = com.x64Dynamics.tfb.architectural.grid.GridBuilding.FootprintShape.values();
+                    var shapes = com.x64Dynamics.tfb.architectural.builds.grid.GridBuilding.FootprintShape.values();
                     selectedGridShape = shapes[(selectedGridShape.ordinal() + 1) % (shapes.length - 1)];
                     rebuildTabWidgets();
                 }));
@@ -712,7 +712,7 @@ public class ArchitectWorkspaceScreen {
                     }
                 }));
                 tabWidgets.add(new UIButton(new UIBounds(sideX + halfW + 4, canvasY + pitch, halfW, btnH), "Fn: " + selectedGridFunction.name().substring(0, 4), b -> {
-                    var fns = com.x64Dynamics.tfb.architectural.grid.GridBuilding.BuildingFunction.values();
+                    var fns = com.x64Dynamics.tfb.architectural.builds.grid.GridBuilding.BuildingFunction.values();
                     selectedGridFunction = fns[(selectedGridFunction.ordinal() + 1) % fns.length];
                     rebuildTabWidgets();
                 }));
@@ -732,7 +732,7 @@ public class ArchitectWorkspaceScreen {
                 tabWidgets.add(new UIButton(new UIBounds(sideX, canvasY + pitch * 3, halfW, btnH), "Save .tfbgrid", b -> {
                     try {
                         String name = blueprintNameField != null ? blueprintNameField.text() : "complex";
-                        com.x64Dynamics.tfb.architectural.grid.GridProjectManager.save(name, gp.grid(), gp.registry());
+                        com.x64Dynamics.tfb.architectural.builds.grid.GridProjectManager.save(name, gp.grid(), gp.registry());
                         setStatus("Saved grid project: " + name);
                     } catch (Exception ex) {
                         setStatus("Grid save failed: " + ex.getMessage());
@@ -773,8 +773,8 @@ public class ArchitectWorkspaceScreen {
 
                 int thirdW = (sideW - 8) / 3;
                 tabWidgets.add(new UIButton(new UIBounds(sideX, canvasY + pitch * 5, thirdW, 16), "Estate", b -> {
-                    com.x64Dynamics.tfb.architectural.grid.GridPresets.populate(
-                        com.x64Dynamics.tfb.architectural.grid.GridPresets.PresetKind.MANOR_ESTATE,
+                    com.x64Dynamics.tfb.architectural.builds.grid.GridPresets.populate(
+                        com.x64Dynamics.tfb.architectural.builds.grid.GridPresets.PresetKind.MANOR_ESTATE,
                         gp, model.origin().y(), model.stylePreset(), model.proceduralSeed()
                     );
                     int n = model.syncGridComplexToPreview();
@@ -782,8 +782,8 @@ public class ArchitectWorkspaceScreen {
                     rebuildTabWidgets();
                 }));
                 tabWidgets.add(new UIButton(new UIBounds(sideX + thirdW + 4, canvasY + pitch * 5, thirdW, 16), "Village", b -> {
-                    com.x64Dynamics.tfb.architectural.grid.GridPresets.populate(
-                        com.x64Dynamics.tfb.architectural.grid.GridPresets.PresetKind.VILLAGE_SQUARE,
+                    com.x64Dynamics.tfb.architectural.builds.grid.GridPresets.populate(
+                        com.x64Dynamics.tfb.architectural.builds.grid.GridPresets.PresetKind.VILLAGE_SQUARE,
                         gp, model.origin().y(), model.stylePreset(), model.proceduralSeed()
                     );
                     int n = model.syncGridComplexToPreview();
@@ -914,12 +914,12 @@ public class ArchitectWorkspaceScreen {
                     try {
                         if (model.isShapeEditorMode()) {
                             model.activeArchProject().setName(blueprintNameField.text());
-                            com.x64Dynamics.tfb.architectural.editor.ArchitecturalProjectStorage.save(model.activeArchProject());
+                            com.x64Dynamics.tfb.architectural.builds.editor.ArchitecturalProjectStorage.save(model.activeArchProject());
                             setStatus(Localization.tr("tfb.status.saved", model.activeArchProject().name()));
                         } else if (model.isCityMode() && model.activeCityProject() != null) {
                             model.activeCityProject().setName(blueprintNameField.text());
                             model.activeCityProject().setAuthor(blueprintAuthorField.text());
-                            com.x64Dynamics.tfb.architectural.city.WorldProjectStorage.save(model.activeCityProject());
+                            com.x64Dynamics.tfb.architectural.builds.city.WorldProjectStorage.save(model.activeCityProject());
                             setStatus(Localization.tr("tfb.status.saved", model.activeCityProject().name()));
                         } else {
                             ParametricBlueprint bp = model.toBlueprint(blueprintNameField.text(), blueprintAuthorField.text());
@@ -932,7 +932,7 @@ public class ArchitectWorkspaceScreen {
                     }
                 }));
 
-                List<String> savedCities = com.x64Dynamics.tfb.architectural.city.WorldProjectStorage.listSavedProjects();
+                List<String> savedCities = com.x64Dynamics.tfb.architectural.builds.city.WorldProjectStorage.listSavedProjects();
                 if (!savedCities.isEmpty()) {
                     UIDropdown<String> cityDropdown = new UIDropdown<>(
                         new UIBounds(contentX, contentY + 56, (contentWidth * 3) / 4 - 6, rowHeight),
@@ -942,7 +942,7 @@ public class ArchitectWorkspaceScreen {
                     tabWidgets.add(new UIButton(new UIBounds(contentX + (contentWidth * 3) / 4, contentY + 56, contentWidth / 4 - 6, rowHeight), Localization.tr("tfb.city.open_project"), b -> {
                         String chosen = cityDropdown.selected();
                         if (chosen != null) {
-                            com.x64Dynamics.tfb.architectural.city.WorldProjectStorage.load(chosen).ifPresent(proj -> {
+                            com.x64Dynamics.tfb.architectural.builds.city.WorldProjectStorage.load(chosen).ifPresent(proj -> {
                                 model.loadWorldProject(proj);
                                 setStatus(Localization.tr("tfb.status.loaded", chosen));
                                 rebuildTabWidgets();

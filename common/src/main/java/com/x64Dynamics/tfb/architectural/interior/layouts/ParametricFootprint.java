@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
+import com.x64Dynamics.tfb.architectural.exterior.roof.RoofGenerator;
 public class ParametricFootprint {
     private final WingConfiguration configuration;
     private final List<BoundingBox3i> wingBoxes;

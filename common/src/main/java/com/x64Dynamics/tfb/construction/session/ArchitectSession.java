@@ -1,15 +1,15 @@
 package com.x64Dynamics.tfb.construction.session;
 
-import com.x64Dynamics.tfb.architectural.PlacementTarget;
-import com.x64Dynamics.tfb.architectural.brush.BrushContext;
-import com.x64Dynamics.tfb.architectural.brush.BrushRegistry;
-import com.x64Dynamics.tfb.architectural.brush.IConstructionBrush;
+import com.x64Dynamics.tfb.architectural.builds.PlacementTarget;
+import com.x64Dynamics.tfb.architectural.builds.brush.BrushContext;
+import com.x64Dynamics.tfb.architectural.builds.brush.BrushRegistry;
+import com.x64Dynamics.tfb.architectural.builds.brush.IConstructionBrush;
 import com.x64Dynamics.tfb.geometry.BoundingBox3i;
 import com.x64Dynamics.tfb.geometry.Vec3i;
 import com.x64Dynamics.tfb.material.MaterialPalette;
 import com.x64Dynamics.tfb.material.StylePreset;
-import com.x64Dynamics.tfb.architectural.terrain.FoundationStrategy;
-import com.x64Dynamics.tfb.architectural.terrain.HeightmapGrid;
+import com.x64Dynamics.tfb.architectural.exterior.terrain.FoundationStrategy;
+import com.x64Dynamics.tfb.architectural.exterior.terrain.HeightmapGrid;
 
 import java.util.*;
 

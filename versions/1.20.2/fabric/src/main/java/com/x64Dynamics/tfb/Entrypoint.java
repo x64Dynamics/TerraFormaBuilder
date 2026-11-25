@@ -24,7 +24,7 @@ public final class Entrypoint implements ModInitializer {
         IPlatformBridge bridge = new DefaultPlatformBridge("fabric", configDir, new DefaultNetworkBridge(), new DefaultLevelAccess());
         TerraFormaBuilder.initializeWithBridge(bridge);
         com.x64Dynamics.tfb.platform.persistence.BlueprintStorage.setStorageDir(configDir.resolve("terraformabuilder").resolve("blueprints"));
-        com.x64Dynamics.tfb.architectural.city.WorldProjectStorage.setProjectsDir(configDir.resolve("terraformabuilder").resolve("projects"));
+        com.x64Dynamics.tfb.architectural.builds.city.WorldProjectStorage.setProjectsDir(configDir.resolve("terraformabuilder").resolve("projects"));
         BlockRegistryScanner.scanIfNeeded();
         LOGGER.info(String.format("[%s] Successfully initialized on Fabric platform.", TerraFormaBuilder.MOD_ID));
     }
