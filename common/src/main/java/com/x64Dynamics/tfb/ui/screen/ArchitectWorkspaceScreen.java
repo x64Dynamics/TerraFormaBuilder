@@ -814,8 +814,18 @@ public class ArchitectWorkspaceScreen {
                 matList.setLabelProvider(e -> e.block().asString() + " [" + e.substance().name() + "]");
                 tabWidgets.add(matList);
 
-                tabWidgets.add(new UIButton(new UIBounds(contentX + contentWidth / 2, contentY + 26, contentWidth / 2 - 6, rowHeight), "Search / Reset", b -> {
+                tabWidgets.add(new UIButton(new UIBounds(contentX + contentWidth / 2, contentY + 26, contentWidth / 4 - 4, rowHeight), "Search / Reset", b -> {
                     matList.setItems(SearchableTaxonomyBrowser.search(materialSearchField.text(), null, null, null));
+                }));
+                tabWidgets.add(new UIButton(new UIBounds(contentX + (contentWidth * 3) / 4, contentY + 26, contentWidth / 4 - 6, rowHeight), "Auto-Harmonize", b -> {
+                    var wall = model.activePalette().get(MaterialRole.WALL_PRIMARY);
+                    var harmonized = com.x64Dynamics.tfb.taxonomy.PaletteHarmonizer.completePalette(wall.namespacedId());
+                    for (MaterialRole r : MaterialRole.values()) {
+                        model.activePalette().set(r, harmonized.get(r));
+                    }
+                    model.generatePreview();
+                    setStatus("Harmonized palette around " + wall.namespacedId() + " (" + Math.round(model.paletteHarmonyScore() * 100) + "%)");
+                    rebuildTabWidgets();
                 }));
             }
 

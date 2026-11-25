@@ -84,14 +84,13 @@ public final class InteriorFloorPlanner {
         List<RoomType> rolePool = getStoryRolePool(storyIndex, rng);
         for (int i = 0; i < leafBoxes.size(); i++) {
             BoundingBox3i b = leafBoxes.get(i);
-            Vec3i door = i < roomDoors.size() ? roomDoors.get(i) : new Vec3i((b.min().x() + b.max().x()) / 2, minY, b.min().z());
+            Vec3i door = i < roomDoors.size() ? roomDoors.get(i) : new Vec3i((b.min().x() + b.max().x()) / 2, minY, b.max().z());
             RoomType type = rolePool.get(i % rolePool.size());
             if (storyIndex == 0 && i == 0) {
                 type = RoomType.LIVING_HALL;
             }
             rooms.add(new InteriorRoom(b, type, door));
             plannedRooms.add(new BuildingPlan.PlannedRoom("f" + storyIndex + "_r" + i, storyIndex, type, b, door));
-            addClearance(door, transitZones);
         }
 
         return new FloorPlanGraphResult(rooms, plannedRooms, connections, partitionWalls, transitZones);
@@ -114,7 +113,7 @@ public final class InteriorFloorPlanner {
         BspNode node = new BspNode(box);
         int spanX = box.sizeX();
         int spanZ = box.sizeZ();
-        int minRoom = 5; // minimum walkable room width/depth
+        int minRoom = (depth == 0 && spanX < 11 && spanZ < 11) ? 3 : 5;
 
         boolean canSplitX = spanX >= (minRoom * 2 + 1);
         boolean canSplitZ = spanZ >= (minRoom * 2 + 1);

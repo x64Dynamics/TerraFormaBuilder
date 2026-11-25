@@ -41,6 +41,19 @@ public class InteriorAndGridEditorTest {
             List<PlacementTarget> targets = InteriorFurnishingGenerator.furnishRoom(room, palette, Collections.emptySet(), 1.0f);
             assertFalse("Room " + rt + " should have furnishings", targets.isEmpty());
         }
+
+        // Verify compact 3x3 room still receives furnishings (no double wall-shrink bug)
+        BoundingBox3i compact = BoundingBox3i.fromOriginAndSize(new Vec3i(1, 65, 1), 3, 3, 3);
+        List<PlacementTarget> compactTargets = InteriorFurnishingGenerator.furnishRoom(
+            new InteriorRoom(compact, RoomType.BEDROOM, new Vec3i(2, 65, 3)), palette, Collections.emptySet(), 1.0f
+        );
+        assertFalse("Compact 3x3 bedroom should still be furnished", compactTargets.isEmpty());
+
+        // Verify 9x9 house subdivides into >= 2 rooms with interior furnishings
+        var plan9x9 = InteriorFloorPlanner.planStoryWithGraph(
+            BoundingBox3i.fromOriginAndSize(new Vec3i(1, 65, 1), 7, 3, 7), 0, 1, palette, 42L
+        );
+        assertTrue("9x9 house interior (7x7) should subdivide into >= 2 rooms", plan9x9.rooms().size() >= 2);
     }
 
     @Test
