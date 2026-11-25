@@ -401,6 +401,12 @@ public final class IntelligentHomeGenerator {
                         new Vec3i(maxX - inset, atticMaxY, maxZ - inset)
                     );
                     Vec3i atticDoor = new Vec3i(minX + width / 2, atticInnerY, minZ + inset);
+                    // Carve attic hatch & place ladder from top story into attic loft
+                    putAir(map, new Vec3i(atticDoor.x(), atticFloorY, atticDoor.z()));
+                    BlockIdentifier ladder = BlockIdentifier.of("minecraft:ladder[facing=south]");
+                    for (int ly = minY + (stories - 1) * storyHeight + 1; ly <= atticInnerY; ly++) {
+                        put(map, new Vec3i(atticDoor.x(), ly, atticDoor.z()), ladder, MaterialRole.DECORATION);
+                    }
                     InteriorRoom atticRoom = new InteriorRoom(atticBox, RoomType.ATTIC_LOFT, atticDoor);
                     if (def.furnishInterior()) {
                         for (PlacementTarget ft : InteriorFurnishingGenerator.furnishRoom(atticRoom, palette, globalClearance, def.furnishingDensity())) {

@@ -56,6 +56,19 @@ public final class TFBClientRenderer {
         LevelRenderer.renderLineBox(poseStack, lineConsumer, minX, minY, minZ, maxX, maxY, maxZ, 0.22f, 0.74f, 0.97f, 1.0f);
 
         // 2. Render POS1 and POS2 distinct markers
+        var gp = controller.model().gridPlacement();
+        if (!gp.registry().allBuildings().isEmpty()) {
+            for (var bld : gp.registry().allBuildings()) {
+                BoundingBox3i gb = gp.grid().toWorldBounds(bld);
+                boolean sel = bld.id().equals(gp.selectedBuildingId());
+                LevelRenderer.renderLineBox(
+                    poseStack, lineConsumer,
+                    gb.min().x() - camPos.x, gb.min().y() - camPos.y, gb.min().z() - camPos.z,
+                    gb.max().x() + 1.0 - camPos.x, gb.max().y() + 1.0 - camPos.y, gb.max().z() + 1.0 - camPos.z,
+                    sel ? 0.98f : 0.2f, sel ? 0.8f : 0.85f, sel ? 0.08f : 0.45f, 1.0f
+                );
+            }
+        }
         Vec3i p1 = controller.model().selectionManager().pos1();
         if (p1 != null) {
             double p1x = p1.x() - camPos.x;

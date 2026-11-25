@@ -61,6 +61,7 @@ public class ArchitectWorkspaceScreen {
     private UITextField blueprintNameField;
     private UITextField blueprintAuthorField;
     private UITextField materialSearchField;
+    private MaterialRole selectedMaterialRole = MaterialRole.WALL_PRIMARY;
 
     // Callbacks
     private Runnable closeCallback;
@@ -789,15 +790,25 @@ public class ArchitectWorkspaceScreen {
 
             case MATERIALS -> {
                 List<StylePreset> styles = Arrays.asList(StylePreset.values());
-                tabWidgets.add(new UIDropdown<>(new UIBounds(contentX, contentY, contentWidth / 2 - 6, rowHeight), TFBLocalization.tr("tfb.ui.style"), styles, styles.indexOf(model.stylePreset()), preset -> {
+                tabWidgets.add(new UIDropdown<>(new UIBounds(contentX, contentY, contentWidth / 3 - 4, rowHeight), TFBLocalization.tr("tfb.ui.style"), styles, styles.indexOf(model.stylePreset()), preset -> {
                     model.setStylePreset(preset);
                     rebuildTabWidgets();
                     setStatus("Applied style: " + preset.displayName());
                 }));
 
+                List<MaterialRole> editableRoles = Arrays.asList(
+                    MaterialRole.WALL_PRIMARY, MaterialRole.WALL_ACCENT, MaterialRole.FLOOR,
+                    MaterialRole.ROOF_SLOPE, MaterialRole.FOUNDATION, MaterialRole.PILLAR,
+                    MaterialRole.WINDOW, MaterialRole.DOOR, MaterialRole.LIGHT_SOURCE
+                );
+                tabWidgets.add(new UIDropdown<>(new UIBounds(contentX + contentWidth / 3, contentY, contentWidth / 3 - 4, rowHeight), "Role", editableRoles, Math.max(0, editableRoles.indexOf(selectedMaterialRole)), role -> {
+                    selectedMaterialRole = role;
+                    setStatus("Editing role: " + role.name());
+                }));
+
                 int discoveredCount = BlockTaxonomyRegistry.getInstance().all().size();
-                tabWidgets.add(new UIButton(new UIBounds(contentX + contentWidth / 2, contentY, contentWidth / 2 - 6, rowHeight),
-                    "Discovered Blocks: " + discoveredCount + " (Harmony: " + Math.round(model.paletteHarmonyScore() * 100) + "%)", b -> {}));
+                tabWidgets.add(new UIButton(new UIBounds(contentX + (contentWidth * 2) / 3, contentY, contentWidth / 3 - 4, rowHeight),
+                    "Blocks: " + discoveredCount + " (" + Math.round(model.paletteHarmonyScore() * 100) + "%)", b -> {}));
 
                 materialSearchField = new UITextField(new UIBounds(contentX, contentY + 26, contentWidth / 2 - 6, rowHeight), "", "Search vanilla & modded blocks...", null);
                 tabWidgets.add(materialSearchField);
@@ -806,9 +817,9 @@ public class ArchitectWorkspaceScreen {
                 UIScrollList<BlockTaxonomyEntry> matList = new UIScrollList<>(
                     new UIBounds(contentX, contentY + 50, contentWidth - 6, 56), 14, results,
                     (entry, idx) -> {
-                        model.activePalette().set(MaterialRole.WALL_PRIMARY, entry.block());
+                        model.activePalette().set(selectedMaterialRole, entry.block());
                         model.generatePreview();
-                        setStatus("Overrode primary wall: " + entry.block().asString());
+                        setStatus("Set " + selectedMaterialRole.name() + ": " + entry.block().asString());
                     }
                 );
                 matList.setLabelProvider(e -> e.block().asString() + " [" + e.substance().name() + "]");

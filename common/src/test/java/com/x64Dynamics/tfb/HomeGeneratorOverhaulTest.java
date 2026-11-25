@@ -113,5 +113,7 @@ public class HomeGeneratorOverhaulTest {
         assertTrue("Tall gable roof on 13x13 home should include usable ATTIC_LOFT floor plan",
             res.plan().floors().stream().flatMap(f -> f.rooms().stream())
                 .anyMatch(r -> r.type() == com.x64Dynamics.tfb.architectural.RoomType.ATTIC_LOFT));
+        assertTrue("Attic loft should include ladder access from top story",
+            res.targets().stream().anyMatch(t -> t.block().path().equals("ladder")));
     }
 }
