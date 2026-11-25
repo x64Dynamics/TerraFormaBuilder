@@ -62,6 +62,8 @@ public class ArchitectWorkspaceScreen {
     private UITextField blueprintAuthorField;
     private UITextField materialSearchField;
     private MaterialRole selectedMaterialRole = MaterialRole.WALL_PRIMARY;
+    private com.x64Dynamics.tfb.grid.GridBuilding.BuildingFunction selectedGridFunction = com.x64Dynamics.tfb.grid.GridBuilding.BuildingFunction.RESIDENTIAL;
+    private com.x64Dynamics.tfb.grid.GridBuilding.FootprintShape selectedGridShape = com.x64Dynamics.tfb.grid.GridBuilding.FootprintShape.RECTANGLE;
 
     // Callbacks
     private Runnable closeCallback;
@@ -640,15 +642,15 @@ public class ArchitectWorkspaceScreen {
                 int sideW = Math.max(80, contentWidth - canvasSize - 12);
                 int halfW = (sideW - 4) / 2;
 
-                tabWidgets.add(new UIButton(new UIBounds(sideX, canvasY, halfW, 16), "+ House", b -> {
+                tabWidgets.add(new UIButton(new UIBounds(sideX, canvasY, halfW, 16), "+ " + selectedGridFunction.name().substring(0, 4), b -> {
                     var sc = gp.selectedCell() != null ? gp.selectedCell() : new com.x64Dynamics.tfb.grid.GridManager.GridCoord(2, 2);
                     String id = "b_" + (gp.registry().allBuildings().size() + 1);
                     var bld = new com.x64Dynamics.tfb.grid.GridBuilding(
                         id, sc.gx(), sc.gz(), model.origin().y(), model.width(), model.depth(),
                         Math.max(1, model.requestedStories()), 4,
-                        com.x64Dynamics.tfb.grid.GridBuilding.FootprintShape.RECTANGLE,
+                        selectedGridShape,
                         com.x64Dynamics.tfb.geometry.Direction.SOUTH, model.stylePreset(), model.activePalette(),
-                        model.roofShape(), com.x64Dynamics.tfb.grid.GridBuilding.BuildingFunction.RESIDENTIAL,
+                        model.roofShape(), selectedGridFunction,
                         false, model.proceduralSeed() + gp.registry().allBuildings().size()
                     );
                     var res = gp.placeBuilding(bld);
@@ -659,19 +661,9 @@ public class ArchitectWorkspaceScreen {
                     setStatus(gp.lastValidationMessage());
                     rebuildTabWidgets();
                 }));
-                tabWidgets.add(new UIButton(new UIBounds(sideX + halfW + 4, canvasY, halfW, 16), "+ Tower", b -> {
-                    var sc = gp.selectedCell() != null ? gp.selectedCell() : new com.x64Dynamics.tfb.grid.GridManager.GridCoord(12, 2);
-                    String id = "tw_" + (gp.registry().allBuildings().size() + 1);
-                    var bld = new com.x64Dynamics.tfb.grid.GridBuilding(
-                        id, sc.gx(), sc.gz(), model.origin().y(), 7, 7, 3, 4,
-                        com.x64Dynamics.tfb.grid.GridBuilding.FootprintShape.SQUARE,
-                        com.x64Dynamics.tfb.geometry.Direction.SOUTH, model.stylePreset(), model.activePalette(),
-                        model.roofShape(), com.x64Dynamics.tfb.grid.GridBuilding.BuildingFunction.TOWER,
-                        false, model.proceduralSeed() + gp.registry().allBuildings().size()
-                    );
-                    var res = gp.placeBuilding(bld);
-                    if (res.valid()) model.syncGridComplexToPreview();
-                    setStatus(gp.lastValidationMessage());
+                tabWidgets.add(new UIButton(new UIBounds(sideX + halfW + 4, canvasY, halfW, 16), "Shape: " + selectedGridShape.name().substring(0, 4), b -> {
+                    var shapes = com.x64Dynamics.tfb.grid.GridBuilding.FootprintShape.values();
+                    selectedGridShape = shapes[(selectedGridShape.ordinal() + 1) % (shapes.length - 1)];
                     rebuildTabWidgets();
                 }));
 
@@ -683,18 +675,23 @@ public class ArchitectWorkspaceScreen {
                         rebuildTabWidgets();
                     }
                 }));
-                tabWidgets.add(new UIButton(new UIBounds(sideX + halfW + 4, canvasY + 18, halfW, 16), "Delete", b -> {
+                tabWidgets.add(new UIButton(new UIBounds(sideX + halfW + 4, canvasY + 18, halfW, 16), "Fn: " + selectedGridFunction.name().substring(0, 4), b -> {
+                    var fns = com.x64Dynamics.tfb.grid.GridBuilding.BuildingFunction.values();
+                    selectedGridFunction = fns[(selectedGridFunction.ordinal() + 1) % fns.length];
+                    rebuildTabWidgets();
+                }));
+
+                tabWidgets.add(new UIButton(new UIBounds(sideX, canvasY + 36, halfW, 16), "Sync 3D (" + gp.registry().allBuildings().size() + ")", b -> {
+                    int n = model.syncGridComplexToPreview();
+                    setStatus("Synced complex (" + n + " blocks, " + gp.registry().connections().size() + " links)");
+                }));
+                tabWidgets.add(new UIButton(new UIBounds(sideX + halfW + 4, canvasY + 36, halfW, 16), "Delete", b -> {
                     if (gp.selectedBuildingId() != null) {
                         gp.deleteBuilding(gp.selectedBuildingId());
                         model.syncGridComplexToPreview();
                         setStatus(gp.lastValidationMessage());
                         rebuildTabWidgets();
                     }
-                }));
-
-                tabWidgets.add(new UIButton(new UIBounds(sideX, canvasY + 36, sideW, 16), "Sync Complex 3D (" + gp.registry().allBuildings().size() + " bld / " + gp.registry().connections().size() + " conn)", b -> {
-                    int n = model.syncGridComplexToPreview();
-                    setStatus("Synced complex (" + n + " blocks, " + gp.registry().connections().size() + " links)");
                 }));
                 tabWidgets.add(new UIButton(new UIBounds(sideX, canvasY + 54, halfW, 16), "Save .tfbgrid", b -> {
                     try {

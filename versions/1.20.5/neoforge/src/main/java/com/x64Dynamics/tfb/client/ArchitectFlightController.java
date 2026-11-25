@@ -17,6 +17,8 @@ public final class ArchitectFlightController {
 
         TFBClientController controller = TFBClientController.getInstance();
         boolean architectMode = controller.isArchitectMode();
+        controller.model().cameraController().setActive(architectMode);
+        if (architectMode) controller.model().cameraController().tick(0.05f);
         boolean flightActive = controller.isFlightActive();
 
         // Mode transition: entered Architect Mode
