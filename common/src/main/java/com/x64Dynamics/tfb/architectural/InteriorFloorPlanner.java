@@ -80,14 +80,19 @@ public final class InteriorFloorPlanner {
         BspNode root = subdivide(interiorBounds, rng, 0, maxDepth);
         collectLeavesAndWalls(root, palette, partitionWalls, connections, transitZones, leafBoxes, roomDoors, storyIndex);
 
-        // Assign story-appropriate RoomTypes with seed variation
+        // Assign story-appropriate RoomTypes with seed variation + hallways & staircase halls
         List<RoomType> rolePool = getStoryRolePool(storyIndex, rng);
         for (int i = 0; i < leafBoxes.size(); i++) {
             BoundingBox3i b = leafBoxes.get(i);
             Vec3i door = i < roomDoors.size() ? roomDoors.get(i) : new Vec3i((b.min().x() + b.max().x()) / 2, minY, b.max().z());
             RoomType type = rolePool.get(i % rolePool.size());
+            boolean containsStair = transitZones.stream().anyMatch(b::contains);
             if (storyIndex == 0 && i == 0) {
                 type = RoomType.LIVING_HALL;
+            } else if (containsStair && storyIndex < totalStories - 1) {
+                type = RoomType.STAIRCASE_HALL;
+            } else if (b.sizeX() <= 4 || b.sizeZ() <= 4) {
+                type = RoomType.HALLWAY;
             }
             rooms.add(new InteriorRoom(b, type, door));
             plannedRooms.add(new BuildingPlan.PlannedRoom("f" + storyIndex + "_r" + i, storyIndex, type, b, door));

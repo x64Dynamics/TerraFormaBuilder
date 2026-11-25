@@ -10,5 +10,8 @@ public enum RoomType {
     BATHROOM,
     ARMORY,
     ALCHEMICAL_LAB,
-    DINING_HALL
+    DINING_HALL,
+    HALLWAY,
+    STAIRCASE_HALL,
+    ATTIC_LOFT
 }

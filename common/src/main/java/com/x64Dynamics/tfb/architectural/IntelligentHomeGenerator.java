@@ -377,6 +377,52 @@ public final class IntelligentHomeGenerator {
             floorPlans.add(new BuildingPlan.FloorPlan(s, floorY, ceilingY, storyRooms, storyConns));
         }
 
+        // 6b. Usable Attic Loft / Upper Roof Room when pitched roof is tall (>= 5 blocks)
+        if (def.wingConfiguration() == WingConfiguration.SINGLE_RECTANGLE
+            && def.roofType() != RoofGenerator.RoofType.FLAT
+            && roofHeight >= 5 && width >= 9 && depth >= 9) {
+            int atticFloorY = wallTopY;
+            int atticInnerY = wallTopY + 1;
+            int atticMaxY = wallTopY + roofHeight - 2;
+            if (atticMaxY >= atticInnerY + 1) {
+                // Attic floor deck (preserving stairwell opening)
+                for (int x = minX + 1; x < maxX; x++) {
+                    for (int z = minZ + 1; z < maxZ; z++) {
+                        Vec3i fp = new Vec3i(x, atticFloorY, z);
+                        if (!globalClearance.contains(fp)) {
+                            put(map, fp, floorBlock, MaterialRole.FLOOR);
+                        }
+                    }
+                }
+                int inset = 2;
+                if (minX + inset <= maxX - inset && minZ + inset <= maxZ - inset) {
+                    BoundingBox3i atticBox = BoundingBox3i.fromCorners(
+                        new Vec3i(minX + inset, atticInnerY, minZ + inset),
+                        new Vec3i(maxX - inset, atticMaxY, maxZ - inset)
+                    );
+                    Vec3i atticDoor = new Vec3i(minX + width / 2, atticInnerY, minZ + inset);
+                    InteriorRoom atticRoom = new InteriorRoom(atticBox, RoomType.ATTIC_LOFT, atticDoor);
+                    if (def.furnishInterior()) {
+                        for (PlacementTarget ft : InteriorFurnishingGenerator.furnishRoom(atticRoom, palette, globalClearance, def.furnishingDensity())) {
+                            put(map, ft.pos(), ft.block(), ft.role());
+                        }
+                    }
+                    // Attach attic loft to the top story's FloorPlan so story count stays exact and all rooms remain reachable
+                    int topIdx = floorPlans.size() - 1;
+                    if (topIdx >= 0) {
+                        var topFp = floorPlans.get(topIdx);
+                        var updatedRooms = new ArrayList<>(topFp.rooms());
+                        updatedRooms.add(new BuildingPlan.PlannedRoom("attic_loft", topIdx, RoomType.ATTIC_LOFT, atticBox, atticDoor));
+                        var updatedConns = new ArrayList<>(topFp.connections());
+                        if (!topFp.rooms().isEmpty()) {
+                            updatedConns.add(new BuildingPlan.RoomConnection(topFp.rooms().get(0).id(), "attic_loft", atticDoor));
+                        }
+                        floorPlans.set(topIdx, new BuildingPlan.FloorPlan(topFp.floorIndex(), topFp.floorY(), topFp.ceilingY(), updatedRooms, updatedConns));
+                    }
+                }
+            }
+        }
+
         // 7. Orientation-Aware Entrance Porch, Steps & Style-Driven Shutters
         if (def.addPorchAndGarden() && width >= 7 && depth >= 7) {
             Direction cross = facing.rotateY();

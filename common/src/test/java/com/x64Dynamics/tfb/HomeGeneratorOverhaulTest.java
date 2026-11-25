@@ -101,4 +101,17 @@ public class HomeGeneratorOverhaulTest {
         assertEquals(res.targets().size(), varied.size());
         assertTrue(varied.stream().anyMatch(t -> t.role() == MaterialRole.WALL_ACCENT));
     }
+
+    @Test
+    public void testTallRoofGeneratesUsableAtticLoftRoom() {
+        var bounds = BoundingBox3i.fromOriginAndSize(new Vec3i(0, 64, 0), 13, 18, 13);
+        var res = IntelligentHomeGenerator.generateHome(new IntelligentHomeGenerator.HomeConfig(
+            bounds, StylePreset.MEDIEVAL.createPalette(), RoofGenerator.RoofType.GABLE,
+            1, 4, StylePreset.MEDIEVAL, Direction.SOUTH, WingConfiguration.SINGLE_RECTANGLE,
+            true, true, true, 1.0f, 606L
+        ));
+        assertTrue("Tall gable roof on 13x13 home should include usable ATTIC_LOFT floor plan",
+            res.plan().floors().stream().flatMap(f -> f.rooms().stream())
+                .anyMatch(r -> r.type() == com.x64Dynamics.tfb.architectural.RoomType.ATTIC_LOFT));
+    }
 }

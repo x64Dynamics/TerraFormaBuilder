@@ -185,6 +185,37 @@ public final class InteriorFurnishingGenerator {
                 safePut(new Vec3i(Math.min(maxX, minX + 1), y, minZ), BlockIdentifier.of("minecraft:water_cauldron[level=3]"), MaterialRole.DECORATION, clearanceZones, map);
                 addCeilingChandelier(centerX, b.max().y(), b.sizeY(), centerZ, light, map);
             }
+            case HALLWAY -> {
+                BlockIdentifier runner = BlockIdentifier.of(carpetId);
+                boolean xLong = b.sizeX() >= b.sizeZ();
+                if (xLong) {
+                    for (int x = minX; x <= maxX; x++) {
+                        safePut(new Vec3i(x, y, centerZ), runner, MaterialRole.DECORATION, clearanceZones, map);
+                    }
+                } else {
+                    for (int z = minZ; z <= maxZ; z++) {
+                        safePut(new Vec3i(centerX, y, z), runner, MaterialRole.DECORATION, clearanceZones, map);
+                    }
+                }
+                safePut(new Vec3i(minX, y, minZ), BlockIdentifier.of("minecraft:flower_pot"), MaterialRole.DECORATION, clearanceZones, map);
+                addCeilingChandelier(centerX, b.max().y(), b.sizeY(), centerZ, light, map);
+            }
+            case STAIRCASE_HALL -> {
+                safePut(new Vec3i(centerX, y, centerZ), BlockIdentifier.of(carpetId), MaterialRole.DECORATION, clearanceZones, map);
+                safePut(new Vec3i(maxX, y, maxZ), BlockIdentifier.of("minecraft:armor_stand"), MaterialRole.DECORATION, clearanceZones, map);
+                addCeilingChandelier(centerX, b.max().y(), b.sizeY(), centerZ, light, map);
+            }
+            case ATTIC_LOFT -> {
+                // Cozy attic loft: storage under eaves, central rug, bed/reading nook, ridge lantern
+                safePut(new Vec3i(minX, y, minZ), BlockIdentifier.of("minecraft:chest[facing=south]"), MaterialRole.DECORATION, clearanceZones, map);
+                safePut(new Vec3i(maxX, y, minZ), BlockIdentifier.of("minecraft:barrel[facing=up]"), MaterialRole.DECORATION, clearanceZones, map);
+                safePut(new Vec3i(centerX, y, centerZ), BlockIdentifier.of(carpetId), MaterialRole.DECORATION, clearanceZones, map);
+                if (b.sizeX() >= 5 && b.sizeZ() >= 5) {
+                    safePut(new Vec3i(centerX, y, maxZ), BlockIdentifier.of(bedId + "[facing=north,part=head]"), MaterialRole.DECORATION, clearanceZones, map);
+                    safePut(new Vec3i(centerX, y, maxZ - 1), BlockIdentifier.of(bedId + "[facing=north,part=foot]"), MaterialRole.DECORATION, clearanceZones, map);
+                }
+                addCeilingChandelier(centerX, b.max().y(), b.sizeY(), centerZ, light, map);
+            }
         }
 
         return new ArrayList<>(map.values());
