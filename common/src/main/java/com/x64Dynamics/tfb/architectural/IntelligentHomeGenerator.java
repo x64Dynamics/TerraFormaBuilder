@@ -544,7 +544,10 @@ public final class IntelligentHomeGenerator {
             }
         }
 
-        List<PlacementTarget> resultTargets = new ArrayList<>(map.values());
+        var enforced = com.x64Dynamics.tfb.architectural.plan.StructuralIntegrityEngine.enforce(
+            new ArrayList<>(map.values()), palette, null
+        );
+        List<PlacementTarget> resultTargets = enforced.targets();
         BoundingBox3i totalBounds = BoundingBox3i.fromCorners(
             new Vec3i(minX - overhang, minY - 1, minZ - overhang),
             new Vec3i(maxX + overhang, wallTopY + roofHeight + 2, maxZ + overhang + (def.addPorchAndGarden() && facing == Direction.SOUTH ? 6 : 0))

@@ -142,7 +142,10 @@ public final class ModularGridSession {
         for (ModuleCell cell : modules.values()) {
             buildSingleModule(cell, cell.coord().equals(doorCell), placed);
         }
-        return new ArrayList<>(placed.values());
+        MaterialPalette basePal = modules.values().iterator().next().palette();
+        return com.x64Dynamics.tfb.architectural.plan.StructuralIntegrityEngine
+            .enforce(new ArrayList<>(placed.values()), basePal, null)
+            .targets();
     }
 
     private CellCoord3D chooseEntranceCell() {
