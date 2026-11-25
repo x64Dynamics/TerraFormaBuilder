@@ -8,3 +8,4 @@ __pycache__/
 *.pyc
 *.tmp
 .template-cache/
+tools/scratch/
