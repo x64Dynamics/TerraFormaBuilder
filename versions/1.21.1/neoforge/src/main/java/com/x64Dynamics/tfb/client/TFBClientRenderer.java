@@ -12,6 +12,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -113,6 +115,17 @@ public final class TFBClientRenderer {
             }
 
             LevelRenderer.renderLineBox(poseStack, lineConsumer, vx, vy, vz, vx + 1.0, vy + 1.0, vz + 1.0, r, g, b, a);
+
+            // Render ghost block model for realistic architectural preview
+            if (!voxel.invalidPlacement() && count < 512) {
+                BlockState state = BlockStateParser.parse(voxel.block());
+                if (!state.isAir()) {
+                    poseStack.pushPose();
+                    poseStack.translate(vx, vy, vz);
+                    mc.getBlockRenderer().renderSingleBlock(state, poseStack, bufferSource, 0x00F000F0, OverlayTexture.NO_OVERLAY);
+                    poseStack.popPose();
+                }
+            }
             if (++count >= maxRenderCount) break;
         }
 
