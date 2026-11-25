@@ -45,7 +45,18 @@ public final class GridComplexGenerator {
                 default -> WingConfiguration.SINGLE_RECTANGLE;
             };
 
-            if (b.function() == GridBuilding.BuildingFunction.TOWER) {
+            if (b.function() == GridBuilding.BuildingFunction.COURTYARD) {
+                for (int x = box.min().x(); x <= box.max().x(); x++) {
+                    for (int z = box.min().z(); z <= box.max().z(); z++) {
+                        merged.put(new Vec3i(x, box.min().y(), z), new PlacementTarget(new Vec3i(x, box.min().y(), z), spec.palette().get(MaterialRole.FOUNDATION), MaterialRole.FOUNDATION));
+                    }
+                }
+                if (box.sizeX() >= 7 && box.sizeZ() >= 7) {
+                    for (PlacementTarget ct : ConnectedBuildingComposer.generateCourtyardCloister(box, Math.max(3, spec.storyHeight() - 1), spec.palette())) {
+                        merged.put(ct.pos(), ct);
+                    }
+                }
+            } else if (b.function() == GridBuilding.BuildingFunction.TOWER) {
                 int radius = Math.max(3, Math.min(box.sizeX(), box.sizeZ()) / 2);
                 Vec3i center = new Vec3i((box.min().x() + box.max().x()) / 2, box.min().y(), (box.min().z() + box.max().z()) / 2);
                 var towerCfg = new TowerGenerator.TowerConfig(TowerGenerator.TowerShape.OCTAGONAL, radius, b.stories() * spec.storyHeight(), Math.max(1, b.stories()), true, true, true);
@@ -93,9 +104,29 @@ public final class GridComplexGenerator {
                     }
                 }
                 case DOORWAY -> {
-                    Vec3i mid = new Vec3i((conn.anchorA().x() + conn.anchorB().x()) / 2, conn.anchorA().y() + 1, (conn.anchorA().z() + conn.anchorB().z()) / 2);
-                    merged.put(mid, new PlacementTarget(mid, BlockIdentifier.AIR, MaterialRole.AIR));
-                    merged.put(mid.add(0, 1, 0), new PlacementTarget(mid.add(0, 1, 0), BlockIdentifier.AIR, MaterialRole.AIR));
+                    GridBuilding to = registry.get(conn.toBuildingId()).orElse(null);
+                    if (from != null && to != null) {
+                        BoundingBox3i ba = grid.toWorldBounds(from);
+                        BoundingBox3i bb = grid.toWorldBounds(to);
+                        int y = Math.max(ba.min().y(), bb.min().y()) + 1;
+                        if (ba.max().x() + 1 == bb.min().x() || bb.max().x() + 1 == ba.min().x()) {
+                            int xA = (ba.max().x() + 1 == bb.min().x()) ? ba.max().x() : bb.max().x();
+                            int xB = xA + 1;
+                            int zMid = (Math.max(ba.min().z(), bb.min().z()) + Math.min(ba.max().z(), bb.max().z())) / 2;
+                            for (int dy = 0; dy < 2; dy++) {
+                                merged.put(new Vec3i(xA, y + dy, zMid), new PlacementTarget(new Vec3i(xA, y + dy, zMid), BlockIdentifier.AIR, MaterialRole.AIR));
+                                merged.put(new Vec3i(xB, y + dy, zMid), new PlacementTarget(new Vec3i(xB, y + dy, zMid), BlockIdentifier.AIR, MaterialRole.AIR));
+                            }
+                        } else if (ba.max().z() + 1 == bb.min().z() || bb.max().z() + 1 == ba.min().z()) {
+                            int zA = (ba.max().z() + 1 == bb.min().z()) ? ba.max().z() : bb.max().z();
+                            int zB = zA + 1;
+                            int xMid = (Math.max(ba.min().x(), bb.min().x()) + Math.min(ba.max().x(), bb.max().x())) / 2;
+                            for (int dy = 0; dy < 2; dy++) {
+                                merged.put(new Vec3i(xMid, y + dy, zA), new PlacementTarget(new Vec3i(xMid, y + dy, zA), BlockIdentifier.AIR, MaterialRole.AIR));
+                                merged.put(new Vec3i(xMid, y + dy, zB), new PlacementTarget(new Vec3i(xMid, y + dy, zB), BlockIdentifier.AIR, MaterialRole.AIR));
+                            }
+                        }
+                    }
                 }
                 case VERTICAL_STACK -> {
                     int h = Math.max(3, Math.abs(conn.anchorB().y() - conn.anchorA().y()) + 1);

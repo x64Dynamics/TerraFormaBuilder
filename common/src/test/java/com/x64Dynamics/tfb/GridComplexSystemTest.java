@@ -141,5 +141,15 @@ public class GridComplexSystemTest {
         var loaded = GridProjectManager.load("estate_alpha").orElseThrow();
         assertEquals(1, loaded.registry().allBuildings().size());
         assertEquals(Direction.EAST, loaded.registry().get("hall").orElseThrow().facing());
+
+        // Courtyard generation test
+        loaded.placeBuilding(new GridBuilding(
+            "plaza", 11, 1, 64, 9, 9, 1, 4,
+            GridBuilding.FootprintShape.SQUARE, Direction.SOUTH,
+            StylePreset.TRADITIONAL, null, RoofGenerator.RoofType.FLAT,
+            GridBuilding.BuildingFunction.COURTYARD, false, 88L
+        ));
+        var res = loaded.generateComplex();
+        assertTrue(res.targets().size() > 200);
     }
 }

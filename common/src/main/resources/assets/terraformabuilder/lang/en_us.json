@@ -13,6 +13,8 @@
   "tfb.nav.design.desc": "Home dimensions, floors, roof style, layout, and world selection",
   "tfb.nav.grid": "Grid",
   "tfb.nav.grid.desc": "Layer-by-layer voxel grid editor with symmetry and 3D preview sync",
+  "tfb.nav.complex": "Complex",
+  "tfb.nav.complex.desc": "Multi-building grid planner, intelligent connections, and camera views",
   "tfb.nav.materials": "Materials",
   "tfb.nav.materials.desc": "Architectural styles, block palettes, and discovered block taxonomy",
   "tfb.nav.library": "Library",

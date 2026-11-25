@@ -65,5 +65,19 @@ public final class TFBClientRenderer {
             };
             Gizmos.cuboid(new BlockPos(pos.x(), pos.y(), pos.z()), GizmoStyle.strokeAndFill(color, 1.0f, (color & 0x00FFFFFF) | 0x26000000));
         }
+
+        var gp = controller.model().gridPlacement();
+        if (!gp.registry().allBuildings().isEmpty()) {
+            var batch = com.x64Dynamics.tfb.grid.GridRendererModel.buildBatch(
+                gp.grid(), gp.registry(), gp.selectedCell(), gp.selectedBuildingId(), gp.grid().origin().y()
+            );
+            for (var line : batch.lines()) {
+                Gizmos.line(
+                    new net.minecraft.world.phys.Vec3(line.start().x(), line.start().y() + 0.02, line.start().z()),
+                    new net.minecraft.world.phys.Vec3(line.end().x(), line.end().y() + 0.02, line.end().z()),
+                    line.argbColor(), line.width()
+                );
+            }
+        }
     }
 }

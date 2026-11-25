@@ -612,6 +612,106 @@ public class ArchitectWorkspaceScreen {
                 }));
             }
 
+            case COMPLEX -> {
+                var gp = model.gridPlacement();
+                var cam = model.cameraController();
+                int camW = (contentWidth - 12) / 5;
+                var modes = com.x64Dynamics.tfb.ui.camera.ArchitectCameraController.CameraViewMode.values();
+                for (int i = 0; i < 5; i++) {
+                    var m = modes[i];
+                    String lbl = (cam.viewMode() == m ? "[" + m.name().substring(0, Math.min(4, m.name().length())) + "]" : m.name().substring(0, Math.min(4, m.name().length())));
+                    tabWidgets.add(new UIButton(new UIBounds(contentX + i * (camW + 2), contentY, camW, rowHeight), lbl, b -> {
+                        cam.setActive(true);
+                        cam.setViewMode(m);
+                        setStatus("Camera: " + m.name());
+                        rebuildTabWidgets();
+                    }));
+                }
+
+                int canvasY = contentY + 22;
+                int canvasSize = Math.min(contentWidth / 2, 128);
+                tabWidgets.add(new UIGridComplexCanvas(new UIBounds(contentX, canvasY, canvasSize, canvasSize), gp, (gx, gz) -> {
+                    setStatus("Cell (" + gx + "," + gz + ") | " + gp.lastValidationMessage());
+                    rebuildTabWidgets();
+                }));
+
+                int sideX = contentX + canvasSize + 8;
+                int sideW = Math.max(80, contentWidth - canvasSize - 12);
+                int halfW = (sideW - 4) / 2;
+
+                tabWidgets.add(new UIButton(new UIBounds(sideX, canvasY, halfW, 16), "+ House", b -> {
+                    var sc = gp.selectedCell() != null ? gp.selectedCell() : new com.x64Dynamics.tfb.grid.GridManager.GridCoord(2, 2);
+                    String id = "b_" + (gp.registry().allBuildings().size() + 1);
+                    var bld = new com.x64Dynamics.tfb.grid.GridBuilding(
+                        id, sc.gx(), sc.gz(), model.origin().y(), model.width(), model.depth(),
+                        Math.max(1, model.requestedStories()), 4,
+                        com.x64Dynamics.tfb.grid.GridBuilding.FootprintShape.RECTANGLE,
+                        com.x64Dynamics.tfb.geometry.Direction.SOUTH, model.stylePreset(), model.activePalette(),
+                        model.roofShape(), com.x64Dynamics.tfb.grid.GridBuilding.BuildingFunction.RESIDENTIAL,
+                        false, model.proceduralSeed() + gp.registry().allBuildings().size()
+                    );
+                    var res = gp.placeBuilding(bld);
+                    if (res.valid()) {
+                        model.syncGridComplexToPreview();
+                        cam.focusOn(gp.grid().toWorldBounds(bld));
+                    }
+                    setStatus(gp.lastValidationMessage());
+                    rebuildTabWidgets();
+                }));
+                tabWidgets.add(new UIButton(new UIBounds(sideX + halfW + 4, canvasY, halfW, 16), "+ Tower", b -> {
+                    var sc = gp.selectedCell() != null ? gp.selectedCell() : new com.x64Dynamics.tfb.grid.GridManager.GridCoord(12, 2);
+                    String id = "tw_" + (gp.registry().allBuildings().size() + 1);
+                    var bld = new com.x64Dynamics.tfb.grid.GridBuilding(
+                        id, sc.gx(), sc.gz(), model.origin().y(), 7, 7, 3, 4,
+                        com.x64Dynamics.tfb.grid.GridBuilding.FootprintShape.SQUARE,
+                        com.x64Dynamics.tfb.geometry.Direction.SOUTH, model.stylePreset(), model.activePalette(),
+                        model.roofShape(), com.x64Dynamics.tfb.grid.GridBuilding.BuildingFunction.TOWER,
+                        false, model.proceduralSeed() + gp.registry().allBuildings().size()
+                    );
+                    var res = gp.placeBuilding(bld);
+                    if (res.valid()) model.syncGridComplexToPreview();
+                    setStatus(gp.lastValidationMessage());
+                    rebuildTabWidgets();
+                }));
+
+                tabWidgets.add(new UIButton(new UIBounds(sideX, canvasY + 18, halfW, 16), "Rotate", b -> {
+                    if (gp.selectedBuildingId() != null) {
+                        gp.rotateBuilding(gp.selectedBuildingId());
+                        model.syncGridComplexToPreview();
+                        setStatus(gp.lastValidationMessage());
+                        rebuildTabWidgets();
+                    }
+                }));
+                tabWidgets.add(new UIButton(new UIBounds(sideX + halfW + 4, canvasY + 18, halfW, 16), "Delete", b -> {
+                    if (gp.selectedBuildingId() != null) {
+                        gp.deleteBuilding(gp.selectedBuildingId());
+                        model.syncGridComplexToPreview();
+                        setStatus(gp.lastValidationMessage());
+                        rebuildTabWidgets();
+                    }
+                }));
+
+                tabWidgets.add(new UIButton(new UIBounds(sideX, canvasY + 36, sideW, 16), "Sync Complex 3D (" + gp.registry().allBuildings().size() + " bld / " + gp.registry().connections().size() + " conn)", b -> {
+                    int n = model.syncGridComplexToPreview();
+                    setStatus("Synced complex (" + n + " blocks, " + gp.registry().connections().size() + " links)");
+                }));
+                tabWidgets.add(new UIButton(new UIBounds(sideX, canvasY + 54, halfW, 16), "Save .tfbgrid", b -> {
+                    try {
+                        String name = blueprintNameField != null ? blueprintNameField.text() : "complex";
+                        com.x64Dynamics.tfb.grid.GridProjectManager.save(name, gp.grid(), gp.registry());
+                        setStatus("Saved grid project: " + name);
+                    } catch (Exception ex) {
+                        setStatus("Grid save failed: " + ex.getMessage());
+                    }
+                }));
+                tabWidgets.add(new UIButton(new UIBounds(sideX + halfW + 4, canvasY + 54, halfW, 16), "Zoom Fit", b -> {
+                    if (gp.selectedBuildingId() != null) {
+                        gp.registry().get(gp.selectedBuildingId()).ifPresent(sel -> cam.focusOn(gp.grid().toWorldBounds(sel)));
+                    }
+                    setStatus("Camera focused on selection");
+                }));
+            }
+
             case GRID_EDITOR -> {
                 var ge = model.gridEditor();
                 int toolW = (contentWidth - 12) / 5;
