@@ -19,20 +19,28 @@ SERVER_BUILD_BLOCK = """            if (targets.isEmpty()) {
                 if (serverLevel != null) {
                     server.execute(() -> {
                         int placed = 0;
+                        int confirmed = 0;
                         for (PlacementTarget target : targets) {
                             Vec3i pos = target.pos();
                             BlockPos bp = new BlockPos(pos.x(), pos.y(), pos.z());
                             BlockState state = BlockStateParser.parse(target.block());
                             if (serverLevel.setBlock(bp, state, 3)) {
                                 placed++;
+                                confirmed++;
+                            } else if (serverLevel.getBlockState(bp).equals(state)) {
+                                confirmed++;
                             }
                         }
                         final int finalPlaced = placed;
+                        final int finalConfirmed = confirmed;
                         serverLevel.playSound(null, mc.player.getX(), mc.player.getY(), mc.player.getZ(),
                             net.minecraft.sounds.SoundEvents.ANVIL_USE, net.minecraft.sounds.SoundSource.BLOCKS, 1.0f, 1.0f);
                         mc.execute(() -> {
+                            String msg = finalPlaced > 0
+                                ? "§a[TFB] Construction complete! Placed " + finalPlaced + " blocks (" + finalConfirmed + " verified)."
+                                : "§e[TFB] Construction verified: All " + finalConfirmed + " blocks are already constructed.";
                             mc.player.displayClientMessage(
-                                Component.nullToEmpty("§a[TFB] Construction complete! Successfully placed " + finalPlaced + " blocks with server lighting."),
+                                Component.nullToEmpty(msg),
                                 false
                             );
                         });

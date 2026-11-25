@@ -42,16 +42,32 @@ public final class ArchitecturalBrushes {
             MaterialPalette palette = context.palette();
 
             int roofHeight = Math.max(3, bounds.sizeY() / 3);
-            int wallHeight = bounds.sizeY() - roofHeight;
+            int wallHeight = Math.max(3, bounds.sizeY() - roofHeight);
             BoundingBox3i wallBounds = BoundingBox3i.fromOriginAndSize(bounds.min(), bounds.sizeX(), wallHeight, bounds.sizeZ());
             BoundingBox3i roofBounds = BoundingBox3i.fromOriginAndSize(bounds.min().add(0, wallHeight, 0), bounds.sizeX(), roofHeight, bounds.sizeZ());
 
+            // 1. Foundation / Ground Floor
             targets.addAll(FloorGenerator.generateFloor(wallBounds, wallBounds.min().y(), true, palette));
-            targets.addAll(WallGenerator.generateBoxWalls(wallBounds, 1, false, palette));
-            targets.addAll(RoofGenerator.generateRoof(roofBounds, RoofGenerator.RoofType.GABLE, Axis.X, 1, palette));
 
-            Vec3i doorCenter = new Vec3i((bounds.min().x() + bounds.max().x()) / 2, bounds.min().y(), bounds.min().z());
-            targets.addAll(OpeningGenerator.carveDoorway(doorCenter, Direction.SOUTH, 1, 2, palette));
+            // 2. Composed 3D Architectural Facades (Pillars, Plinths, Window Bays, Doorway, Cornice)
+            int minX = wallBounds.min().x(), maxX = wallBounds.max().x();
+            int minZ = wallBounds.min().z(), maxZ = wallBounds.max().z();
+            int y = wallBounds.min().y();
+            int lenX = wallBounds.sizeX();
+            int lenZ = wallBounds.sizeZ();
+
+            // South facade (Entrance door & framed windows)
+            targets.addAll(WallSegmentationEngine.composeFacade(new Vec3i(minX, y, maxZ), Direction.EAST, Direction.SOUTH, lenX, wallHeight, true, palette));
+            // North facade (Windows & rhythm pillars)
+            targets.addAll(WallSegmentationEngine.composeFacade(new Vec3i(maxX, y, minZ), Direction.WEST, Direction.NORTH, lenX, wallHeight, false, palette));
+            // East facade (Side windows)
+            targets.addAll(WallSegmentationEngine.composeFacade(new Vec3i(maxX, y, maxZ), Direction.NORTH, Direction.EAST, lenZ, wallHeight, false, palette));
+            // West facade (Side windows)
+            targets.addAll(WallSegmentationEngine.composeFacade(new Vec3i(minX, y, minZ), Direction.SOUTH, Direction.WEST, lenZ, wallHeight, false, palette));
+
+            // 3. Roof aligned to dominant axis with filled gable pediments
+            Axis ridgeAxis = (bounds.sizeX() >= bounds.sizeZ()) ? Axis.X : Axis.Z;
+            targets.addAll(RoofGenerator.generateRoof(roofBounds, RoofGenerator.RoofType.GABLE, ridgeAxis, 1, palette));
 
             if (context.heightmap() != null) {
                 targets.addAll(TerrainAdapter.adapt(wallBounds, context.heightmap(), context.foundationStrategy(), palette).foundationPlacements());
@@ -69,16 +85,31 @@ public final class ArchitecturalBrushes {
             List<PlacementTarget> targets = new ArrayList<>();
             BoundingBox3i bounds = context.bounds();
             MaterialPalette palette = context.palette();
-            int stories = context.getProperty("stories", 3);
+            int stories = Math.max(1, context.getProperty("stories", Math.max(1, bounds.sizeY() / 4)));
             int storyHeight = Math.max(3, bounds.sizeY() / stories);
+            int totalWallHeight = Math.min(bounds.sizeY(), stories * storyHeight);
 
-            targets.addAll(WallGenerator.generateBoxWalls(bounds, 1, false, palette));
+            int minX = bounds.min().x(), maxX = bounds.max().x();
+            int minZ = bounds.min().z(), maxZ = bounds.max().z();
+            int y = bounds.min().y();
+            int lenX = bounds.sizeX();
+            int lenZ = bounds.sizeZ();
 
+            // Composed Multi-Story Facades
+            targets.addAll(WallSegmentationEngine.composeFacade(new Vec3i(minX, y, maxZ), Direction.EAST, Direction.SOUTH, lenX, totalWallHeight, true, palette));
+            targets.addAll(WallSegmentationEngine.composeFacade(new Vec3i(maxX, y, minZ), Direction.WEST, Direction.NORTH, lenX, totalWallHeight, false, palette));
+            targets.addAll(WallSegmentationEngine.composeFacade(new Vec3i(maxX, y, maxZ), Direction.NORTH, Direction.EAST, lenZ, totalWallHeight, false, palette));
+            targets.addAll(WallSegmentationEngine.composeFacade(new Vec3i(minX, y, minZ), Direction.SOUTH, Direction.WEST, lenZ, totalWallHeight, false, palette));
+
+            // Interior floors for each story
             for (int s = 0; s < stories; s++) {
                 int floorY = bounds.min().y() + (s * storyHeight);
                 targets.addAll(FloorGenerator.generateFloor(bounds, floorY, true, palette));
             }
-            targets.addAll(RoofGenerator.generateRoof(bounds, RoofGenerator.RoofType.FLAT, Axis.X, 0, palette));
+
+            // Top Roof with parapet
+            BoundingBox3i roofBounds = BoundingBox3i.fromOriginAndSize(bounds.min().add(0, totalWallHeight, 0), bounds.sizeX(), Math.max(1, bounds.sizeY() - totalWallHeight), bounds.sizeZ());
+            targets.addAll(RoofGenerator.generateRoof(roofBounds, RoofGenerator.RoofType.FLAT, Axis.X, 0, palette));
             return targets;
         }
     }

@@ -96,7 +96,7 @@ public final class TFBClientRenderer {
         WorldPreviewBuffer previewBuffer = controller.model().previewBuffer();
         List<PreviewVoxel> voxels = previewBuffer.getFilteredVoxels();
 
-        int maxRenderCount = 4096; // Extended budget for large architectural builds
+        int maxRenderCount = 8192; // Full architectural structure rendering budget
         int count = 0;
         for (PreviewVoxel voxel : voxels) {
             Vec3i pos = voxel.pos();
@@ -110,24 +110,24 @@ public final class TFBClientRenderer {
             float r = 0.35f, g = 0.85f, b = 1.0f, a = 0.55f;
             if (voxel.invalidPlacement()) {
                 r = 1.0f; g = 0.15f; b = 0.15f; a = 0.95f; // Red conflict highlight
-            } else if (voxel.isModified()) {
-                r = 1.0f; g = 0.85f; b = 0.15f; a = 0.85f; // Yellow modified highlight
-            }
-
-            LevelRenderer.renderLineBox(poseStack, lineConsumer, vx, vy, vz, vx + 1.0, vy + 1.0, vz + 1.0, r, g, b, a);
-
-            // Render ghost block model for realistic architectural preview
-            if (!voxel.invalidPlacement() && count < 512) {
+                LevelRenderer.renderLineBox(poseStack, lineConsumer, vx, vy, vz, vx + 1.0, vy + 1.0, vz + 1.0, r, g, b, a);
+            } else {
+                // Render real 3D textured block models with orientations, stairs, slabs, and decor
                 BlockState state = BlockStateParser.parse(voxel.block());
                 if (!state.isAir()) {
                     poseStack.pushPose();
                     poseStack.translate(vx, vy, vz);
                     mc.getBlockRenderer().renderSingleBlock(state, poseStack, bufferSource, 0x00F000F0, OverlayTexture.NO_OVERLAY);
                     poseStack.popPose();
+                } else {
+                    LevelRenderer.renderLineBox(poseStack, lineConsumer, vx, vy, vz, vx + 1.0, vy + 1.0, vz + 1.0, r, g, b, a);
                 }
             }
             if (++count >= maxRenderCount) break;
         }
+
+        // Flush all batched block models to GPU
+        bufferSource.endBatch();
 
         poseStack.popPose();
     }

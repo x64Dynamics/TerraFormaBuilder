@@ -141,7 +141,44 @@ public class ArchitectWorkspaceScreen {
         widgets.add(tabBar);
 
         // 3. Left Sidebar (Category Filter & Brush List)
-        int brushListY = headerHeight + 26;
+        int catBtnY = headerHeight + 2;
+        int catBtnW = (sidebarWidth - 14) / 4;
+        int catBtnH = 18;
+
+        widgets.add(new UIButton(new UIBounds(6, catBtnY, catBtnW, catBtnH), "ALL", b -> {
+            List<IConstructionBrush> list = new ArrayList<>(BrushRegistry.all());
+            brushList.setItems(list);
+            if (!list.isEmpty()) {
+                model.setActiveBrush(list.get(0));
+                brushList.setSelectedIndex(0);
+            }
+        }));
+        widgets.add(new UIButton(new UIBounds(6 + catBtnW + 2, catBtnY, catBtnW, catBtnH), "ARC", b -> {
+            List<IConstructionBrush> list = BrushRegistry.byCategory(com.x64Dynamics.tfb.brush.BrushCategory.ARCHITECTURAL);
+            brushList.setItems(list);
+            if (!list.isEmpty()) {
+                model.setActiveBrush(list.get(0));
+                brushList.setSelectedIndex(0);
+            }
+        }));
+        widgets.add(new UIButton(new UIBounds(6 + (catBtnW + 2) * 2, catBtnY, catBtnW, catBtnH), "STR", b -> {
+            List<IConstructionBrush> list = BrushRegistry.byCategory(com.x64Dynamics.tfb.brush.BrushCategory.STRUCTURAL);
+            brushList.setItems(list);
+            if (!list.isEmpty()) {
+                model.setActiveBrush(list.get(0));
+                brushList.setSelectedIndex(0);
+            }
+        }));
+        widgets.add(new UIButton(new UIBounds(6 + (catBtnW + 2) * 3, catBtnY, catBtnW, catBtnH), "INF", b -> {
+            List<IConstructionBrush> list = BrushRegistry.byCategory(com.x64Dynamics.tfb.brush.BrushCategory.INFRASTRUCTURE);
+            brushList.setItems(list);
+            if (!list.isEmpty()) {
+                model.setActiveBrush(list.get(0));
+                brushList.setSelectedIndex(0);
+            }
+        }));
+
+        int brushListY = headerHeight + 24;
         int brushListHeight = height - brushListY - footerHeight - 4;
 
         List<IConstructionBrush> allBrushes = new ArrayList<>(BrushRegistry.all());
@@ -149,6 +186,7 @@ public class ArchitectWorkspaceScreen {
             model.setActiveBrush(brush);
             setStatus("Selected brush: " + brush.displayName());
         });
+        brushList.setLabelProvider(brush -> "[" + brush.category().name().substring(0, Math.min(3, brush.category().name().length())) + "] " + brush.displayName());
         brushList.setSelectedIndex(allBrushes.indexOf(model.activeBrush()));
         widgets.add(brushList);
 

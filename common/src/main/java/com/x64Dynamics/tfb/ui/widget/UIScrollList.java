@@ -13,12 +13,17 @@ public class UIScrollList<T> extends UIWidget {
     private int selectedIndex = -1;
     private final BiConsumer<T, Integer> itemSelectAction;
     private Consumer<T> doubleClickAction;
+    private java.util.function.Function<T, String> labelProvider = Object::toString;
 
     public UIScrollList(UIBounds bounds, int itemHeight, List<T> items, BiConsumer<T, Integer> itemSelectAction) {
         super(bounds);
         this.itemHeight = itemHeight;
         this.items = items;
         this.itemSelectAction = itemSelectAction;
+    }
+
+    public void setLabelProvider(java.util.function.Function<T, String> provider) {
+        this.labelProvider = provider != null ? provider : Object::toString;
     }
 
     public void setItems(List<T> items) {
@@ -61,7 +66,8 @@ public class UIScrollList<T> extends UIWidget {
             graphics.fill(bounds.x() + 1, itemY, bounds.x() + bounds.width() - 9, itemY + itemHeight, bg);
 
             int textColor = isSelected ? 0xFFFFFFFF : (itemHovered ? 0xFFE2E8F0 : 0xFF94A3B8);
-            graphics.drawText(item.toString(), bounds.x() + 4, itemY + (itemHeight - 8) / 2, textColor, false);
+            String label = labelProvider != null ? labelProvider.apply(item) : String.valueOf(item);
+            graphics.drawText(label, bounds.x() + 4, itemY + (itemHeight - 8) / 2, textColor, false);
         }
 
         graphics.disableScissor();

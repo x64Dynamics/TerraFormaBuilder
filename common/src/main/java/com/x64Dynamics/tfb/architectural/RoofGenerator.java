@@ -84,6 +84,7 @@ public final class RoofGenerator {
         List<PlacementTarget> targets = new ArrayList<>();
         BlockIdentifier stair = palette.get(MaterialRole.ROOF_SLOPE);
         BlockIdentifier ridgeSlab = palette.get(MaterialRole.ROOF_RIDGE);
+        BlockIdentifier wallBlock = palette.get(MaterialRole.WALL_PRIMARY);
 
         int minX = bounds.min().x(), maxX = bounds.max().x();
         int minZ = bounds.min().z(), maxZ = bounds.max().z();
@@ -105,6 +106,20 @@ public final class RoofGenerator {
                     for (int x = minX; x <= maxX; x++) {
                         targets.add(new PlacementTarget(new Vec3i(x, y, zLeft), northStair, MaterialRole.ROOF_SLOPE));
                         targets.add(new PlacementTarget(new Vec3i(x, y, zRight), southStair, MaterialRole.ROOF_SLOPE));
+                    }
+                    // Fill gable pediments on both ends
+                    if (maxX - minX >= 2) {
+                        for (int z = zLeft + 1; z < zRight; z++) {
+                            targets.add(new PlacementTarget(new Vec3i(minX + 1, y, z), wallBlock, MaterialRole.WALL_PRIMARY));
+                            targets.add(new PlacementTarget(new Vec3i(maxX - 1, y, z), wallBlock, MaterialRole.WALL_PRIMARY));
+                        }
+                    }
+                    // For even spans, cap the top ridge pair
+                    if (zLeft == zRight - 1) {
+                        for (int x = minX; x <= maxX; x++) {
+                            targets.add(new PlacementTarget(new Vec3i(x, y + 1, zLeft), ridgeSlab, MaterialRole.ROOF_RIDGE));
+                            targets.add(new PlacementTarget(new Vec3i(x, y + 1, zRight), ridgeSlab, MaterialRole.ROOF_RIDGE));
+                        }
                     }
                 } else if (zLeft == zRight) {
                     for (int x = minX; x <= maxX; x++) {
@@ -128,6 +143,20 @@ public final class RoofGenerator {
                     for (int z = minZ; z <= maxZ; z++) {
                         targets.add(new PlacementTarget(new Vec3i(xLeft, y, z), westStair, MaterialRole.ROOF_SLOPE));
                         targets.add(new PlacementTarget(new Vec3i(xRight, y, z), eastStair, MaterialRole.ROOF_SLOPE));
+                    }
+                    // Fill gable pediments on both ends
+                    if (maxZ - minZ >= 2) {
+                        for (int x = xLeft + 1; x < xRight; x++) {
+                            targets.add(new PlacementTarget(new Vec3i(x, y, minZ + 1), wallBlock, MaterialRole.WALL_PRIMARY));
+                            targets.add(new PlacementTarget(new Vec3i(x, y, maxZ - 1), wallBlock, MaterialRole.WALL_PRIMARY));
+                        }
+                    }
+                    // For even spans, cap the top ridge pair
+                    if (xLeft == xRight - 1) {
+                        for (int z = minZ; z <= maxZ; z++) {
+                            targets.add(new PlacementTarget(new Vec3i(xLeft, y + 1, z), ridgeSlab, MaterialRole.ROOF_RIDGE));
+                            targets.add(new PlacementTarget(new Vec3i(xRight, y + 1, z), ridgeSlab, MaterialRole.ROOF_RIDGE));
+                        }
                     }
                 } else if (xLeft == xRight) {
                     for (int z = minZ; z <= maxZ; z++) {
@@ -155,9 +184,13 @@ public final class RoofGenerator {
             int curMinX = minX + inset, curMaxX = maxX - inset;
             int curMinZ = minZ + inset, curMaxZ = maxZ - inset;
 
-            if (curMinX == curMaxX && curMinZ == curMaxZ) {
-                targets.add(new PlacementTarget(new Vec3i(curMinX, y, curMinZ), slab, MaterialRole.ROOF_RIDGE));
-                continue;
+            if (curMinX >= curMaxX || curMinZ >= curMaxZ) {
+                for (int x = curMinX; x <= curMaxX; x++) {
+                    for (int z = curMinZ; z <= curMaxZ; z++) {
+                        targets.add(new PlacementTarget(new Vec3i(x, y, z), slab, MaterialRole.ROOF_RIDGE));
+                    }
+                }
+                break;
             }
 
             for (int x = curMinX; x <= curMaxX; x++) {

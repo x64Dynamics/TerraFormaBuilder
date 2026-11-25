@@ -2,6 +2,7 @@ package com.x64Dynamics.tfb.ui.model;
 
 import com.x64Dynamics.tfb.architectural.AdvancedRoofFeatures;
 import com.x64Dynamics.tfb.architectural.FacadeOrnamentGenerator;
+import com.x64Dynamics.tfb.architectural.FloorGenerator;
 import com.x64Dynamics.tfb.architectural.InteriorFloorPlanner;
 import com.x64Dynamics.tfb.architectural.InteriorFurnishingGenerator;
 import com.x64Dynamics.tfb.architectural.InteriorRoom;
@@ -367,7 +368,11 @@ public class ArchitectWorkspaceModel {
             ParametricFootprint footprint = ParametricFootprint.create(box, wingConfiguration);
             targets.addAll(WingLayoutGenerator.generateWingCompound(footprint, roofShape, activePalette));
         } else {
-            BrushContext ctx = new BrushContext(box, Collections.emptyList(), activePalette, null, foundationStrategy, Collections.emptyMap());
+            List<Vec3i> pathPts = Collections.emptyList();
+            if (selectionManager.pos1() != null && selectionManager.pos2() != null) {
+                pathPts = List.of(selectionManager.pos1(), selectionManager.pos2());
+            }
+            BrushContext ctx = new BrushContext(box, pathPts, activePalette, null, foundationStrategy, Collections.emptyMap());
             if (activeBrush != null) {
                 targets.addAll(activeBrush.generate(ctx));
             }
@@ -399,17 +404,36 @@ public class ArchitectWorkspaceModel {
             }
         }
 
-        // 3. Interior rooms & furnishings
-        if (enableInteriors && activeCategory == BrushCategory.ARCHITECTURAL && width >= 10 && depth >= 10 && height >= 6) {
-            BoundingBox3i interiorBox = new BoundingBox3i(
-                new Vec3i(box.min().x() + 1, box.min().y() + 1, box.min().z() + 1),
-                new Vec3i(box.max().x() - 1, box.min().y() + 4, box.max().z() - 1)
-            );
-            InteriorFloorPlanner.FloorPlanResult floorPlan = InteriorFloorPlanner.planFloor(interiorBox, activePalette);
-            targets.addAll(floorPlan.partitionWalls());
-            if (furnishRooms) {
-                for (InteriorRoom room : floorPlan.rooms()) {
-                    targets.addAll(InteriorFurnishingGenerator.furnishRoom(room, activePalette, floorPlan.transitClearanceZones(), furnishingDensity));
+        // 3. Multi-Story Interior rooms & furnishings
+        if (enableInteriors && activeCategory == BrushCategory.ARCHITECTURAL && width >= 8 && depth >= 8 && height >= 5) {
+            int storyHeight = 4;
+            int numStories = Math.max(1, (height - 2) / storyHeight);
+
+            for (int s = 0; s < numStories; s++) {
+                int floorY = box.min().y() + 1 + (s * storyHeight);
+                int ceilingY = Math.min(box.max().y() - 1, floorY + storyHeight - 1);
+                if (ceilingY <= floorY) continue;
+
+                if (s > 0) {
+                    BoundingBox3i floorBounds = BoundingBox3i.fromCorners(
+                        new Vec3i(box.min().x() + 1, floorY - 1, box.min().z() + 1),
+                        new Vec3i(box.max().x() - 1, floorY - 1, box.max().z() - 1)
+                    );
+                    targets.addAll(FloorGenerator.generateFloor(floorBounds, floorY - 1, true, activePalette));
+                }
+
+                BoundingBox3i storyBox = BoundingBox3i.fromCorners(
+                    new Vec3i(box.min().x() + 1, floorY, box.min().z() + 1),
+                    new Vec3i(box.max().x() - 1, ceilingY, box.max().z() - 1)
+                );
+
+                InteriorFloorPlanner.FloorPlanResult floorPlan = InteriorFloorPlanner.planStory(storyBox, s, numStories, activePalette);
+                targets.addAll(floorPlan.partitionWalls());
+
+                if (furnishRooms) {
+                    for (InteriorRoom room : floorPlan.rooms()) {
+                        targets.addAll(InteriorFurnishingGenerator.furnishRoom(room, activePalette, floorPlan.transitClearanceZones(), furnishingDensity));
+                    }
                 }
             }
         }

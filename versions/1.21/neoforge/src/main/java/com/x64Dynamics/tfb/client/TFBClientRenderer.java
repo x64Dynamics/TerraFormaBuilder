@@ -12,6 +12,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -53,7 +55,26 @@ public final class TFBClientRenderer {
         VertexConsumer lineConsumer = bufferSource.getBuffer(RenderType.lines());
         LevelRenderer.renderLineBox(poseStack, lineConsumer, minX, minY, minZ, maxX, maxY, maxZ, 0.22f, 0.74f, 0.97f, 1.0f);
 
-        // 2. Render face handles on center of each face
+        // 2. Render POS1 and POS2 distinct markers
+        Vec3i p1 = controller.model().selectionManager().pos1();
+        if (p1 != null) {
+            double p1x = p1.x() - camPos.x;
+            double p1y = p1.y() - camPos.y;
+            double p1z = p1.z() - camPos.z;
+            // Vibrant green marker for POS1
+            LevelRenderer.renderLineBox(poseStack, lineConsumer, p1x - 0.02, p1y - 0.02, p1z - 0.02, p1x + 1.02, p1y + 1.02, p1z + 1.02, 0.15f, 0.95f, 0.25f, 1.0f);
+        }
+
+        Vec3i p2 = controller.model().selectionManager().pos2();
+        if (p2 != null) {
+            double p2x = p2.x() - camPos.x;
+            double p2y = p2.y() - camPos.y;
+            double p2z = p2.z() - camPos.z;
+            // Vibrant amber/gold marker for POS2
+            LevelRenderer.renderLineBox(poseStack, lineConsumer, p2x - 0.02, p2y - 0.02, p2z - 0.02, p2x + 1.02, p2y + 1.02, p2z + 1.02, 1.0f, 0.65f, 0.05f, 1.0f);
+        }
+
+        // 3. Render face handles on center of each face
         double midX = (minX + maxX) / 2.0;
         double midY = (minY + maxY) / 2.0;
         double midZ = (minZ + maxZ) / 2.0;
@@ -71,11 +92,11 @@ public final class TFBClientRenderer {
         LevelRenderer.renderLineBox(poseStack, lineConsumer, midX - hSize, midY - hSize, maxZ - hSize, midX + hSize, midY + hSize, maxZ + hSize, 0.2f, 0.5f, 0.95f, 1.0f);
         LevelRenderer.renderLineBox(poseStack, lineConsumer, midX - hSize, midY - hSize, minZ - hSize, midX + hSize, midY + hSize, minZ + hSize, 0.2f, 0.5f, 0.95f, 1.0f);
 
-        // 3. Render ghost preview voxels from WorldPreviewBuffer
+        // 4. Render ghost preview voxels from WorldPreviewBuffer
         WorldPreviewBuffer previewBuffer = controller.model().previewBuffer();
         List<PreviewVoxel> voxels = previewBuffer.getFilteredVoxels();
 
-        int maxRenderCount = 2048; // Budget to ensure smooth 120 FPS rendering
+        int maxRenderCount = 8192; // Full architectural structure rendering budget
         int count = 0;
         for (PreviewVoxel voxel : voxels) {
             Vec3i pos = voxel.pos();
@@ -83,19 +104,30 @@ public final class TFBClientRenderer {
             double vy = pos.y() - camPos.y;
             double vz = pos.z() - camPos.z;
 
-            // Distance cull (within 96 blocks)
-            if (vx * vx + vy * vy + vz * vz > 96.0 * 96.0) continue;
+            // Distance cull (within 128 blocks)
+            if (vx * vx + vy * vy + vz * vz > 128.0 * 128.0) continue;
 
-            float r = 0.8f, g = 0.8f, b = 0.8f;
+            float r = 0.35f, g = 0.85f, b = 1.0f, a = 0.55f;
             if (voxel.invalidPlacement()) {
-                r = 1.0f; g = 0.1f; b = 0.1f; // Red conflict highlight
-            } else if (voxel.isModified()) {
-                r = 1.0f; g = 0.8f; b = 0.1f; // Yellow modified highlight
+                r = 1.0f; g = 0.15f; b = 0.15f; a = 0.95f; // Red conflict highlight
+                LevelRenderer.renderLineBox(poseStack, lineConsumer, vx, vy, vz, vx + 1.0, vy + 1.0, vz + 1.0, r, g, b, a);
+            } else {
+                // Render real 3D textured block models with orientations, stairs, slabs, and decor
+                BlockState state = BlockStateParser.parse(voxel.block());
+                if (!state.isAir()) {
+                    poseStack.pushPose();
+                    poseStack.translate(vx, vy, vz);
+                    mc.getBlockRenderer().renderSingleBlock(state, poseStack, bufferSource, 0x00F000F0, OverlayTexture.NO_OVERLAY);
+                    poseStack.popPose();
+                } else {
+                    LevelRenderer.renderLineBox(poseStack, lineConsumer, vx, vy, vz, vx + 1.0, vy + 1.0, vz + 1.0, r, g, b, a);
+                }
             }
-
-            LevelRenderer.renderLineBox(poseStack, lineConsumer, vx, vy, vz, vx + 1.0, vy + 1.0, vz + 1.0, r, g, b, 0.35f);
             if (++count >= maxRenderCount) break;
         }
+
+        // Flush all batched block models to GPU
+        bufferSource.endBatch();
 
         poseStack.popPose();
     }
