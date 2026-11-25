@@ -316,4 +316,75 @@ public final class ConnectedBuildingComposer {
             }
         }
     }
+
+    /**
+     * Generates a covered elevated skybridge or colonnade walkway connecting two separate
+     * building sections with floor deck, side balustrades/pillars, roofed canopy, and lanterns.
+     */
+    public static List<PlacementTarget> generateCoveredWalkway(
+        Vec3i start,
+        Vec3i end,
+        int width,
+        int height,
+        MaterialPalette palette
+    ) {
+        Map<Vec3i, PlacementTarget> map = new LinkedHashMap<>();
+        BlockIdentifier floor = palette.get(MaterialRole.FLOOR);
+        BlockIdentifier pillar = palette.get(MaterialRole.PILLAR);
+        BlockIdentifier rail = palette.get(MaterialRole.BALUSTRADE);
+        BlockIdentifier roof = palette.get(MaterialRole.ROOF_RIDGE);
+        BlockIdentifier light = palette.get(MaterialRole.LIGHT_SOURCE);
+
+        List<Vec3i> spine = ShapeRasterizer.bresenhamLine(start, end);
+        boolean xMajor = Math.abs(end.x() - start.x()) >= Math.abs(end.z() - start.z());
+        int halfW = Math.max(1, width / 2);
+        int clearH = Math.max(3, height);
+
+        for (int i = 0; i < spine.size(); i++) {
+            Vec3i c = spine.get(i);
+            boolean isPillarStep = (i % 4 == 0) || (i == spine.size() - 1);
+            for (int w = -halfW; w <= halfW; w++) {
+                Vec3i fp = xMajor ? c.add(0, 0, w) : c.add(w, 0, 0);
+                map.put(fp, new PlacementTarget(fp, floor, MaterialRole.FLOOR));
+                map.put(fp.add(0, clearH + 1, 0), new PlacementTarget(fp.add(0, clearH + 1, 0), roof, MaterialRole.ROOF_RIDGE));
+
+                boolean isEdge = Math.abs(w) == halfW;
+                if (isEdge) {
+                    if (isPillarStep) {
+                        for (int h = 1; h <= clearH; h++) {
+                            map.put(fp.add(0, h, 0), new PlacementTarget(fp.add(0, h, 0), pillar, MaterialRole.PILLAR));
+                        }
+                    } else {
+                        map.put(fp.add(0, 1, 0), new PlacementTarget(fp.add(0, 1, 0), rail, MaterialRole.BALUSTRADE));
+                    }
+                }
+            }
+            if (isPillarStep) {
+                map.put(c.add(0, clearH, 0), new PlacementTarget(c.add(0, clearH, 0), light.withProperty("hanging", "true"), MaterialRole.LIGHT_SOURCE));
+            }
+        }
+        return new ArrayList<>(map.values());
+    }
+
+    /**
+     * Generates a perimeter cloister arcade around a rectangular courtyard.
+     */
+    public static List<PlacementTarget> generateCourtyardCloister(
+        BoundingBox3i courtyardBounds,
+        int arcadeHeight,
+        MaterialPalette palette
+    ) {
+        List<PlacementTarget> targets = new ArrayList<>();
+        int y = courtyardBounds.min().y();
+        Vec3i nw = new Vec3i(courtyardBounds.min().x(), y, courtyardBounds.min().z());
+        Vec3i ne = new Vec3i(courtyardBounds.max().x(), y, courtyardBounds.min().z());
+        Vec3i se = new Vec3i(courtyardBounds.max().x(), y, courtyardBounds.max().z());
+        Vec3i sw = new Vec3i(courtyardBounds.min().x(), y, courtyardBounds.max().z());
+
+        targets.addAll(generateCoveredWalkway(nw, ne, 3, arcadeHeight, palette));
+        targets.addAll(generateCoveredWalkway(ne, se, 3, arcadeHeight, palette));
+        targets.addAll(generateCoveredWalkway(se, sw, 3, arcadeHeight, palette));
+        targets.addAll(generateCoveredWalkway(sw, nw, 3, arcadeHeight, palette));
+        return targets;
+    }
 }

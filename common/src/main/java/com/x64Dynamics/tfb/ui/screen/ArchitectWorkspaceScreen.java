@@ -18,6 +18,7 @@ import com.x64Dynamics.tfb.taxonomy.BlockTaxonomyRegistry;
 import com.x64Dynamics.tfb.taxonomy.SearchableTaxonomyBrowser;
 import com.x64Dynamics.tfb.ui.TFBClientController;
 import com.x64Dynamics.tfb.ui.model.ArchitectWorkspaceModel;
+import com.x64Dynamics.tfb.ui.model.VoxelGridEditorModel;
 import com.x64Dynamics.tfb.ui.model.WorkspaceTab;
 import com.x64Dynamics.tfb.ui.rendering.IGuiGraphicsContext;
 import com.x64Dynamics.tfb.ui.widget.*;
@@ -609,6 +610,63 @@ public class ArchitectWorkspaceScreen {
                     model.clearSelection();
                     rebuildTabWidgets();
                 }));
+            }
+
+            case GRID_EDITOR -> {
+                var ge = model.gridEditor();
+                int toolW = (contentWidth - 12) / 5;
+                var tools = VoxelGridEditorModel.GridTool.values();
+                for (int i = 0; i < tools.length; i++) {
+                    var t = tools[i];
+                    String lbl = (ge.activeTool() == t ? "[" + t.label() + "]" : t.label());
+                    tabWidgets.add(new UIButton(new UIBounds(contentX + i * (toolW + 2), contentY, toolW, rowHeight), lbl, b -> {
+                        ge.setActiveTool(t);
+                        rebuildTabWidgets();
+                    }));
+                }
+
+                int ctrlW = (contentWidth - 12) / 5;
+                tabWidgets.add(new UIButton(new UIBounds(contentX, contentY + 22, ctrlW, rowHeight), "Y- (" + ge.activeSliceY() + ")", b -> {
+                    ge.setActiveSliceY(ge.activeSliceY() - 1);
+                    rebuildTabWidgets();
+                }));
+                tabWidgets.add(new UIButton(new UIBounds(contentX + ctrlW + 2, contentY + 22, ctrlW, rowHeight), "Y+ (" + ge.activeSliceY() + ")", b -> {
+                    ge.setActiveSliceY(ge.activeSliceY() + 1);
+                    rebuildTabWidgets();
+                }));
+                tabWidgets.add(new UIToggleButton(new UIBounds(contentX + (ctrlW + 2) * 2, contentY + 22, ctrlW, rowHeight), "Mirror X", ge.isMirrorX(), v -> {
+                    ge.setMirrorX(v);
+                    rebuildTabWidgets();
+                }));
+                tabWidgets.add(new UIToggleButton(new UIBounds(contentX + (ctrlW + 2) * 3, contentY + 22, ctrlW, rowHeight), "Mirror Z", ge.isMirrorZ(), v -> {
+                    ge.setMirrorZ(v);
+                    rebuildTabWidgets();
+                }));
+                tabWidgets.add(new UIButton(new UIBounds(contentX + (ctrlW + 2) * 4, contentY + 22, ctrlW, rowHeight), "Sync 3D", b -> {
+                    int n = model.syncGridEditorToPreview();
+                    setStatus("Synced " + n + " grid voxels to 3D preview");
+                }));
+
+                int canvasY = contentY + 46;
+                int canvasSize = Math.min(contentWidth / 2, 112);
+                tabWidgets.add(new UIVoxelGridCanvas(new UIBounds(contentX, canvasY, canvasSize, canvasSize), ge, () -> {
+                    model.syncGridEditorToPreview();
+                }));
+
+                int sideX = contentX + canvasSize + 8;
+                int sideW = Math.max(60, contentWidth - canvasSize - 12);
+                MaterialRole[] swatches = {
+                    MaterialRole.WALL_PRIMARY, MaterialRole.FLOOR, MaterialRole.ROOF_SLOPE,
+                    MaterialRole.PILLAR, MaterialRole.WINDOW, MaterialRole.DOOR, MaterialRole.LIGHT_SOURCE
+                };
+                for (int i = 0; i < swatches.length; i++) {
+                    MaterialRole r = swatches[i];
+                    String label = (ge.activeRole() == r ? "> " : "") + r.name();
+                    tabWidgets.add(new UIButton(new UIBounds(sideX, canvasY + i * 16, sideW, 14), label, b -> {
+                        ge.setActiveRole(r);
+                        rebuildTabWidgets();
+                    }));
+                }
             }
 
             case MATERIALS -> {

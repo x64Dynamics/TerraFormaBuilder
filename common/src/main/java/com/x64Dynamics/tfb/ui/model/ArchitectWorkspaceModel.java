@@ -216,6 +216,17 @@ public class ArchitectWorkspaceModel {
     public String selectedSectionId() { return selectedSectionId; }
     public void setSelectedSectionId(String id) { this.selectedSectionId = id; }
 
+    private final VoxelGridEditorModel gridEditor = new VoxelGridEditorModel(16, 16, 16);
+    public VoxelGridEditorModel gridEditor() { return gridEditor; }
+
+    public synchronized int syncGridEditorToPreview() {
+        List<PlacementTarget> targets = gridEditor.toPlacementTargets(origin, activePalette());
+        this.cachedPreviewTargets = targets;
+        this.cachedBuildPlan = new ProgressiveBuildPlan(targets);
+        this.previewBuffer.updateFromTargets(targets, liveLevelAccess);
+        return targets.size();
+    }
+
     public synchronized com.x64Dynamics.tfb.architectural.assets.AuthoredAsset captureSelectionAsAsset(String name) throws java.io.IOException {
         String assetName = (name != null && !name.isBlank()) ? name.trim() : "captured_asset";
         String id = assetName.toLowerCase(java.util.Locale.ROOT).replaceAll("[^a-z0-9_-]", "_");

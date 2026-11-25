@@ -1,13 +1,20 @@
 package com.x64Dynamics.tfb.architectural;
 
 import com.x64Dynamics.tfb.geometry.BoundingBox3i;
+import com.x64Dynamics.tfb.geometry.Direction;
 import com.x64Dynamics.tfb.geometry.Vec3i;
 import com.x64Dynamics.tfb.material.BlockIdentifier;
+import com.x64Dynamics.tfb.material.BlockStateNormalizer;
 import com.x64Dynamics.tfb.material.MaterialPalette;
 import com.x64Dynamics.tfb.material.MaterialRole;
 
 import java.util.*;
 
+/**
+ * Generates realistic human-scale interior layouts and furnishings for every RoomType,
+ * respecting clearance zones, wall-hugging counters/wardrobes, paired beds,
+ * hanging chandeliers, rugs, and properly normalized BlockState properties.
+ */
 public final class InteriorFurnishingGenerator {
     private InteriorFurnishingGenerator() { }
 
@@ -21,14 +28,17 @@ public final class InteriorFurnishingGenerator {
         Set<Vec3i> clearanceZones,
         float density
     ) {
-        List<PlacementTarget> targets = new ArrayList<>();
-        Map<Vec3i, PlacementTarget> map = new HashMap<>();
-
+        Map<Vec3i, PlacementTarget> map = new LinkedHashMap<>();
         BoundingBox3i b = room.bounds();
         int y = b.min().y();
-
+        int minX = b.min().x() + 1, maxX = b.max().x() - 1;
+        int minZ = b.min().z() + 1, maxZ = b.max().z() - 1;
         int centerX = (b.min().x() + b.max().x()) / 2;
         int centerZ = (b.min().z() + b.max().z()) / 2;
+
+        if (minX > maxX || minZ > maxZ) {
+            return Collections.emptyList();
+        }
 
         BlockIdentifier stair = palette.get(MaterialRole.STAIR);
         BlockIdentifier slab = palette.get(MaterialRole.SLAB);
@@ -37,123 +47,138 @@ public final class InteriorFurnishingGenerator {
 
         switch (room.type()) {
             case LIVING_HALL -> {
-                // 1. Central sitting arrangement: Coffee table with sofa/chairs
                 Vec3i tablePos = new Vec3i(centerX, y, centerZ);
                 safePut(tablePos, fence, MaterialRole.DECORATION, clearanceZones, map);
-                safePut(tablePos.add(0, 1, 0), slab, MaterialRole.DECORATION, clearanceZones, map);
+                safePut(tablePos.add(0, 1, 0), BlockStateNormalizer.normalize(slab.withProperty("type", "bottom"), Direction.SOUTH), MaterialRole.DECORATION, clearanceZones, map);
+                safePut(tablePos.add(0, 2, 0), BlockIdentifier.of("minecraft:flower_pot"), MaterialRole.DECORATION, clearanceZones, map);
 
-                // Sofa chairs flanking table
+                // U-shaped sofa & armchairs facing coffee table
                 safePut(tablePos.add(0, 0, -1), stair.withProperty("facing", "south").withProperty("half", "bottom"), MaterialRole.DECORATION, clearanceZones, map);
                 safePut(tablePos.add(0, 0, 1), stair.withProperty("facing", "north").withProperty("half", "bottom"), MaterialRole.DECORATION, clearanceZones, map);
                 safePut(tablePos.add(-1, 0, 0), stair.withProperty("facing", "east").withProperty("half", "bottom"), MaterialRole.DECORATION, clearanceZones, map);
 
-                // Rug under seating
-                BlockIdentifier redCarpet = BlockIdentifier.of("minecraft:red_carpet");
+                // Woven area rug
+                BlockIdentifier carpet = BlockIdentifier.of("minecraft:red_carpet");
                 for (int dx = -1; dx <= 1; dx++) {
                     for (int dz = -1; dz <= 1; dz++) {
-                        if (dx == 0 && dz == 0) continue;
-                        safePut(tablePos.add(dx, 0, dz), redCarpet, MaterialRole.DECORATION, clearanceZones, map);
+                        Vec3i rp = tablePos.add(dx, 0, dz);
+                        if (!map.containsKey(rp)) {
+                            safePut(rp, carpet, MaterialRole.DECORATION, clearanceZones, map);
+                        }
                     }
                 }
 
-                // 2. Hanging Chandelier
-                Vec3i ceilingCenter = new Vec3i(centerX, b.max().y(), centerZ);
-                map.put(ceilingCenter, new PlacementTarget(ceilingCenter, BlockIdentifier.of("minecraft:chain"), MaterialRole.DECORATION));
-                map.put(ceilingCenter.add(0, -1, 0), new PlacementTarget(ceilingCenter.add(0, -1, 0), light, MaterialRole.LIGHT_SOURCE));
+                // Corner bookshelf & potted plant
+                safePut(new Vec3i(minX, y, minZ), BlockIdentifier.of("minecraft:bookshelf"), MaterialRole.DECORATION, clearanceZones, map);
+                safePut(new Vec3i(minX, y + 1, minZ), light, MaterialRole.LIGHT_SOURCE, clearanceZones, map);
+
+                addCeilingChandelier(centerX, b.max().y(), centerZ, light, map);
             }
             case BEDROOM -> {
-                // Canopy bed in quiet corner
-                Vec3i bedHead = new Vec3i(b.min().x() + 1, y, b.min().z() + 1);
+                // Paired double or single bed against north wall
+                Vec3i bedHead = new Vec3i(minX, y, minZ);
                 Vec3i bedFoot = bedHead.add(0, 0, 1);
                 safePut(bedHead, BlockIdentifier.of("minecraft:red_bed[facing=south,part=head]"), MaterialRole.DECORATION, clearanceZones, map);
                 safePut(bedFoot, BlockIdentifier.of("minecraft:red_bed[facing=south,part=foot]"), MaterialRole.DECORATION, clearanceZones, map);
 
-                // Nightstand with lantern
+                // Bedside nightstand + lamp + rug
                 Vec3i nightstand = bedHead.add(1, 0, 0);
-                safePut(nightstand, BlockIdentifier.of("minecraft:oak_slab[half=top]"), MaterialRole.DECORATION, clearanceZones, map);
+                safePut(nightstand, BlockIdentifier.of("minecraft:oak_slab[type=top]"), MaterialRole.DECORATION, clearanceZones, map);
                 safePut(nightstand.add(0, 1, 0), light, MaterialRole.LIGHT_SOURCE, clearanceZones, map);
+                safePut(bedFoot.add(1, 0, 0), BlockIdentifier.of("minecraft:light_gray_carpet"), MaterialRole.DECORATION, clearanceZones, map);
 
-                // Wardrobe cabinet on opposite wall
-                Vec3i wardrobeBase = new Vec3i(b.max().x() - 1, y, b.min().z() + 1);
+                // Wardrobe & chest on opposite wall
+                Vec3i wardrobeBase = new Vec3i(maxX, y, minZ);
                 safePut(wardrobeBase, BlockIdentifier.of("minecraft:barrel[facing=up]"), MaterialRole.DECORATION, clearanceZones, map);
                 safePut(wardrobeBase.add(0, 1, 0), BlockIdentifier.of("minecraft:barrel[facing=up]"), MaterialRole.DECORATION, clearanceZones, map);
+                safePut(new Vec3i(maxX, y, maxZ), BlockIdentifier.of("minecraft:chest[facing=west]"), MaterialRole.DECORATION, clearanceZones, map);
             }
             case DINING_HALL -> {
-                // Long banquet dining table
-                for (int x = b.min().x() + 2; x <= b.max().x() - 2; x++) {
+                int startX = Math.min(maxX, minX + 1);
+                int endX = Math.max(minX, maxX - 1);
+                for (int x = startX; x <= endX; x++) {
                     Vec3i tPos = new Vec3i(x, y, centerZ);
-                    safePut(tPos, slab, MaterialRole.SLAB, clearanceZones, map);
+                    safePut(tPos, BlockStateNormalizer.normalize(slab.withProperty("type", "top"), Direction.SOUTH), MaterialRole.SLAB, clearanceZones, map);
+                    if (x == centerX) {
+                        safePut(tPos.add(0, 1, 0), BlockIdentifier.of("minecraft:candle[lit=true,candles=2]"), MaterialRole.LIGHT_SOURCE, clearanceZones, map);
+                    }
                     safePut(tPos.add(0, 0, -1), stair.withProperty("facing", "south").withProperty("half", "bottom"), MaterialRole.DECORATION, clearanceZones, map);
                     safePut(tPos.add(0, 0, 1), stair.withProperty("facing", "north").withProperty("half", "bottom"), MaterialRole.DECORATION, clearanceZones, map);
                 }
-                // Overhead lighting
-                Vec3i light1 = new Vec3i(b.min().x() + 2, b.max().y(), centerZ);
-                Vec3i light2 = new Vec3i(b.max().x() - 2, b.max().y(), centerZ);
-                map.put(light1, new PlacementTarget(light1, light, MaterialRole.LIGHT_SOURCE));
-                map.put(light2, new PlacementTarget(light2, light, MaterialRole.LIGHT_SOURCE));
+                addCeilingChandelier(centerX, b.max().y(), centerZ, light, map);
             }
             case KITCHEN_HEARTH -> {
-                // Fireplace hearth along back wall
-                Vec3i hearth = new Vec3i(centerX, y, b.max().z() - 1);
-                safePut(hearth, BlockIdentifier.of("minecraft:campfire"), MaterialRole.DECORATION, clearanceZones, map);
-                safePut(hearth.add(-1, 0, 0), BlockIdentifier.of("minecraft:bricks"), MaterialRole.WALL_PRIMARY, clearanceZones, map);
-                safePut(hearth.add(1, 0, 0), BlockIdentifier.of("minecraft:bricks"), MaterialRole.WALL_PRIMARY, clearanceZones, map);
-                safePut(hearth.add(-1, 1, 0), BlockIdentifier.of("minecraft:bricks"), MaterialRole.WALL_PRIMARY, clearanceZones, map);
-                safePut(hearth.add(1, 1, 0), BlockIdentifier.of("minecraft:bricks"), MaterialRole.WALL_PRIMARY, clearanceZones, map);
-                safePut(hearth.add(0, 2, 0), BlockIdentifier.of("minecraft:brick_slab"), MaterialRole.SLAB, clearanceZones, map);
+                // Brick hearth with chimney breast
+                Vec3i hearth = new Vec3i(centerX, y, maxZ);
+                safePut(hearth, BlockIdentifier.of("minecraft:campfire[lit=true]"), MaterialRole.DECORATION, clearanceZones, map);
+                for (int dx = -1; dx <= 1; dx += 2) {
+                    safePut(hearth.add(dx, 0, 0), BlockIdentifier.of("minecraft:bricks"), MaterialRole.WALL_PRIMARY, clearanceZones, map);
+                    safePut(hearth.add(dx, 1, 0), BlockIdentifier.of("minecraft:bricks"), MaterialRole.WALL_PRIMARY, clearanceZones, map);
+                }
+                safePut(hearth.add(0, 2, 0), BlockIdentifier.of("minecraft:brick_slab[type=bottom]"), MaterialRole.SLAB, clearanceZones, map);
 
-                // Kitchen appliances: Smoker, Cauldron sink, and prep counter
-                safePut(new Vec3i(b.min().x() + 1, y, b.min().z() + 1), BlockIdentifier.of("minecraft:smoker"), MaterialRole.DECORATION, clearanceZones, map);
-                safePut(new Vec3i(b.min().x() + 2, y, b.min().z() + 1), BlockIdentifier.of("minecraft:water_cauldron[level=3]"), MaterialRole.DECORATION, clearanceZones, map);
-                safePut(new Vec3i(b.min().x() + 3, y, b.min().z() + 1), BlockIdentifier.of("minecraft:blast_furnace"), MaterialRole.DECORATION, clearanceZones, map);
+                // Kitchen counter row along north wall
+                safePut(new Vec3i(minX, y, minZ), BlockIdentifier.of("minecraft:smoker[facing=south]"), MaterialRole.DECORATION, clearanceZones, map);
+                safePut(new Vec3i(Math.min(maxX, minX + 1), y, minZ), BlockIdentifier.of("minecraft:water_cauldron[level=3]"), MaterialRole.DECORATION, clearanceZones, map);
+                safePut(new Vec3i(Math.min(maxX, minX + 2), y, minZ), BlockIdentifier.of("minecraft:crafting_table"), MaterialRole.DECORATION, clearanceZones, map);
+                safePut(new Vec3i(Math.min(maxX, minX + 3), y, minZ), BlockIdentifier.of("minecraft:barrel[facing=south]"), MaterialRole.DECORATION, clearanceZones, map);
+                addCeilingChandelier(centerX, b.max().y(), centerZ, light, map);
             }
             case LIBRARY_STUDY -> {
-                // Bookshelves line the back wall
-                int zBack = b.max().z() - 1;
-                for (int x = b.min().x() + 1; x <= b.max().x() - 1; x++) {
-                    safePut(new Vec3i(x, y, zBack), BlockIdentifier.of("minecraft:bookshelf"), MaterialRole.DECORATION, clearanceZones, map);
-                    safePut(new Vec3i(x, y + 1, zBack), BlockIdentifier.of("minecraft:bookshelf"), MaterialRole.DECORATION, clearanceZones, map);
+                for (int x = minX; x <= maxX; x++) {
+                    safePut(new Vec3i(x, y, maxZ), BlockIdentifier.of("minecraft:bookshelf"), MaterialRole.DECORATION, clearanceZones, map);
+                    safePut(new Vec3i(x, y + 1, maxZ), BlockIdentifier.of("minecraft:bookshelf"), MaterialRole.DECORATION, clearanceZones, map);
                 }
-                // Writing study desk
                 Vec3i desk = new Vec3i(centerX, y, centerZ);
                 safePut(desk, fence, MaterialRole.DECORATION, clearanceZones, map);
                 safePut(desk.add(0, 1, 0), BlockIdentifier.of("minecraft:oak_pressure_plate"), MaterialRole.DECORATION, clearanceZones, map);
-                safePut(desk.add(1, 1, 0), light, MaterialRole.LIGHT_SOURCE, clearanceZones, map);
-                safePut(desk.add(0, 0, 1), stair.withProperty("facing", "north").withProperty("half", "bottom"), MaterialRole.DECORATION, clearanceZones, map);
+                safePut(desk.add(1, 0, 0), BlockIdentifier.of("minecraft:lectern[facing=north]"), MaterialRole.DECORATION, clearanceZones, map);
+                safePut(desk.add(0, 0, -1), stair.withProperty("facing", "south").withProperty("half", "bottom"), MaterialRole.DECORATION, clearanceZones, map);
+                addCeilingChandelier(centerX, b.max().y(), centerZ, light, map);
             }
             case WORKSHOP_SMITHY -> {
-                safePut(new Vec3i(b.min().x() + 1, y, b.min().z() + 1), BlockIdentifier.of("minecraft:anvil"), MaterialRole.DECORATION, clearanceZones, map);
-                safePut(new Vec3i(b.min().x() + 2, y, b.min().z() + 1), BlockIdentifier.of("minecraft:blast_furnace"), MaterialRole.DECORATION, clearanceZones, map);
-                safePut(new Vec3i(b.min().x() + 3, y, b.min().z() + 1), BlockIdentifier.of("minecraft:stonecutter"), MaterialRole.DECORATION, clearanceZones, map);
-                safePut(new Vec3i(b.max().x() - 1, y, b.max().z() - 1), BlockIdentifier.of("minecraft:crafting_table"), MaterialRole.DECORATION, clearanceZones, map);
-                safePut(new Vec3i(b.max().x() - 2, y, b.max().z() - 1), BlockIdentifier.of("minecraft:smithing_table"), MaterialRole.DECORATION, clearanceZones, map);
+                safePut(new Vec3i(minX, y, minZ), BlockIdentifier.of("minecraft:anvil[facing=south]"), MaterialRole.DECORATION, clearanceZones, map);
+                safePut(new Vec3i(Math.min(maxX, minX + 1), y, minZ), BlockIdentifier.of("minecraft:blast_furnace[facing=south]"), MaterialRole.DECORATION, clearanceZones, map);
+                safePut(new Vec3i(Math.min(maxX, minX + 2), y, minZ), BlockIdentifier.of("minecraft:stonecutter[facing=south]"), MaterialRole.DECORATION, clearanceZones, map);
+                safePut(new Vec3i(maxX, y, maxZ), BlockIdentifier.of("minecraft:crafting_table"), MaterialRole.DECORATION, clearanceZones, map);
+                safePut(new Vec3i(Math.max(minX, maxX - 1), y, maxZ), BlockIdentifier.of("minecraft:smithing_table"), MaterialRole.DECORATION, clearanceZones, map);
+                addCeilingChandelier(centerX, b.max().y(), centerZ, light, map);
             }
             case STORAGE_PANTRY -> {
-                for (int x = b.min().x() + 1; x <= b.max().x() - 1; x += 2) {
-                    safePut(new Vec3i(x, y, b.min().z() + 1), BlockIdentifier.of("minecraft:barrel[facing=up]"), MaterialRole.DECORATION, clearanceZones, map);
-                    safePut(new Vec3i(x, y + 1, b.min().z() + 1), BlockIdentifier.of("minecraft:barrel[facing=up]"), MaterialRole.DECORATION, clearanceZones, map);
+                for (int x = minX; x <= maxX; x += 2) {
+                    safePut(new Vec3i(x, y, minZ), BlockIdentifier.of("minecraft:barrel[facing=up]"), MaterialRole.DECORATION, clearanceZones, map);
+                    safePut(new Vec3i(x, y + 1, minZ), BlockIdentifier.of("minecraft:barrel[facing=up]"), MaterialRole.DECORATION, clearanceZones, map);
                 }
+                safePut(new Vec3i(maxX, y, maxZ), BlockIdentifier.of("minecraft:chest[facing=north]"), MaterialRole.DECORATION, clearanceZones, map);
             }
             case BATHROOM -> {
-                safePut(new Vec3i(b.min().x() + 1, y, b.min().z() + 1), BlockIdentifier.of("minecraft:water_cauldron[level=3]"), MaterialRole.DECORATION, clearanceZones, map);
-                safePut(new Vec3i(b.min().x() + 2, y, b.min().z() + 1), BlockIdentifier.of("minecraft:smooth_quartz_slab"), MaterialRole.SLAB, clearanceZones, map);
-                safePut(new Vec3i(b.min().x() + 2, y + 1, b.min().z() + 1), light, MaterialRole.LIGHT_SOURCE, clearanceZones, map);
+                safePut(new Vec3i(minX, y, minZ), BlockIdentifier.of("minecraft:water_cauldron[level=3]"), MaterialRole.DECORATION, clearanceZones, map);
+                safePut(new Vec3i(Math.min(maxX, minX + 1), y, minZ), BlockIdentifier.of("minecraft:smooth_quartz_slab[type=top]"), MaterialRole.SLAB, clearanceZones, map);
+                safePut(new Vec3i(Math.min(maxX, minX + 1), y + 1, minZ), light, MaterialRole.LIGHT_SOURCE, clearanceZones, map);
+                safePut(new Vec3i(maxX, y, maxZ), BlockIdentifier.of("minecraft:white_carpet"), MaterialRole.DECORATION, clearanceZones, map);
             }
             case ARMORY -> {
-                safePut(new Vec3i(b.min().x() + 1, y, b.min().z() + 1), BlockIdentifier.of("minecraft:armor_stand"), MaterialRole.DECORATION, clearanceZones, map);
-                safePut(new Vec3i(b.min().x() + 2, y, b.min().z() + 1), BlockIdentifier.of("minecraft:armor_stand"), MaterialRole.DECORATION, clearanceZones, map);
-                safePut(new Vec3i(b.max().x() - 1, y, b.max().z() - 1), BlockIdentifier.of("minecraft:grindstone"), MaterialRole.DECORATION, clearanceZones, map);
-                safePut(new Vec3i(b.max().x() - 2, y, b.max().z() - 1), BlockIdentifier.of("minecraft:chest"), MaterialRole.DECORATION, clearanceZones, map);
+                safePut(new Vec3i(minX, y, minZ), BlockIdentifier.of("minecraft:armor_stand"), MaterialRole.DECORATION, clearanceZones, map);
+                safePut(new Vec3i(Math.min(maxX, minX + 1), y, minZ), BlockIdentifier.of("minecraft:armor_stand"), MaterialRole.DECORATION, clearanceZones, map);
+                safePut(new Vec3i(maxX, y, maxZ), BlockIdentifier.of("minecraft:grindstone"), MaterialRole.DECORATION, clearanceZones, map);
+                safePut(new Vec3i(Math.max(minX, maxX - 1), y, maxZ), BlockIdentifier.of("minecraft:chest[facing=north]"), MaterialRole.DECORATION, clearanceZones, map);
             }
             case ALCHEMICAL_LAB -> {
                 safePut(new Vec3i(centerX, y, centerZ), BlockIdentifier.of("minecraft:enchanting_table"), MaterialRole.DECORATION, clearanceZones, map);
-                safePut(new Vec3i(b.min().x() + 1, y, b.min().z() + 1), BlockIdentifier.of("minecraft:brewing_stand"), MaterialRole.DECORATION, clearanceZones, map);
-                safePut(new Vec3i(b.min().x() + 2, y, b.min().z() + 1), BlockIdentifier.of("minecraft:water_cauldron[level=3]"), MaterialRole.DECORATION, clearanceZones, map);
+                safePut(new Vec3i(minX, y, minZ), BlockIdentifier.of("minecraft:brewing_stand"), MaterialRole.DECORATION, clearanceZones, map);
+                safePut(new Vec3i(Math.min(maxX, minX + 1), y, minZ), BlockIdentifier.of("minecraft:water_cauldron[level=3]"), MaterialRole.DECORATION, clearanceZones, map);
+                addCeilingChandelier(centerX, b.max().y(), centerZ, light, map);
             }
         }
 
-        targets.addAll(map.values());
-        return targets;
+        return new ArrayList<>(map.values());
+    }
+
+    private static void addCeilingChandelier(int x, int ceilingY, int z, BlockIdentifier light, Map<Vec3i, PlacementTarget> map) {
+        Vec3i top = new Vec3i(x, ceilingY, z);
+        map.put(top, new PlacementTarget(top, BlockIdentifier.of("minecraft:chain[axis=y]"), MaterialRole.DECORATION));
+        Vec3i lamp = top.add(0, -1, 0);
+        map.put(lamp, new PlacementTarget(lamp, BlockStateNormalizer.normalize(light.withProperty("hanging", "true"), Direction.SOUTH), MaterialRole.LIGHT_SOURCE));
     }
 
     private static void safePut(
@@ -164,7 +189,7 @@ public final class InteriorFurnishingGenerator {
         Map<Vec3i, PlacementTarget> map
     ) {
         if (!clearanceZones.contains(pos)) {
-            map.put(pos, new PlacementTarget(pos, block, role));
+            map.put(pos, new PlacementTarget(pos, BlockStateNormalizer.normalize(block, Direction.SOUTH), role));
         }
     }
 }
