@@ -130,7 +130,8 @@ public final class ModularGridSession {
 
     /**
      * Compiles all placed 5x5x5 modules into connected PlacementTargets with automatic
-     * horizontal wall merging, vertical floor/stair sections, and top-layer roofs.
+     * horizontal wall merging, vertical floor/stair sections, detailed facades, interior
+     * furnishings, and stepped overhang roofs on top-most cells.
      */
     public List<PlacementTarget> buildPlacementTargets() {
         if (modules.isEmpty()) return Collections.emptyList();
@@ -174,9 +175,12 @@ public final class ModularGridSession {
 
         BlockIdentifier floorMat = (c.gy() == 0 && !hasBelow) ? pal.get(MaterialRole.FOUNDATION) : pal.get(MaterialRole.FLOOR);
         BlockIdentifier wallMat = pal.get(MaterialRole.WALL_PRIMARY);
+        BlockIdentifier accentMat = pal.get(MaterialRole.WALL_ACCENT);
         BlockIdentifier trimMat = pal.get(MaterialRole.BEAM);
         BlockIdentifier pillarMat = pal.get(MaterialRole.PILLAR);
         BlockIdentifier windowMat = pal.get(MaterialRole.WINDOW);
+        BlockIdentifier slabMat = pal.get(MaterialRole.SLAB);
+        BlockIdentifier doorMat = pal.get(MaterialRole.DOOR);
         BlockIdentifier air = BlockIdentifier.of("minecraft:air");
 
         // 1. Floor slab at y0 (leave stairwell opening if module below connects up)
@@ -185,8 +189,10 @@ public final class ModularGridSession {
         for (int x = x0; x <= x1; x++) {
             for (int z = z0; z <= z1; z++) {
                 boolean isStairOpening = hasBelow && (x == stairX && (z == stairZ || z == stairZ + 1));
-                put(out, x, y0, z, isStairOpening ? air : floorMat,
-                    isStairOpening ? MaterialRole.AIR : (c.gy() == 0 ? MaterialRole.FOUNDATION : MaterialRole.FLOOR));
+                boolean isEdgePlinth = (c.gy() == 0 && !hasBelow) && ((x == x0 && !connW) || (x == x1 && !connE) || (z == z0 && !connN) || (z == z1 && !connS));
+                BlockIdentifier mat = isStairOpening ? air : (isEdgePlinth ? pal.get(MaterialRole.SUB_FOUNDATION) : floorMat);
+                MaterialRole role = isStairOpening ? MaterialRole.AIR : (c.gy() == 0 ? MaterialRole.FOUNDATION : MaterialRole.FLOOR);
+                put(out, x, y0, z, mat, role);
             }
         }
 
@@ -199,82 +205,144 @@ public final class ModularGridSession {
             }
         }
 
-        // 3. Exterior walls ONLY on non-connected faces
+        // 3. Detailed exterior walls ONLY on non-connected faces
         int midX = (x0 + x1) / 2;
         int midZ = (z0 + z1) / 2;
         int midY = y0 + 2;
-        boolean placedDoor = false;
+        Direction doorPlacedFace = null;
 
         for (int y = y0 + 1; y <= y1; y++) {
+            boolean isBaseCourse = (y == y0 + 1);
             boolean isTopTrim = (y == y1);
-            BlockIdentifier faceMat = isTopTrim ? trimMat : wallMat;
-            MaterialRole faceRole = isTopTrim ? MaterialRole.BEAM : MaterialRole.WALL_PRIMARY;
+            BlockIdentifier faceMat = isTopTrim ? trimMat : (isBaseCourse ? accentMat : wallMat);
+            MaterialRole faceRole = isTopTrim ? MaterialRole.BEAM : (isBaseCourse ? MaterialRole.WALL_ACCENT : MaterialRole.WALL_PRIMARY);
 
-            if (!connN) {
-                for (int x = x0; x <= x1; x++) {
-                    boolean corner = (x == x0 && !connW) || (x == x1 && !connE);
-                    boolean win = !isTopTrim && y == midY && x == midX;
-                    boolean door = isEntranceCell && !placedDoor && (x == midX) && (y == y0 + 1 || y == y0 + 2);
-                    if (door) {
-                        put(out, x, y, z0, air, MaterialRole.DOOR);
-                    } else {
-                        put(out, x, y, z0, corner ? pillarMat : (win ? windowMat : faceMat),
-                            corner ? MaterialRole.PILLAR : (win ? MaterialRole.WINDOW : faceRole));
-                    }
-                }
-                if (isEntranceCell && !placedDoor) placedDoor = true;
-            }
             if (!connS) {
-                for (int x = x0; x <= x1; x++) {
-                    boolean corner = (x == x0 && !connW) || (x == x1 && !connE);
-                    boolean win = !isTopTrim && y == midY && x == midX;
-                    boolean door = isEntranceCell && !placedDoor && (x == midX) && (y == y0 + 1 || y == y0 + 2);
-                    if (door) {
-                        put(out, x, y, z1, air, MaterialRole.DOOR);
-                    } else {
-                        put(out, x, y, z1, corner ? pillarMat : (win ? windowMat : faceMat),
-                            corner ? MaterialRole.PILLAR : (win ? MaterialRole.WINDOW : faceRole));
-                    }
-                }
-                if (isEntranceCell && !placedDoor) placedDoor = true;
+                boolean useDoor = isEntranceCell && (doorPlacedFace == null || doorPlacedFace == Direction.SOUTH);
+                if (useDoor) doorPlacedFace = Direction.SOUTH;
+                buildZFace(x0, x1, z1, y, y0, midX, midY, isTopTrim, connW, connE, useDoor, Direction.SOUTH,
+                    pillarMat, faceMat, faceRole, windowMat, slabMat, doorMat, pal, out);
+            }
+            if (!connN) {
+                boolean useDoor = isEntranceCell && (doorPlacedFace == null || doorPlacedFace == Direction.NORTH);
+                if (useDoor) doorPlacedFace = Direction.NORTH;
+                buildZFace(x0, x1, z0, y, y0, midX, midY, isTopTrim, connW, connE, useDoor, Direction.NORTH,
+                    pillarMat, faceMat, faceRole, windowMat, slabMat, doorMat, pal, out);
             }
             if (!connW) {
-                for (int z = z0; z <= z1; z++) {
-                    boolean corner = (z == z0 && !connN) || (z == z1 && !connS);
-                    boolean win = !isTopTrim && y == midY && z == midZ;
-                    put(out, x0, y, z, corner ? pillarMat : (win ? windowMat : faceMat),
-                        corner ? MaterialRole.PILLAR : (win ? MaterialRole.WINDOW : faceRole));
-                }
+                boolean useDoor = isEntranceCell && (doorPlacedFace == null || doorPlacedFace == Direction.WEST);
+                if (useDoor) doorPlacedFace = Direction.WEST;
+                buildXFace(z0, z1, x0, y, y0, midZ, midY, isTopTrim, connN, connS, useDoor, Direction.WEST,
+                    pillarMat, faceMat, faceRole, windowMat, slabMat, doorMat, pal, out);
             }
             if (!connE) {
-                for (int z = z0; z <= z1; z++) {
-                    boolean corner = (z == z0 && !connN) || (z == z1 && !connS);
-                    boolean win = !isTopTrim && y == midY && z == midZ;
-                    put(out, x1, y, z, corner ? pillarMat : (win ? windowMat : faceMat),
-                        corner ? MaterialRole.PILLAR : (win ? MaterialRole.WINDOW : faceRole));
-                }
+                boolean useDoor = isEntranceCell && (doorPlacedFace == null || doorPlacedFace == Direction.EAST);
+                if (useDoor) doorPlacedFace = Direction.EAST;
+                buildXFace(z0, z1, x1, y, y0, midZ, midY, isTopTrim, connN, connS, useDoor, Direction.EAST,
+                    pillarMat, faceMat, faceRole, windowMat, slabMat, doorMat, pal, out);
             }
         }
 
-        // 4. Vertical connection stairs if a module is stacked on top of this one
+        // 4. Vertical connection stairs + interior furnishings
         if (hasAbove) {
             BlockIdentifier stairMat = pal.get(MaterialRole.STAIR).withProperty("facing", "south");
             for (int step = 1; step < cellHeight; step++) {
                 int sz = Math.min(z1 - 1, stairZ + step - 1);
                 put(out, stairX, y0 + step, sz, stairMat, MaterialRole.STAIR);
             }
-            // Corner lantern for interior lighting
             put(out, x1 - 1, y1, z1 - 1, pal.get(MaterialRole.LIGHT_SOURCE), MaterialRole.LIGHT_SOURCE);
         } else {
-            // 5. Top-most cell in this column gets the roof + ceiling light
+            // Top-most cell in this column gets the stepped roof + ceiling light
             put(out, midX, y1, midZ, pal.get(MaterialRole.LIGHT_SOURCE), MaterialRole.LIGHT_SOURCE);
-            buildModuleRoof(box, c, pal, cell.roofType(), connN, connS, connW, connE, out);
+            buildModuleRoof(box, pal, cell.roofType(), connN, connS, connW, connE, out);
+        }
+
+        furnishModuleInterior(box, c, pal, hasAbove, hasBelow, out);
+    }
+
+    private void buildZFace(
+        int x0, int x1, int z, int y, int y0, int midX, int midY, boolean isTopTrim,
+        boolean connW, boolean connE, boolean useDoor, Direction facing,
+        BlockIdentifier pillarMat, BlockIdentifier faceMat, MaterialRole faceRole,
+        BlockIdentifier windowMat, BlockIdentifier slabMat, BlockIdentifier doorMat,
+        MaterialPalette pal, Map<Vec3i, PlacementTarget> out
+    ) {
+        String faceName = facing.name().toLowerCase();
+        int stepZ = facing == Direction.SOUTH ? z + 1 : z - 1;
+        for (int x = x0; x <= x1; x++) {
+            boolean corner = (x == x0 && !connW) || (x == x1 && !connE);
+            boolean isDoorCol = useDoor && x == midX;
+            if (isDoorCol && y == y0 + 1) {
+                put(out, x, y, z, doorMat.withProperty("facing", faceName).withProperty("half", "lower"), MaterialRole.DOOR);
+                put(out, x, y0, stepZ, slabMat.withProperty("type", "bottom"), MaterialRole.SLAB);
+            } else if (isDoorCol && y == y0 + 2) {
+                put(out, x, y, z, doorMat.withProperty("facing", faceName).withProperty("half", "upper"), MaterialRole.DOOR);
+            } else if (isDoorCol && y == y0 + 3) {
+                put(out, x, y, z, pal.get(MaterialRole.BEAM), MaterialRole.BEAM);
+                put(out, x, y, stepZ, pal.get(MaterialRole.LIGHT_SOURCE), MaterialRole.LIGHT_SOURCE);
+            } else if (!useDoor && !isTopTrim && y == midY && x == midX) {
+                put(out, x, y, z, windowMat, MaterialRole.WINDOW);
+                put(out, x, y - 1, stepZ, slabMat.withProperty("type", "top"), MaterialRole.SLAB);
+            } else {
+                put(out, x, y, z, corner ? pillarMat : faceMat, corner ? MaterialRole.PILLAR : faceRole);
+            }
+        }
+    }
+
+    private void buildXFace(
+        int z0, int z1, int x, int y, int y0, int midZ, int midY, boolean isTopTrim,
+        boolean connN, boolean connS, boolean useDoor, Direction facing,
+        BlockIdentifier pillarMat, BlockIdentifier faceMat, MaterialRole faceRole,
+        BlockIdentifier windowMat, BlockIdentifier slabMat, BlockIdentifier doorMat,
+        MaterialPalette pal, Map<Vec3i, PlacementTarget> out
+    ) {
+        String faceName = facing.name().toLowerCase();
+        int stepX = facing == Direction.EAST ? x + 1 : x - 1;
+        for (int z = z0; z <= z1; z++) {
+            boolean corner = (z == z0 && !connN) || (z == z1 && !connS);
+            boolean isDoorCol = useDoor && z == midZ;
+            if (isDoorCol && y == y0 + 1) {
+                put(out, x, y, z, doorMat.withProperty("facing", faceName).withProperty("half", "lower"), MaterialRole.DOOR);
+                put(out, stepX, y0, z, slabMat.withProperty("type", "bottom"), MaterialRole.SLAB);
+            } else if (isDoorCol && y == y0 + 2) {
+                put(out, x, y, z, doorMat.withProperty("facing", faceName).withProperty("half", "upper"), MaterialRole.DOOR);
+            } else if (isDoorCol && y == y0 + 3) {
+                put(out, x, y, z, pal.get(MaterialRole.BEAM), MaterialRole.BEAM);
+                put(out, stepX, y, z, pal.get(MaterialRole.LIGHT_SOURCE), MaterialRole.LIGHT_SOURCE);
+            } else if (!useDoor && !isTopTrim && y == midY && z == midZ) {
+                put(out, x, y, z, windowMat, MaterialRole.WINDOW);
+                put(out, stepX, y - 1, z, slabMat.withProperty("type", "top"), MaterialRole.SLAB);
+            } else {
+                put(out, x, y, z, corner ? pillarMat : faceMat, corner ? MaterialRole.PILLAR : faceRole);
+            }
+        }
+    }
+
+    private void furnishModuleInterior(
+        BoundingBox3i box, CellCoord3D c, MaterialPalette pal,
+        boolean hasAbove, boolean hasBelow, Map<Vec3i, PlacementTarget> out
+    ) {
+        int ix = box.max().x() - 1;
+        int iz = box.max().z() - 1;
+        int iy = box.min().y() + 1;
+        // Place cozy interior details away from the stairwell at (x0+1, z0+1)
+        if (c.gy() == 0) {
+            put(out, ix, iy, iz, BlockIdentifier.of("minecraft:crafting_table"), MaterialRole.DECORATION);
+            if (!hasAbove) {
+                put(out, ix - 1, iy, iz, BlockIdentifier.of("minecraft:chest"), MaterialRole.DECORATION);
+            }
+            put(out, box.min().x() + 2, iy, box.min().z() + 2, BlockIdentifier.of("minecraft:red_carpet"), MaterialRole.DECORATION);
+        } else {
+            put(out, ix, iy, iz, BlockIdentifier.of("minecraft:bookshelf"), MaterialRole.DECORATION);
+            if (!hasAbove && !hasBelow) {
+                put(out, ix - 1, iy, iz, BlockIdentifier.of("minecraft:oak_slab").withProperty("type", "top"), MaterialRole.DECORATION);
+            }
+            put(out, box.min().x() + 2, iy, box.min().z() + 2, BlockIdentifier.of("minecraft:blue_carpet"), MaterialRole.DECORATION);
         }
     }
 
     private void buildModuleRoof(
         BoundingBox3i box,
-        CellCoord3D c,
         MaterialPalette pal,
         RoofGenerator.RoofType roofType,
         boolean connN, boolean connS, boolean connW, boolean connE,
@@ -283,33 +351,49 @@ public final class ModularGridSession {
         int x0 = box.min().x(), z0 = box.min().z();
         int x1 = box.max().x(), z1 = box.max().z();
         int roofY = box.max().y() + 1;
-        BlockIdentifier roofMat = pal.get(MaterialRole.ROOF_SLOPE);
+        BlockIdentifier roofStair = pal.get(MaterialRole.ROOF_SLOPE);
         BlockIdentifier ridgeMat = pal.get(MaterialRole.ROOF_RIDGE);
+        BlockIdentifier overhangMat = pal.get(MaterialRole.ROOF_OVERHANG);
 
         if (roofType == RoofGenerator.RoofType.FLAT) {
             for (int x = x0; x <= x1; x++) {
                 for (int z = z0; z <= z1; z++) {
                     boolean edge = (!connN && z == z0) || (!connS && z == z1) || (!connW && x == x0) || (!connE && x == x1);
-                    put(out, x, roofY, z, edge ? ridgeMat : roofMat, edge ? MaterialRole.ROOF_RIDGE : MaterialRole.ROOF_SLOPE);
+                    put(out, x, roofY, z, edge ? ridgeMat : overhangMat, edge ? MaterialRole.ROOF_RIDGE : MaterialRole.ROOF_OVERHANG);
                 }
             }
             return;
         }
 
-        // Pitched layered roof respecting connected edges so adjacent roofs merge cleanly
-        int layers = Math.max(2, (cellSize + 1) / 2);
+        // Stepped roof with 1-block eave overhang on exposed edges
+        int ex0 = connW ? x0 : x0 - 1;
+        int ex1 = connE ? x1 : x1 + 1;
+        int ez0 = connN ? z0 : z0 - 1;
+        int ez1 = connS ? z1 : z1 + 1;
+        int layers = Math.max(2, (cellSize + 2) / 2);
+
         for (int layer = 0; layer < layers; layer++) {
-            int lx0 = connW ? x0 : x0 + layer;
-            int lx1 = connE ? x1 : x1 - layer;
-            int lz0 = connN ? z0 : z0 + layer;
-            int lz1 = connS ? z1 : z1 - layer;
+            int lx0 = connW ? x0 : ex0 + layer;
+            int lx1 = connE ? x1 : ex1 - layer;
+            int lz0 = connN ? z0 : ez0 + layer;
+            int lz1 = connS ? z1 : ez1 - layer;
             if (lx0 > lx1 || lz0 > lz1) break;
             boolean topLayer = (layer == layers - 1) || (lx1 - lx0 <= 1 && lz1 - lz0 <= 1);
-            BlockIdentifier mat = topLayer ? ridgeMat : roofMat;
-            MaterialRole role = topLayer ? MaterialRole.ROOF_RIDGE : MaterialRole.ROOF_SLOPE;
             for (int x = lx0; x <= lx1; x++) {
                 for (int z = lz0; z <= lz1; z++) {
-                    put(out, x, roofY + layer, z, mat, role);
+                    if (topLayer) {
+                        put(out, x, roofY + layer, z, ridgeMat, MaterialRole.ROOF_RIDGE);
+                    } else if (!connN && z == lz0) {
+                        put(out, x, roofY + layer, z, roofStair.withProperty("facing", "south"), MaterialRole.ROOF_SLOPE);
+                    } else if (!connS && z == lz1) {
+                        put(out, x, roofY + layer, z, roofStair.withProperty("facing", "north"), MaterialRole.ROOF_SLOPE);
+                    } else if (!connW && x == lx0) {
+                        put(out, x, roofY + layer, z, roofStair.withProperty("facing", "east"), MaterialRole.ROOF_SLOPE);
+                    } else if (!connE && x == lx1) {
+                        put(out, x, roofY + layer, z, roofStair.withProperty("facing", "west"), MaterialRole.ROOF_SLOPE);
+                    } else {
+                        put(out, x, roofY + layer, z, overhangMat, MaterialRole.ROOF_OVERHANG);
+                    }
                 }
             }
         }

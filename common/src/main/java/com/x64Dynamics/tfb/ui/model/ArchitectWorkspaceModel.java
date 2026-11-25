@@ -505,6 +505,10 @@ public class ArchitectWorkspaceModel {
 
     public void setPos1(Vec3i pos) {
         if (inWorldGridMode && pos != null) {
+            if (modularGrid.modules().isEmpty()) {
+                this.origin = new Vec3i(pos.x() - modularGrid.cellSize() / 2, pos.y(), pos.z() - modularGrid.cellSize() / 2);
+                modularGrid.setOrigin(this.origin);
+            }
             var cell = modularGrid.worldToCell(pos);
             modularGrid.stackOrPlace(cell.gx(), cell.gz(), stylePreset, activePalette(), roofShape);
             syncModularGridToPreview();

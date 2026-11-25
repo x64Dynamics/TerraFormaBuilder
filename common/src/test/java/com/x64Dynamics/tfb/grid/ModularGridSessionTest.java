@@ -76,7 +76,7 @@ public class ModularGridSessionTest {
         assertFalse(model.cachedPreviewTargets().isEmpty());
 
         // Second click on same 5x5 cell stacks floor 2 on top
-        model.setPos1(new Vec3i(3, 64, 3));
+        model.setPos1(new Vec3i(2, 64, 2));
         assertEquals(2, model.modularGrid().modules().size());
         assertEquals(1, model.modularGrid().highestFloorAt(0, 0));
 
