@@ -108,6 +108,7 @@ public class ArchitectWorkspaceModel {
     private final WorldPreviewBuffer previewBuffer = new WorldPreviewBuffer();
     private List<PlacementTarget> cachedPreviewTargets = new ArrayList<>();
     private ProgressiveBuildPlan cachedBuildPlan = null;
+    private com.x64Dynamics.tfb.architectural.plan.BuildingPlan latestPlan = null;
 
     public ArchitectWorkspaceModel() {
         this.selectionManager = new WorldSelectionManager(boundingBox());
@@ -374,34 +375,37 @@ public class ArchitectWorkspaceModel {
 
     public List<PlacementTarget> cachedPreviewTargets() { return cachedPreviewTargets; }
     public ProgressiveBuildPlan cachedBuildPlan() { return cachedBuildPlan; }
+    public com.x64Dynamics.tfb.architectural.plan.BuildingPlan latestPlan() { return latestPlan; }
     public int totalBlockCount() { return cachedPreviewTargets.size(); }
 
     public synchronized void generatePreview() {
         List<PlacementTarget> targets = new ArrayList<>();
         BoundingBox3i box = boundingBox();
 
-        boolean isUnifiedHome = (activeBrush instanceof ArchitecturalBrushes.HouseBrush)
-            && wingConfiguration == WingConfiguration.SINGLE_RECTANGLE;
+        boolean isUnifiedHome = (activeBrush instanceof ArchitecturalBrushes.HouseBrush);
 
         if (isUnifiedHome) {
-            com.x64Dynamics.tfb.architectural.IntelligentHomeGenerator.HomeConfig homeCfg =
-                new com.x64Dynamics.tfb.architectural.IntelligentHomeGenerator.HomeConfig(
+            com.x64Dynamics.tfb.architectural.plan.BuildingDefinition def =
+                new com.x64Dynamics.tfb.architectural.plan.BuildingDefinition(
+                    "home-" + Long.toHexString(proceduralSeed),
                     box,
+                    wingConfiguration,
+                    stylePreset,
                     activePalette,
                     roofShape,
                     requestedStories,
-                    wingConfiguration,
                     addPorchAndGarden,
                     addChimney,
                     enableInteriors && furnishRooms,
                     furnishingDensity,
                     proceduralSeed
                 );
-            com.x64Dynamics.tfb.architectural.IntelligentHomeGenerator.HomeGenerationResult res =
-                com.x64Dynamics.tfb.architectural.IntelligentHomeGenerator.generateHome(homeCfg);
-            targets.addAll(res.targets());
-            this.generatedStories = res.stories();
-            this.generatedRoomCount = res.roomCount();
+            com.x64Dynamics.tfb.architectural.plan.BuildingPlan plan =
+                com.x64Dynamics.tfb.architectural.IntelligentHomeGenerator.generatePlan(def);
+            this.latestPlan = plan;
+            targets.addAll(plan.targets());
+            this.generatedStories = plan.floors().size();
+            this.generatedRoomCount = plan.totalRoomCount();
         } else {
             // 1. Primary generation: Wing Compound or standard brush
             if (activeCategory == BrushCategory.ARCHITECTURAL && wingConfiguration != WingConfiguration.SINGLE_RECTANGLE) {

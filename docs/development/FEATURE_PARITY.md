@@ -19,13 +19,14 @@ This matrix tracks core architectural features, gameplay integration, and in-gam
 | **Procedural Geometry** | Rectangular, Polygons, Circles, Curves, L/T/Cross Wings | `ShapeRasterizer`, `ParametricFootprint` | Full access via Brushes | Full access via Brushes | **Verified** |
 | **Roads & Curves** | Straight, Splines, Curbs, Sidewalks, Streetlights, Intersections | `RoadInfrastructureEngine` | Infrastructure Brushes | Infrastructure Brushes | **Verified** |
 | **Facades & Wall Rhythm** | Tri-partite rhythmic segmentation (Plinth, Nobile, Cornice) | `WallSegmentationEngine` | Integrated in Building brushes | Integrated in Building brushes | **Verified** |
-| **Interior Furnishing** | Multi-quadrant room subdivision, transit clearance, room presets | `InteriorFloorPlanner` | Integrated in Room brushes | Integrated in Room brushes | **Verified** |
-| **Roofs** | Gable, Hip, Mansard, Flat, Conical, Dome, Shed, Gambrel | `RoofGenerator` | Integrated in Roof brushes | Integrated in Roof brushes | **Verified** |
-| **Universal Materials** | Taxonomy discovery, 5 architectural presets, harmony scoring | `BlockTaxonomyRegistry` | Dynamic block resolution | Dynamic block resolution | **Verified** |
-| **Live 3D Preview** | In-world bounding boxes, transformation handles, ghost voxels | `WorldPreviewBuffer` | `TFBClientRenderer` | `FabricLevelAccess` | **Verified** |
-| **Construction Engine** | Direct level placement, blockstate parsing, progress tracking | `ProgressiveBuildPlan` | `BlockStateParser` + `Level.setBlock` | `BlockStateParser` + `Level.setBlock` | **Verified** |
-| **History & Undo/Redo** | Memento pattern design history stack (`Ctrl+Z`, `Ctrl+Y`) | `DesignHistoryStack` | Keymapped & hooked | Keymapped & hooked | **Verified** |
-| **Blueprints** | Parametric serialization, JSON export/import, metadata | `ParametricBlueprint` | Workspace Blueprints tab | Workspace Blueprints tab | **Verified** |
+| **Home Builder Pipeline** | Deterministic `BuildingDefinition`, validated `BuildingPlan`, multi-wing homes | `IntelligentHomeGenerator`, `BuildingPlanValidator` | Integrated Home Builder (`HouseBrush`) | Integrated Home Builder (`HouseBrush`) | **Verified** |
+| **Interior Furnishing** | Seed-driven BSP floor plans, room graph, stairwells, room presets | `InteriorFloorPlanner`, `InteriorFurnishingGenerator` | Integrated in Home Builder | Integrated in Home Builder | **Verified** |
+| **Roofs** | Gable (filled pediments), Hip, Mansard, Flat, Conical, Dome, Shed | `RoofGenerator` | Integrated in Home Builder | Integrated in Home Builder | **Verified** |
+| **Universal Materials** | Runtime block registry scan, 12 architectural styles, family resolver | `BlockTaxonomyRegistry`, `MaterialFamilyResolver` | `BlockRegistryScanner` | `BlockTaxonomyRegistry` | **Verified** |
+| **Live 3D Preview** | Textured 3D block models, `endBatch()` flush, 8192 budget, POS1/POS2 markers | `WorldPreviewBuffer` | `TFBClientRenderer` | `FabricLevelAccess` | **Verified** |
+| **Construction Engine** | Dependency-ordered placement, world block undo/redo, verified counts | `DependencyAwareScheduler`, `WorldConstructionHistory` | `TFBClientEvents.executeBuild` | `ClientEntrypoint` | **Verified** |
+| **History & Undo/Redo** | World block transaction undo/redo + design history (`Ctrl+Z`, `Ctrl+Y`) | `WorldConstructionHistory`, `DesignHistoryStack` | `executeWorldUndo` / `executeWorldRedo` | Keymapped & hooked | **Verified** |
+| **Blueprints** | JSON disk persistence (`config/terraformabuilder/blueprints/`) + load/save UI | `ParametricBlueprint`, `BlueprintStorage` | Workspace Blueprints tab | Workspace Blueprints tab | **Verified** |
 
 ---
 

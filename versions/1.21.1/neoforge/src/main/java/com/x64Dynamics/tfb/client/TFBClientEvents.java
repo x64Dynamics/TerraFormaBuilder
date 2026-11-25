@@ -102,7 +102,9 @@ public final class TFBClientEvents {
                 }
 
                 while (TFBKeyMappings.UNDO.consumeClick()) {
-                    if (TFBClientController.getInstance().model().undo()) {
+                    if (executeWorldUndo(mc)) {
+                        // World undo handled asynchronously on server
+                    } else if (TFBClientController.getInstance().model().undo()) {
                         mc.player.displayClientMessage(Component.literal("§e[TFB] Reverted last design operation."), true);
                     } else {
                         mc.player.displayClientMessage(Component.literal("§7[TFB] Nothing to undo."), true);
@@ -110,7 +112,9 @@ public final class TFBClientEvents {
                 }
 
                 while (TFBKeyMappings.REDO.consumeClick()) {
-                    if (TFBClientController.getInstance().model().redo()) {
+                    if (executeWorldRedo(mc)) {
+                        // World redo handled asynchronously on server
+                    } else if (TFBClientController.getInstance().model().redo()) {
                         mc.player.displayClientMessage(Component.literal("§e[TFB] Restored undone design operation."), true);
                     } else {
                         mc.player.displayClientMessage(Component.literal("§7[TFB] Nothing to redo."), true);
@@ -310,16 +314,24 @@ public final class TFBClientEvents {
                     server.execute(() -> {
                         int placed = 0;
                         int confirmed = 0;
+                        List<com.x64Dynamics.tfb.editing.WorldConstructionHistory.BlockChange> changes = new java.util.ArrayList<>();
                         for (com.x64Dynamics.tfb.construction.ScheduledBlockPlacement target : scheduled) {
                             Vec3i pos = target.pos();
                             BlockPos bp = new BlockPos(pos.x(), pos.y(), pos.z());
+                            BlockState prevState = serverLevel.getBlockState(bp);
                             BlockState state = BlockStateParser.parse(target.block());
-                            if (serverLevel.setBlock(bp, state, 3)) {
+                            if (!prevState.equals(state) && serverLevel.setBlock(bp, state, 3)) {
                                 placed++;
                                 confirmed++;
+                                changes.add(new com.x64Dynamics.tfb.editing.WorldConstructionHistory.BlockChange(
+                                    pos, BlockStateParser.fromBlockState(prevState), target.block()
+                                ));
                             } else if (serverLevel.getBlockState(bp).equals(state)) {
                                 confirmed++;
                             }
+                        }
+                        if (!changes.isEmpty()) {
+                            com.x64Dynamics.tfb.editing.WorldConstructionHistory.getInstance().recordTransaction(changes);
                         }
                         final int finalPlaced = placed;
                         final int finalConfirmed = confirmed;
@@ -354,6 +366,51 @@ public final class TFBClientEvents {
                 Component.literal("§a[TFB] Construction complete! Successfully placed " + placed + " client blocks."),
                 false
             );
+        }
+
+        public static boolean executeWorldUndo(Minecraft mc) {
+            var history = com.x64Dynamics.tfb.editing.WorldConstructionHistory.getInstance();
+            if (!history.canUndo() || mc.level == null || mc.player == null) return false;
+            net.minecraft.server.MinecraftServer server = mc.getSingleplayerServer();
+            if (server == null) return false;
+            net.minecraft.server.level.ServerLevel serverLevel = server.getLevel(mc.level.dimension());
+            if (serverLevel == null) return false;
+
+            List<com.x64Dynamics.tfb.editing.WorldConstructionHistory.BlockChange> tx = history.popUndo();
+            server.execute(() -> {
+                for (int i = tx.size() - 1; i >= 0; i--) {
+                    var ch = tx.get(i);
+                    BlockPos bp = new BlockPos(ch.pos().x(), ch.pos().y(), ch.pos().z());
+                    serverLevel.setBlock(bp, BlockStateParser.parse(ch.oldBlock()), 3);
+                }
+                mc.execute(() -> mc.player.displayClientMessage(
+                    Component.literal("§e[TFB] Undid world construction (" + tx.size() + " blocks restored)."),
+                    true
+                ));
+            });
+            return true;
+        }
+
+        public static boolean executeWorldRedo(Minecraft mc) {
+            var history = com.x64Dynamics.tfb.editing.WorldConstructionHistory.getInstance();
+            if (!history.canRedo() || mc.level == null || mc.player == null) return false;
+            net.minecraft.server.MinecraftServer server = mc.getSingleplayerServer();
+            if (server == null) return false;
+            net.minecraft.server.level.ServerLevel serverLevel = server.getLevel(mc.level.dimension());
+            if (serverLevel == null) return false;
+
+            List<com.x64Dynamics.tfb.editing.WorldConstructionHistory.BlockChange> tx = history.popRedo();
+            server.execute(() -> {
+                for (var ch : tx) {
+                    BlockPos bp = new BlockPos(ch.pos().x(), ch.pos().y(), ch.pos().z());
+                    serverLevel.setBlock(bp, BlockStateParser.parse(ch.newBlock()), 3);
+                }
+                mc.execute(() -> mc.player.displayClientMessage(
+                    Component.literal("§e[TFB] Redid world construction (" + tx.size() + " blocks placed)."),
+                    true
+                ));
+            });
+            return true;
         }
     }
 }

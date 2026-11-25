@@ -394,15 +394,45 @@ public class ArchitectWorkspaceScreen {
             }
 
             case BLUEPRINTS -> {
-                blueprintNameField = new UITextField(new UIBounds(contentX, contentY, contentWidth / 2 - 6, rowHeight), "My Architectural Design", "Design Name", null);
+                blueprintNameField = new UITextField(new UIBounds(contentX, contentY, contentWidth / 2 - 6, rowHeight), "My Home Design", "Design Name", null);
                 blueprintAuthorField = new UITextField(new UIBounds(contentX + contentWidth / 2, contentY, contentWidth / 4 - 6, rowHeight), "KyroXova", "Author", null);
                 tabWidgets.add(blueprintNameField);
                 tabWidgets.add(blueprintAuthorField);
 
                 tabWidgets.add(new UIButton(new UIBounds(contentX + (contentWidth / 4) * 3, contentY, contentWidth / 4 - 6, rowHeight), "Save Design", b -> {
                     ParametricBlueprint bp = model.toBlueprint(blueprintNameField.text(), blueprintAuthorField.text());
-                    setStatus("Saved blueprint: " + bp.metadata().name());
+                    try {
+                        com.x64Dynamics.tfb.persistence.BlueprintStorage.save(bp);
+                        setStatus("Saved home design: " + bp.metadata().name());
+                        rebuildTabWidgets();
+                    } catch (Exception ex) {
+                        setStatus("Save failed: " + ex.getMessage());
+                    }
                 }));
+
+                List<String> savedNames = com.x64Dynamics.tfb.persistence.BlueprintStorage.listSavedNames();
+                if (!savedNames.isEmpty()) {
+                    UIDropdown<String> savedDropdown = new UIDropdown<>(
+                        new UIBounds(contentX, contentY + 28, (contentWidth * 3) / 4 - 6, rowHeight),
+                        "Saved Designs",
+                        savedNames,
+                        0,
+                        name -> {}
+                    );
+                    tabWidgets.add(savedDropdown);
+                    tabWidgets.add(new UIButton(new UIBounds(contentX + (contentWidth * 3) / 4, contentY + 28, contentWidth / 4 - 6, rowHeight), "Open Design", b -> {
+                        String chosen = savedDropdown.selected();
+                        if (chosen != null) {
+                            com.x64Dynamics.tfb.persistence.BlueprintStorage.load(chosen).ifPresentOrElse(bp -> {
+                                model.loadBlueprint(bp);
+                                setStatus("Loaded design: " + chosen);
+                                rebuildTabWidgets();
+                            }, () -> setStatus("Could not load design: " + chosen));
+                        }
+                    }));
+                } else {
+                    tabWidgets.add(new UIButton(new UIBounds(contentX, contentY + 28, contentWidth - 6, rowHeight), "No saved designs yet. Click 'Save Design' above to save current home.", b -> {}));
+                }
             }
 
             case SETTINGS -> {

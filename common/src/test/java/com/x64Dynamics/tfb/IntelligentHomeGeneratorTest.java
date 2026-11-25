@@ -101,4 +101,47 @@ public class IntelligentHomeGeneratorTest {
         MaterialFamily family = MaterialFamilyResolver.resolve(BlockIdentifier.of("create:andesite_bricks"));
         assertEquals("create:andesite_brick_stairs", family.stair().asString());
     }
+
+    @Test
+    public void testBuildingPlanValidationSeedDiversityAndMultiWing() throws Exception {
+        BoundingBox3i bounds = BoundingBox3i.fromOriginAndSize(new Vec3i(0, 64, 0), 17, 14, 17);
+        MaterialPalette palette = StylePreset.NORDIC.createPalette();
+
+        var def1 = new com.x64Dynamics.tfb.architectural.plan.BuildingDefinition(
+            "seed1", bounds, WingConfiguration.SINGLE_RECTANGLE, StylePreset.NORDIC,
+            palette, RoofGenerator.RoofType.GABLE, 2, true, true, true, 1.0f, 101L
+        );
+        var def2 = new com.x64Dynamics.tfb.architectural.plan.BuildingDefinition(
+            "seed2", bounds, WingConfiguration.SINGLE_RECTANGLE, StylePreset.NORDIC,
+            palette, RoofGenerator.RoofType.GABLE, 2, true, true, true, 1.0f, 9999L
+        );
+
+        var plan1 = IntelligentHomeGenerator.generatePlan(def1);
+        var plan2 = IntelligentHomeGenerator.generatePlan(def2);
+
+        assertTrue("Plan 1 should be valid", plan1.validation().valid());
+        assertEquals("All rooms in Plan 1 should be reachable",
+            plan1.validation().totalRoomCount(), plan1.validation().reachableRoomCount());
+        assertTrue("Plan 2 should be valid", plan2.validation().valid());
+        assertNotEquals("Different seeds should produce distinct room bounds",
+            plan1.floors().get(0).rooms(), plan2.floors().get(0).rooms());
+
+        // Multi-wing L_SHAPED home
+        var lDef = new com.x64Dynamics.tfb.architectural.plan.BuildingDefinition(
+            "lwing", bounds, WingConfiguration.L_SHAPED, StylePreset.TRADITIONAL,
+            StylePreset.TRADITIONAL.createPalette(), RoofGenerator.RoofType.GABLE, 2, true, true, true, 1.0f, 42L
+        );
+        var lPlan = IntelligentHomeGenerator.generatePlan(lDef);
+        assertTrue("Multi-wing L-shaped plan should be valid", lPlan.validation().valid());
+        assertFalse(lPlan.targets().isEmpty());
+
+        // Blueprint disk persistence round-trip
+        java.nio.file.Path tempDir = java.nio.file.Files.createTempDirectory("tfb_bp_test");
+        com.x64Dynamics.tfb.persistence.BlueprintStorage.setStorageDir(tempDir);
+        var model = new com.x64Dynamics.tfb.ui.model.ArchitectWorkspaceModel();
+        var bp = model.toBlueprint("Test Nordic Manor", "KyroXova");
+        com.x64Dynamics.tfb.persistence.BlueprintStorage.save(bp);
+        assertTrue(com.x64Dynamics.tfb.persistence.BlueprintStorage.listSavedNames().contains("Test_Nordic_Manor"));
+        assertTrue(com.x64Dynamics.tfb.persistence.BlueprintStorage.load("Test_Nordic_Manor").isPresent());
+    }
 }
