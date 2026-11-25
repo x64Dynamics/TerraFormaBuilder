@@ -240,6 +240,22 @@ public class ArchitectWorkspaceModel {
         return result.targets().size();
     }
 
+    public synchronized com.x64Dynamics.tfb.architectural.AutoArchitectEngine.AutoDesignReport runAutoModeDesign() {
+        this.cityMode = false;
+        this.shapeEditorMode = false;
+        var report = com.x64Dynamics.tfb.architectural.AutoArchitectEngine.autoDesign(
+            origin, boundingBox(), liveLevelAccess, null, proceduralSeed
+        );
+        this.stylePreset = report.chosenStyle();
+        this.roofShape = report.chosenRoof();
+        this.wingConfiguration = report.chosenWings();
+        this.latestPlan = report.plan();
+        this.cachedPreviewTargets = report.plan().targets();
+        this.cachedBuildPlan = new ProgressiveBuildPlan(report.plan().targets());
+        this.previewBuffer.updateFromTargets(report.plan().targets(), liveLevelAccess);
+        return report;
+    }
+
     public synchronized int syncGridEditorToPreview() {
         List<PlacementTarget> targets = gridEditor.toPlacementTargets(origin, activePalette());
         this.cachedPreviewTargets = targets;

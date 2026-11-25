@@ -416,6 +416,11 @@ public class ArchitectWorkspaceScreen {
                     setStatus(msg);
                     tabBar.setActiveTab(WorkspaceTab.ARCHITECTURE);
                 }));
+                tabWidgets.add(new UIButton(new UIBounds(contentX, contentY + 84, contentWidth - 6, rowHeight), "Auto Mode (Biome + Palette + Interior)", b -> {
+                    var rep = model.runAutoModeDesign();
+                    refreshHierarchy();
+                    setStatus("Auto: " + rep.biomeTheme().name() + " | " + rep.chosenStyle().displayName() + " | " + rep.plan().targets().size() + " blocks");
+                }));
             }
 
             case ARCHITECTURE -> {
