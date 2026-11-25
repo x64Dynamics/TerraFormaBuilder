@@ -149,15 +149,13 @@ public final class ArchitecturalBrushes {
             BoundingBox3i bounds = context.bounds();
             MaterialPalette palette = context.palette();
 
-            int radius = Math.min(bounds.sizeX(), bounds.sizeZ()) / 2;
+            int radius = Math.max(3, Math.min(bounds.sizeX(), bounds.sizeZ()) / 2);
             Vec3i center = new Vec3i((bounds.min().x() + bounds.max().x()) / 2, bounds.min().y(), (bounds.min().z() + bounds.max().z()) / 2);
-
-            List<Vec3i> cylinderBlocks = ShapeRasterizer.cylinder(center, radius, radius, bounds.sizeY(), true);
-            for (Vec3i pos : cylinderBlocks) {
-                targets.add(new PlacementTarget(pos, palette.get(MaterialRole.WALL_PRIMARY), MaterialRole.WALL_PRIMARY));
-            }
-
-            targets.addAll(StaircaseGenerator.generateSpiral(center, bounds.sizeY(), palette));
+            TowerGenerator.TowerShape shape = (bounds.sizeX() == bounds.sizeZ() && bounds.sizeX() >= 10)
+                ? TowerGenerator.TowerShape.OCTAGONAL
+                : TowerGenerator.TowerShape.CIRCULAR;
+            var config = new TowerGenerator.TowerConfig(shape, radius, Math.max(8, bounds.sizeY()), 2, true, true, true);
+            targets.addAll(TowerGenerator.generateTower(center, config, palette));
             return targets;
         }
     }

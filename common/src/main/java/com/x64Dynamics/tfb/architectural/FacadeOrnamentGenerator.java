@@ -92,4 +92,97 @@ public final class FacadeOrnamentGenerator {
         }
         return targets;
     }
+
+    /**
+     * Generates fluted classical pilasters with plinth bases and stair-corbel capitals.
+     */
+    public static List<PlacementTarget> generateFlutedPilasters(BoundingBox3i wallSpan, Direction wallFacing, int spacing, MaterialPalette palette) {
+        List<PlacementTarget> targets = new ArrayList<>();
+        BlockIdentifier pillar = palette.get(MaterialRole.PILLAR);
+        BlockIdentifier plinth = palette.get(MaterialRole.FOUNDATION);
+        BlockIdentifier capital = palette.get(MaterialRole.STAIR)
+            .withProperty("facing", wallFacing.opposite().name().toLowerCase())
+            .withProperty("half", "top");
+
+        int minX = wallSpan.min().x(), maxX = wallSpan.max().x();
+        int minZ = wallSpan.min().z(), maxZ = wallSpan.max().z();
+        int minY = wallSpan.min().y(), maxY = wallSpan.max().y();
+        boolean runsX = (maxX - minX) >= (maxZ - minZ);
+        int length = runsX ? (maxX - minX + 1) : (maxZ - minZ + 1);
+
+        for (int offset = 0; offset < length; offset += Math.max(2, spacing)) {
+            Vec3i base = runsX ? new Vec3i(minX + offset, minY, minZ) : new Vec3i(minX, minY, minZ + offset);
+            Vec3i protruded = base.offset(wallFacing);
+            for (int y = minY; y <= maxY; y++) {
+                Vec3i p = new Vec3i(protruded.x(), y, protruded.z());
+                if (y == minY) {
+                    targets.add(new PlacementTarget(p, plinth, MaterialRole.FOUNDATION));
+                } else if (y == maxY) {
+                    targets.add(new PlacementTarget(p, capital, MaterialRole.BEAM));
+                } else {
+                    targets.add(new PlacementTarget(p, pillar, MaterialRole.PILLAR));
+                }
+            }
+        }
+        return targets;
+    }
+
+    /**
+     * Generates a triangular classical pediment cornice above a doorway or window bay.
+     */
+    public static List<PlacementTarget> generatePedimentCornice(Vec3i centerTop, Direction outwardFacing, int width, MaterialPalette palette) {
+        List<PlacementTarget> targets = new ArrayList<>();
+        Direction cross = outwardFacing.rotateY();
+        BlockIdentifier slab = palette.get(MaterialRole.SLAB);
+        BlockIdentifier stair = palette.get(MaterialRole.ROOF_SLOPE);
+        int halfW = Math.max(1, width / 2);
+
+        for (int w = -halfW; w <= halfW; w++) {
+            targets.add(new PlacementTarget(centerTop.offset(cross, w).offset(outwardFacing), slab, MaterialRole.ROOF_OVERHANG));
+        }
+        int rise = Math.max(1, halfW);
+        for (int h = 1; h <= rise; h++) {
+            int span = halfW - h;
+            if (span < 0) break;
+            if (span == 0) {
+                targets.add(new PlacementTarget(centerTop.add(0, h, 0).offset(outwardFacing), slab, MaterialRole.ROOF_RIDGE));
+            } else {
+                targets.add(new PlacementTarget(centerTop.offset(cross, -span).add(0, h, 0).offset(outwardFacing),
+                    stair.withProperty("facing", cross.name().toLowerCase()).withProperty("half", "bottom"), MaterialRole.ROOF_SLOPE));
+                targets.add(new PlacementTarget(centerTop.offset(cross, span).add(0, h, 0).offset(outwardFacing),
+                    stair.withProperty("facing", cross.opposite().name().toLowerCase()).withProperty("half", "bottom"), MaterialRole.ROOF_SLOPE));
+            }
+        }
+        return targets;
+    }
+
+    /**
+     * Generates a rhythmic facade window array with sills, lintels, shutters, and intervening fluted pilasters.
+     */
+    public static List<PlacementTarget> generateRhythmicWindowArray(
+        BoundingBox3i wallSpan,
+        Direction wallFacing,
+        int baySpacing,
+        int windowHeight,
+        MaterialPalette palette
+    ) {
+        List<PlacementTarget> targets = new ArrayList<>();
+        targets.addAll(generateFlutedPilasters(wallSpan, wallFacing, Math.max(3, baySpacing), palette));
+
+        int minX = wallSpan.min().x(), maxX = wallSpan.max().x();
+        int minZ = wallSpan.min().z(), maxZ = wallSpan.max().z();
+        int midY = wallSpan.min().y() + 1;
+        boolean runsX = (maxX - minX) >= (maxZ - minZ);
+        int length = runsX ? (maxX - minX + 1) : (maxZ - minZ + 1);
+        int step = Math.max(3, baySpacing);
+
+        for (int offset = step / 2; offset < length - 1; offset += step) {
+            Vec3i winBase = runsX ? new Vec3i(minX + offset, midY, minZ) : new Vec3i(minX, midY, minZ + offset);
+            for (int h = 0; h < Math.max(1, windowHeight); h++) {
+                targets.add(new PlacementTarget(winBase.add(0, h, 0), palette.get(MaterialRole.WINDOW), MaterialRole.WINDOW));
+            }
+            targets.addAll(addWindowShuttersAndFlowerBox(winBase, wallFacing, 1, Math.max(1, windowHeight), palette));
+        }
+        return targets;
+    }
 }

@@ -68,8 +68,13 @@ public final class StructuralBrushes {
         public BrushCategory category() { return BrushCategory.STRUCTURAL; }
 
         public List<PlacementTarget> generate(BrushContext context) {
-            Direction dir = Direction.NORTH;
-            return StaircaseGenerator.generateStraight(context.bounds().min(), dir, context.bounds().sizeY(), context.bounds().sizeX(), context.palette());
+            BoundingBox3i b = context.bounds();
+            StaircaseGenerator.StaircaseStyle style = (b.sizeX() >= 7 && b.sizeY() >= 6)
+                ? StaircaseGenerator.StaircaseStyle.BIFURCATED_IMPERIAL
+                : (b.sizeX() >= 4 && b.sizeY() >= 4)
+                    ? StaircaseGenerator.StaircaseStyle.DOG_LEG
+                    : StaircaseGenerator.StaircaseStyle.STRAIGHT;
+            return StaircaseGenerator.generate(style, b, Direction.NORTH, context.palette());
         }
     }
 

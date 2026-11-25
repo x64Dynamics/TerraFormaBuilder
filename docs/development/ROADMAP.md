@@ -13,12 +13,12 @@
 - [x] Shift + scroll 4-category page cycling (Architecture, Infrastructure, Editing, Decoration).
 - [x] NeoForge 1.21.1 and Fabric 1.20.1 implementation & verification.
 
-### Phase 2: Expanded Procedural Architecture & Brushes (ACTIVE)
-- [ ] Multi-segment circular and polygonal towers with connected battlements.
-- [ ] Spline-based road intersection networks with automated crosswalks, traffic lights, and curbs.
-- [ ] Procedural staircase configurations (Spiral, Dog-leg, Bifurcated imperial, Straight).
-- [ ] Dynamic roof intersection resolver for non-rectangular complex compounds.
-- [ ] Advanced facade window arrays with rhythmic pilaster fluting and pediment cornices.
+### Phase 2: Expanded Procedural Architecture & Brushes (COMPLETED)
+- [x] Multi-segment circular and polygonal towers with connected battlements.
+- [x] Spline-based road intersection networks with automated crosswalks, traffic lights, and curbs.
+- [x] Procedural staircase configurations (Spiral, Dog-leg, Bifurcated imperial, Straight).
+- [x] Dynamic roof intersection resolver for non-rectangular complex compounds.
+- [x] Advanced facade window arrays with rhythmic pilaster fluting and pediment cornices.
 
 ### Phase 3: Universal Block Intelligence & Dynamic Mod Discovery
 - [ ] Automated scan of loaded block registries for custom modded stairs, slabs, pillars, and decorations.

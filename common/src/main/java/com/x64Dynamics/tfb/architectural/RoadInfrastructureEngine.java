@@ -204,11 +204,50 @@ public final class RoadInfrastructureEngine {
                 if (type != IntersectionType.T_JUNCTION) {
                     addStreetlight(center.add(cornerOffset, 1, -cornerOffset), palette, map);
                 }
+
+                // Crosswalks & traffic lights for urban intersections
+                if (profile.style() == RoadStyle.ASPHALT_MODERN) {
+                    addCrosswalk(center.add(0, 0, halfRoad + 2), true, halfRoad, map);
+                    addCrosswalk(center.add(halfRoad + 2, 0, 0), false, halfRoad, map);
+                    addCrosswalk(center.add(-halfRoad - 2, 0, 0), false, halfRoad, map);
+                    if (type != IntersectionType.T_JUNCTION) {
+                        addCrosswalk(center.add(0, 0, -halfRoad - 2), true, halfRoad, map);
+                        addTrafficLight(center.add(cornerOffset, 1, -cornerOffset), Direction.WEST, map);
+                    }
+                    addTrafficLight(center.add(-cornerOffset, 1, cornerOffset), Direction.EAST, map);
+                }
             }
         }
 
         targets.addAll(map.values());
         return targets;
+    }
+
+    private static void addCrosswalk(Vec3i lineCenter, boolean runsAlongX, int halfRoad, Map<Vec3i, PlacementTarget> map) {
+        BlockIdentifier stripe = BlockIdentifier.of("minecraft:white_concrete");
+        for (int i = -halfRoad; i <= halfRoad; i++) {
+            if (Math.abs(i) % 2 == 0) {
+                Vec3i p1 = runsAlongX ? lineCenter.add(i, 0, 0) : lineCenter.add(0, 0, i);
+                Vec3i p2 = runsAlongX ? lineCenter.add(i, 0, 1) : lineCenter.add(1, 0, i);
+                map.put(p1, new PlacementTarget(p1, stripe, MaterialRole.WALL_ACCENT));
+                map.put(p2, new PlacementTarget(p2, stripe, MaterialRole.WALL_ACCENT));
+            }
+        }
+    }
+
+    private static void addTrafficLight(Vec3i base, Direction armDir, Map<Vec3i, PlacementTarget> map) {
+        BlockIdentifier pole = BlockIdentifier.of("minecraft:iron_bars");
+        BlockIdentifier housing = BlockIdentifier.of("minecraft:black_concrete");
+        map.put(base, new PlacementTarget(base, BlockIdentifier.of("minecraft:polished_andesite"), MaterialRole.PILLAR));
+        for (int y = 1; y <= 4; y++) {
+            map.put(base.add(0, y, 0), new PlacementTarget(base.add(0, y, 0), pole, MaterialRole.PILLAR));
+        }
+        Vec3i armStart = base.add(0, 4, 0);
+        map.put(armStart.offset(armDir, 1), new PlacementTarget(armStart.offset(armDir, 1), pole, MaterialRole.PILLAR));
+        Vec3i head = armStart.offset(armDir, 2);
+        map.put(head, new PlacementTarget(head, housing, MaterialRole.DECORATION));
+        map.put(head.add(0, 1, 0), new PlacementTarget(head.add(0, 1, 0), BlockIdentifier.of("minecraft:red_concrete"), MaterialRole.LIGHT_SOURCE));
+        map.put(head.add(0, -1, 0), new PlacementTarget(head.add(0, -1, 0), BlockIdentifier.of("minecraft:lime_concrete"), MaterialRole.LIGHT_SOURCE));
     }
 
     private static void addStreetlight(Vec3i base, MaterialPalette palette, Map<Vec3i, PlacementTarget> map) {

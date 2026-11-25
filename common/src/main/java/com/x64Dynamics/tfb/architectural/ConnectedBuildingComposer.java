@@ -279,23 +279,39 @@ public final class ConnectedBuildingComposer {
         for (PlacementTarget target : roofTargets) {
             Vec3i pos = target.pos();
 
-            // Prevent roof blocks from clipping inside taller attached sections (e.g. towers)
-            boolean clipsInsideTaller = false;
+            // Prevent roof blocks from clipping inside taller or intersecting attached sections
+            boolean clipsInsideOther = false;
             for (BuildingSection other : allSections) {
                 if (other == current) continue;
-                if (other.bounds().max().y() > current.bounds().max().y()) {
-                    // Other is taller (e.g. tower). Check if roof clips inside other's interior bounds
-                    BoundingBox3i ob = other.bounds();
-                    if (pos.x() >= ob.min().x() && pos.x() <= ob.max().x() &&
-                        pos.z() >= ob.min().z() && pos.z() <= ob.max().z() &&
-                        pos.y() >= ob.min().y() && pos.y() <= ob.max().y()) {
-                        clipsInsideTaller = true;
+                BoundingBox3i ob = other.bounds();
+                boolean insideFootprint = pos.x() >= ob.min().x() && pos.x() <= ob.max().x() &&
+                                          pos.z() >= ob.min().z() && pos.z() <= ob.max().z();
+                if (!insideFootprint) continue;
+
+                // Taller section: never clip inside its volume
+                if (ob.max().y() > current.bounds().max().y() &&
+                    pos.y() >= ob.min().y() && pos.y() <= ob.max().y()) {
+                    clipsInsideOther = true;
+                    break;
+                }
+                // Equal-height intersecting wing: keep higher roof surface (valley resolution)
+                if (ob.max().y() == current.bounds().max().y()) {
+                    PlacementTarget existing = blockMap.get(pos);
+                    if (existing != null && existing.role() == MaterialRole.ROOF_RIDGE) {
+                        clipsInsideOther = true;
+                        break;
+                    }
+                    // Clear lower overhang if inside adjacent wing interior
+                    if (pos.x() > ob.min().x() && pos.x() < ob.max().x() &&
+                        pos.z() > ob.min().z() && pos.z() < ob.max().z() &&
+                        pos.y() < ob.max().y() - Math.max(3, ob.sizeY() / 3)) {
+                        clipsInsideOther = true;
                         break;
                     }
                 }
             }
 
-            if (!clipsInsideTaller) {
+            if (!clipsInsideOther) {
                 blockMap.put(pos, target);
             }
         }
