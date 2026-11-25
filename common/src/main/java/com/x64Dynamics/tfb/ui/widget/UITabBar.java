@@ -7,7 +7,7 @@ import java.util.function.Consumer;
 
 public class UITabBar extends UIWidget {
     private final WorkspaceTab[] tabs = WorkspaceTab.values();
-    private WorkspaceTab activeTab = WorkspaceTab.ARCHITECTURE;
+    private WorkspaceTab activeTab = WorkspaceTab.HOME;
     private final Consumer<WorkspaceTab> tabSelectAction;
 
     public UITabBar(UIBounds bounds, Consumer<WorkspaceTab> tabSelectAction) {

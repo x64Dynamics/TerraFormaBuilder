@@ -196,4 +196,24 @@ public class UISystemTest {
         controller.setTargetPosition(new Vec3i(100, 70, 100));
         assertEquals(new Vec3i(100, 70, 100), controller.model().origin());
     }
+
+    @Test
+    public void testLocalizationAndAllStudioTabs() {
+        assertTrue(com.x64Dynamics.tfb.i18n.TFBLocalization.hasKey("tfb.home.welcome"));
+        assertTrue(com.x64Dynamics.tfb.i18n.TFBLocalization.hasKey("tfb.nav.home"));
+        assertTrue(com.x64Dynamics.tfb.i18n.TFBLocalization.hasKey("tfb.room.living_hall"));
+        assertEquals("Design", com.x64Dynamics.tfb.i18n.TFBLocalization.tr("tfb.nav.design"));
+
+        ArchitectWorkspaceModel model = new ArchitectWorkspaceModel();
+        ArchitectWorkspaceScreen screen = new ArchitectWorkspaceScreen(model);
+        DummyGraphics g = new DummyGraphics();
+
+        for (WorkspaceTab tab : WorkspaceTab.values()) {
+            model.setActiveTab(tab);
+            screen.init(854, 480);
+            screen.render(g, 200, 200);
+            screen.init(1280, 720);
+            screen.render(g, 400, 300);
+        }
+    }
 }

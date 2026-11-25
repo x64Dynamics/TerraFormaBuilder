@@ -2,35 +2,35 @@ package com.x64Dynamics.tfb.ui.screen;
 
 import com.x64Dynamics.tfb.architectural.RoofGenerator;
 import com.x64Dynamics.tfb.architectural.WingConfiguration;
+import com.x64Dynamics.tfb.architectural.plan.BuildingPlan;
+import com.x64Dynamics.tfb.brush.ArchitecturalBrushes;
+import com.x64Dynamics.tfb.brush.BrushCategory;
 import com.x64Dynamics.tfb.brush.BrushRegistry;
 import com.x64Dynamics.tfb.brush.IConstructionBrush;
-import com.x64Dynamics.tfb.geometry.Axis;
-import com.x64Dynamics.tfb.geometry.Rotation;
+import com.x64Dynamics.tfb.editing.WorldSelectionManager;
+import com.x64Dynamics.tfb.i18n.TFBLocalization;
 import com.x64Dynamics.tfb.material.MaterialRole;
 import com.x64Dynamics.tfb.material.StylePreset;
+import com.x64Dynamics.tfb.persistence.BlueprintStorage;
 import com.x64Dynamics.tfb.persistence.ParametricBlueprint;
-import com.x64Dynamics.tfb.preview.PreviewFilterMode;
 import com.x64Dynamics.tfb.taxonomy.BlockTaxonomyEntry;
+import com.x64Dynamics.tfb.taxonomy.BlockTaxonomyRegistry;
 import com.x64Dynamics.tfb.taxonomy.SearchableTaxonomyBrowser;
-import com.x64Dynamics.tfb.terrain.FoundationStrategy;
+import com.x64Dynamics.tfb.ui.TFBClientController;
 import com.x64Dynamics.tfb.ui.model.ArchitectWorkspaceModel;
 import com.x64Dynamics.tfb.ui.model.WorkspaceTab;
 import com.x64Dynamics.tfb.ui.rendering.IGuiGraphicsContext;
-import com.x64Dynamics.tfb.ui.widget.UIButton;
-import com.x64Dynamics.tfb.ui.widget.UIDropdown;
-import com.x64Dynamics.tfb.ui.widget.UIProgressBar;
-import com.x64Dynamics.tfb.ui.widget.UIScrollList;
-import com.x64Dynamics.tfb.ui.widget.UISlider;
-import com.x64Dynamics.tfb.ui.widget.UITabBar;
-import com.x64Dynamics.tfb.ui.widget.UITextField;
-import com.x64Dynamics.tfb.ui.widget.UIToggleButton;
-import com.x64Dynamics.tfb.ui.widget.UIWidget;
-import com.x64Dynamics.tfb.ui.widget.UIBounds;
+import com.x64Dynamics.tfb.ui.widget.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
+/**
+ * TerraFormaBuilder Studio UI featuring a Home Dashboard, live Building Hierarchy,
+ * contextual Design/Materials/Library/Projects/Settings editors, and full localization.
+ */
 public class ArchitectWorkspaceScreen {
     private final ArchitectWorkspaceModel model;
     private final List<UIWidget> widgets = new ArrayList<>();
@@ -49,7 +49,9 @@ public class ArchitectWorkspaceScreen {
     private UIButton closeButton;
 
     // Left Sidebar Widgets
+    private UIScrollList<String> hierarchyList;
     private UIScrollList<IConstructionBrush> brushList;
+    private final List<UIWidget> libraryFilterButtons = new ArrayList<>();
 
     // Construction progress
     private UIProgressBar constructionProgressBar;
@@ -58,14 +60,13 @@ public class ArchitectWorkspaceScreen {
     private UITextField blueprintNameField;
     private UITextField blueprintAuthorField;
     private UITextField materialSearchField;
-    private UITextField selectionNameField;
 
     // Callbacks
     private Runnable closeCallback;
     private Runnable buildCallback;
 
     // Status message
-    private String statusMessage = "Ready. Configure architectural parameters and preview in-world.";
+    private String statusMessage = TFBLocalization.tr("tfb.status.ready");
     private long statusMessageExpiry = 0;
 
     public ArchitectWorkspaceScreen(ArchitectWorkspaceModel model) {
@@ -81,49 +82,83 @@ public class ArchitectWorkspaceScreen {
         this.height = screenHeight;
         this.widgets.clear();
         this.tabWidgets.clear();
+        this.libraryFilterButtons.clear();
 
         int headerHeight = 24;
         int tabBarHeight = 20;
-        int sidebarWidth = Math.max(120, width / 5);
+        int sidebarWidth = Math.max(132, width / 5);
         int footerHeight = 18;
 
         // 1. Top Header Actions
-        int actionBtnWidth = 52;
+        int actionBtnWidth = 48;
         int actionBtnHeight = 16;
         int actionY = 4;
 
-        boolean flightOn = com.x64Dynamics.tfb.ui.TFBClientController.getInstance().isFlightActive();
-        flightButton = new UIButton(new UIBounds(width - (actionBtnWidth * 6 + 28), actionY, actionBtnWidth, actionBtnHeight), flightOn ? "Flight: ON" : "Flight: OFF", b -> {
-            com.x64Dynamics.tfb.ui.TFBClientController.getInstance().toggleFlight();
-            boolean state = com.x64Dynamics.tfb.ui.TFBClientController.getInstance().isFlightActive();
-            b.setLabel(state ? "Flight: ON" : "Flight: OFF");
-            setStatus(state ? "Architect Flight enabled." : "Architect Flight disabled.");
-        });
+        boolean flightOn = TFBClientController.getInstance().isFlightActive();
+        flightButton = new UIButton(
+            new UIBounds(width - (actionBtnWidth * 6 + 28), actionY, actionBtnWidth, actionBtnHeight),
+            TFBLocalization.tr(flightOn ? "tfb.ui.flight_on" : "tfb.ui.flight_off"),
+            b -> {
+                TFBClientController.getInstance().toggleFlight();
+                boolean state = TFBClientController.getInstance().isFlightActive();
+                b.setLabel(TFBLocalization.tr(state ? "tfb.ui.flight_on" : "tfb.ui.flight_off"));
+                setStatus(state ? "Architect Flight enabled." : "Architect Flight disabled.");
+            }
+        );
 
-        previewButton = new UIButton(new UIBounds(width - (actionBtnWidth * 5 + 24), actionY, actionBtnWidth, actionBtnHeight), "Preview", b -> {
-            model.generatePreview();
-            setStatus("Generated preview with " + model.totalBlockCount() + " blocks.");
-        });
-        instantBuildButton = new UIButton(new UIBounds(width - (actionBtnWidth * 4 + 20), actionY, actionBtnWidth, actionBtnHeight), "Build", b -> {
-            if (buildCallback != null) {
-                buildCallback.run();
-            } else {
-                setStatus("Started construction (" + model.totalBlockCount() + " blocks).");
+        previewButton = new UIButton(
+            new UIBounds(width - (actionBtnWidth * 5 + 24), actionY, actionBtnWidth, actionBtnHeight),
+            TFBLocalization.tr("tfb.ui.preview"),
+            b -> {
+                model.generatePreview();
+                refreshHierarchy();
+                setStatus("Preview generated (" + model.totalBlockCount() + " blocks).");
             }
-        });
-        undoButton = new UIButton(new UIBounds(width - (actionBtnWidth * 3 + 16), actionY, actionBtnWidth, actionBtnHeight), "Undo", b -> {
-            if (model.undo()) setStatus("Reverted last edit.");
-            else setStatus("Nothing to undo.");
-        });
-        redoButton = new UIButton(new UIBounds(width - (actionBtnWidth * 2 + 12), actionY, actionBtnWidth, actionBtnHeight), "Redo", b -> {
-            if (model.redo()) setStatus("Redone edit.");
-            else setStatus("Nothing to redo.");
-        });
-        closeButton = new UIButton(new UIBounds(width - (actionBtnWidth + 8), actionY, actionBtnWidth, actionBtnHeight), "Close", b -> {
-            if (closeCallback != null) {
-                closeCallback.run();
+        );
+        instantBuildButton = new UIButton(
+            new UIBounds(width - (actionBtnWidth * 4 + 20), actionY, actionBtnWidth, actionBtnHeight),
+            TFBLocalization.tr("tfb.ui.build"),
+            b -> {
+                if (buildCallback != null) {
+                    buildCallback.run();
+                } else {
+                    setStatus("Started construction (" + model.totalBlockCount() + " blocks).");
+                }
             }
-        });
+        );
+        undoButton = new UIButton(
+            new UIBounds(width - (actionBtnWidth * 3 + 16), actionY, actionBtnWidth, actionBtnHeight),
+            TFBLocalization.tr("tfb.ui.undo"),
+            b -> {
+                if (model.undo()) {
+                    refreshHierarchy();
+                    setStatus("Reverted last edit.");
+                } else {
+                    setStatus("Nothing to undo.");
+                }
+            }
+        );
+        redoButton = new UIButton(
+            new UIBounds(width - (actionBtnWidth * 2 + 12), actionY, actionBtnWidth, actionBtnHeight),
+            TFBLocalization.tr("tfb.ui.redo"),
+            b -> {
+                if (model.redo()) {
+                    refreshHierarchy();
+                    setStatus("Redone edit.");
+                } else {
+                    setStatus("Nothing to redo.");
+                }
+            }
+        );
+        closeButton = new UIButton(
+            new UIBounds(width - (actionBtnWidth + 8), actionY, actionBtnWidth, actionBtnHeight),
+            TFBLocalization.tr("tfb.ui.close"),
+            b -> {
+                if (closeCallback != null) {
+                    closeCallback.run();
+                }
+            }
+        );
 
         widgets.add(flightButton);
         widgets.add(previewButton);
@@ -132,7 +167,7 @@ public class ArchitectWorkspaceScreen {
         widgets.add(redoButton);
         widgets.add(closeButton);
 
-        // 2. Tab Bar
+        // 2. Studio Navigation Bar
         tabBar = new UITabBar(new UIBounds(sidebarWidth + 4, headerHeight + 2, width - sidebarWidth - 8, tabBarHeight), tab -> {
             model.setActiveTab(tab);
             rebuildTabWidgets();
@@ -140,51 +175,33 @@ public class ArchitectWorkspaceScreen {
         tabBar.setActiveTab(model.activeTab());
         widgets.add(tabBar);
 
-        // 3. Left Sidebar (Category Filter & Brush List)
+        // 3. Left Sidebar: Building Hierarchy + Tool Library
+        int listY = headerHeight + 20;
+        int listHeight = height - listY - footerHeight - 4;
+
+        hierarchyList = new UIScrollList<>(new UIBounds(6, listY, sidebarWidth - 8, listHeight), 15, buildHierarchyItems(), (item, idx) -> {
+            setStatus(item.trim());
+        });
+        widgets.add(hierarchyList);
+
         int catBtnY = headerHeight + 18;
         int catBtnW = (sidebarWidth - 14) / 4;
         int catBtnH = 16;
 
-        widgets.add(new UIButton(new UIBounds(6, catBtnY, catBtnW, catBtnH), "ALL", b -> {
-            List<IConstructionBrush> list = new ArrayList<>(BrushRegistry.all());
-            brushList.setItems(list);
-            if (!list.isEmpty()) {
-                model.setActiveBrush(list.get(0));
-                brushList.setSelectedIndex(0);
-            }
-        }));
-        widgets.add(new UIButton(new UIBounds(6 + catBtnW + 2, catBtnY, catBtnW, catBtnH), "ARC", b -> {
-            List<IConstructionBrush> list = BrushRegistry.byCategory(com.x64Dynamics.tfb.brush.BrushCategory.ARCHITECTURAL);
-            brushList.setItems(list);
-            if (!list.isEmpty()) {
-                model.setActiveBrush(list.get(0));
-                brushList.setSelectedIndex(0);
-            }
-        }));
-        widgets.add(new UIButton(new UIBounds(6 + (catBtnW + 2) * 2, catBtnY, catBtnW, catBtnH), "STR", b -> {
-            List<IConstructionBrush> list = BrushRegistry.byCategory(com.x64Dynamics.tfb.brush.BrushCategory.STRUCTURAL);
-            brushList.setItems(list);
-            if (!list.isEmpty()) {
-                model.setActiveBrush(list.get(0));
-                brushList.setSelectedIndex(0);
-            }
-        }));
-        widgets.add(new UIButton(new UIBounds(6 + (catBtnW + 2) * 3, catBtnY, catBtnW, catBtnH), "INF", b -> {
-            List<IConstructionBrush> list = BrushRegistry.byCategory(com.x64Dynamics.tfb.brush.BrushCategory.INFRASTRUCTURE);
-            brushList.setItems(list);
-            if (!list.isEmpty()) {
-                model.setActiveBrush(list.get(0));
-                brushList.setSelectedIndex(0);
-            }
-        }));
+        UIButton btnAll = new UIButton(new UIBounds(6, catBtnY, catBtnW, catBtnH), "ALL", b -> filterBrushes(null));
+        UIButton btnArc = new UIButton(new UIBounds(6 + catBtnW + 2, catBtnY, catBtnW, catBtnH), "ARC", b -> filterBrushes(BrushCategory.ARCHITECTURAL));
+        UIButton btnStr = new UIButton(new UIBounds(6 + (catBtnW + 2) * 2, catBtnY, catBtnW, catBtnH), "STR", b -> filterBrushes(BrushCategory.STRUCTURAL));
+        UIButton btnInf = new UIButton(new UIBounds(6 + (catBtnW + 2) * 3, catBtnY, catBtnW, catBtnH), "INF", b -> filterBrushes(BrushCategory.INFRASTRUCTURE));
+        libraryFilterButtons.addAll(Arrays.asList(btnAll, btnArc, btnStr, btnInf));
+        widgets.addAll(libraryFilterButtons);
 
         int brushListY = headerHeight + 38;
         int brushListHeight = height - brushListY - footerHeight - 4;
-
         List<IConstructionBrush> allBrushes = new ArrayList<>(BrushRegistry.all());
         brushList = new UIScrollList<>(new UIBounds(6, brushListY, sidebarWidth - 8, brushListHeight), 16, allBrushes, (brush, idx) -> {
             model.setActiveBrush(brush);
-            setStatus("Selected brush: " + brush.displayName());
+            refreshHierarchy();
+            setStatus("Selected tool: " + brush.displayName());
         });
         brushList.setLabelProvider(brush -> "[" + brush.category().name().substring(0, Math.min(3, brush.category().name().length())) + "] " + brush.displayName());
         brushList.setSelectedIndex(allBrushes.indexOf(model.activeBrush()));
@@ -193,279 +210,293 @@ public class ArchitectWorkspaceScreen {
         // 4. Construction progress bar in footer
         constructionProgressBar = new UIProgressBar(new UIBounds(width - 180, height - footerHeight + 2, 172, footerHeight - 4));
         constructionProgressBar.setProgress(1.0f);
-        constructionProgressBar.setStatusText("Preview Ready");
+        constructionProgressBar.setStatusText(TFBLocalization.tr("tfb.status.preview_ready"));
         widgets.add(constructionProgressBar);
 
-        // Build active tab widgets
         rebuildTabWidgets();
+    }
+
+    private void filterBrushes(BrushCategory category) {
+        List<IConstructionBrush> list = category == null
+            ? new ArrayList<>(BrushRegistry.all())
+            : BrushRegistry.byCategory(category);
+        brushList.setItems(list);
+        if (!list.isEmpty()) {
+            model.setActiveBrush(list.get(0));
+            brushList.setSelectedIndex(0);
+        }
+    }
+
+    private void refreshHierarchy() {
+        if (hierarchyList != null) {
+            hierarchyList.setItems(buildHierarchyItems());
+        }
+    }
+
+    private List<String> buildHierarchyItems() {
+        List<String> items = new ArrayList<>();
+        BuildingPlan plan = model.latestPlan();
+        if (plan == null) {
+            items.add("Home: " + model.width() + "x" + model.depth());
+            items.add("  Tool: " + (model.activeBrush() != null ? model.activeBrush().displayName() : "None"));
+            return items;
+        }
+
+        items.add("Home (" + model.width() + "x" + model.depth() + ")");
+        for (BuildingPlan.FloorPlan fp : plan.floors()) {
+            items.add("  " + TFBLocalization.tr("tfb.hierarchy.floor", fp.floorIndex() + 1, fp.rooms().size()));
+            for (BuildingPlan.PlannedRoom room : fp.rooms()) {
+                String roomName = TFBLocalization.tr("tfb.room." + room.type().name().toLowerCase(Locale.ROOT));
+                items.add("    - " + roomName + " (" + room.bounds().sizeX() + "x" + room.bounds().sizeZ() + ")");
+            }
+        }
+        for (BuildingPlan.StairwellPlan sw : plan.stairwells()) {
+            items.add("  " + TFBLocalization.tr("tfb.hierarchy.stairwell", sw.fromFloor() + 1, sw.toFloor() + 1));
+        }
+        items.add("  " + TFBLocalization.tr("tfb.hierarchy.roof", plan.definition().roofType().name()));
+        if (plan.definition().addPorchAndGarden()) {
+            items.add("  " + TFBLocalization.tr("tfb.hierarchy.porch"));
+        }
+        return items;
     }
 
     private void rebuildTabWidgets() {
         tabWidgets.clear();
-        int contentX = Math.max(120, width / 5) + 12;
+        refreshHierarchy();
+
+        int sidebarWidth = Math.max(132, width / 5);
+        int contentX = sidebarWidth + 12;
         int contentY = 52;
         int contentWidth = width - contentX - 12;
         int rowHeight = 20;
 
         WorkspaceTab tab = model.activeTab();
+        boolean isLibrary = (tab == WorkspaceTab.LIBRARY);
+        if (hierarchyList != null) hierarchyList.setVisible(!isLibrary);
+        if (brushList != null) brushList.setVisible(isLibrary);
+        for (UIWidget b : libraryFilterButtons) b.setVisible(isLibrary);
 
         switch (tab) {
-            case ARCHITECTURE -> {
-                // Row 1: Essential Home Dimensions & Floors (0 = Auto)
-                tabWidgets.add(new UISlider(new UIBounds(contentX, contentY, contentWidth / 3 - 6, rowHeight), "Width", 7, 48, model.width(), model::setWidth));
-                tabWidgets.add(new UISlider(new UIBounds(contentX + contentWidth / 3, contentY, contentWidth / 3 - 6, rowHeight), "Depth", 7, 48, model.depth(), model::setDepth));
-                tabWidgets.add(new UISlider(new UIBounds(contentX + (contentWidth / 3) * 2, contentY, contentWidth / 3 - 6, rowHeight), "Floors (0=Auto)", 0, 4, model.requestedStories(), model::setRequestedStories));
-
-                // Row 2: Style, Roof & Footprint Layout
-                List<StylePreset> styles = Arrays.asList(StylePreset.values());
-                tabWidgets.add(new UIDropdown<>(new UIBounds(contentX, contentY + 28, contentWidth / 3 - 6, rowHeight), "Style", styles, styles.indexOf(model.stylePreset()), model::setStylePreset));
-
-                List<RoofGenerator.RoofType> roofShapes = Arrays.asList(RoofGenerator.RoofType.values());
-                tabWidgets.add(new UIDropdown<>(new UIBounds(contentX + contentWidth / 3, contentY + 28, contentWidth / 3 - 6, rowHeight), "Roof", roofShapes, roofShapes.indexOf(model.roofShape()), model::setRoofShape));
-
-                List<WingConfiguration> wingConfigs = Arrays.asList(WingConfiguration.values());
-                tabWidgets.add(new UIDropdown<>(new UIBounds(contentX + (contentWidth / 3) * 2, contentY + 28, contentWidth / 3 - 6, rowHeight), "Layout", wingConfigs, wingConfigs.indexOf(model.wingConfiguration()), model::setWingConfiguration));
-
-                // Row 3: Essential Home Features & Quick Regenerate
-                tabWidgets.add(new UIToggleButton(new UIBounds(contentX, contentY + 56, contentWidth / 4 - 4, rowHeight), "Furnish", model.furnishRooms(), model::setFurnishRooms));
-                tabWidgets.add(new UIToggleButton(new UIBounds(contentX + contentWidth / 4, contentY + 56, contentWidth / 4 - 4, rowHeight), "Porch & Garden", model.addPorchAndGarden(), model::setAddPorchAndGarden));
-                tabWidgets.add(new UIToggleButton(new UIBounds(contentX + (contentWidth / 4) * 2, contentY + 56, contentWidth / 4 - 4, rowHeight), "Chimney", model.addChimney(), model::setAddChimney));
-                tabWidgets.add(new UIButton(new UIBounds(contentX + (contentWidth / 4) * 3, contentY + 56, contentWidth / 4 - 4, rowHeight), "New Variation", b -> {
-                    model.randomizeSeed();
-                    setStatus("Generated new home variation (seed " + model.proceduralSeed() + ").");
+            case HOME -> {
+                // Quick-Start Home Templates
+                tabWidgets.add(new UIButton(new UIBounds(contentX, contentY + 24, contentWidth / 3 - 6, rowHeight), TFBLocalization.tr("tfb.home.cottage"), b -> {
+                    applyHomeTemplate(9, 9, 1, StylePreset.RUSTIC, WingConfiguration.SINGLE_RECTANGLE);
                 }));
-            }
-
-            case SELECTION -> {
-                com.x64Dynamics.tfb.editing.WorldSelectionManager sel = model.selectionManager();
-                String p1Str = sel.pos1() != null ? "(" + sel.pos1().x() + "," + sel.pos1().y() + "," + sel.pos1().z() + ")" : "None";
-                String p2Str = sel.pos2() != null ? "(" + sel.pos2().x() + "," + sel.pos2().y() + "," + sel.pos2().z() + ")" : "None";
-
-                // Row 1: POS1 and POS2 indicators & setters
-                tabWidgets.add(new UIButton(new UIBounds(contentX, contentY, contentWidth / 4 - 4, rowHeight), "POS1: " + p1Str, b -> {
-                    model.setPos1(model.origin());
-                    rebuildTabWidgets();
-                    setStatus("POS1 set to origin: " + model.origin());
+                tabWidgets.add(new UIButton(new UIBounds(contentX + contentWidth / 3, contentY + 24, contentWidth / 3 - 6, rowHeight), TFBLocalization.tr("tfb.home.family"), b -> {
+                    applyHomeTemplate(15, 15, 2, StylePreset.MEDIEVAL, WingConfiguration.SINGLE_RECTANGLE);
                 }));
-                tabWidgets.add(new UIButton(new UIBounds(contentX + contentWidth / 4, contentY, contentWidth / 4 - 4, rowHeight), "Clear POS1", b -> {
-                    sel.clearPositions();
-                    rebuildTabWidgets();
-                    setStatus("Cleared POS1.");
-                }));
-                tabWidgets.add(new UIButton(new UIBounds(contentX + (contentWidth / 4) * 2, contentY, contentWidth / 4 - 4, rowHeight), "POS2: " + p2Str, b -> {
-                    model.setPos2(model.boundingBox().max());
-                    rebuildTabWidgets();
-                    setStatus("POS2 set to max bounds: " + model.boundingBox().max());
-                }));
-                tabWidgets.add(new UIButton(new UIBounds(contentX + (contentWidth / 4) * 3, contentY, contentWidth / 4 - 4, rowHeight), "Clear POS2", b -> {
-                    sel.clearPositions();
-                    rebuildTabWidgets();
-                    setStatus("Cleared POS2.");
+                tabWidgets.add(new UIButton(new UIBounds(contentX + (contentWidth / 3) * 2, contentY + 24, contentWidth / 3 - 6, rowHeight), TFBLocalization.tr("tfb.home.manor"), b -> {
+                    applyHomeTemplate(21, 19, 3, StylePreset.TRADITIONAL, WingConfiguration.L_SHAPED);
                 }));
 
-                // Row 2: Manual Coordinate Inputs for POS1 and POS2
-                String p1Coord = sel.pos1() != null ? sel.pos1().x() + " " + sel.pos1().y() + " " + sel.pos1().z() : "";
-                UITextField p1Field = new UITextField(new UIBounds(contentX, contentY + 28, contentWidth / 4 - 4, rowHeight), p1Coord, "POS1 (X Y Z)", null);
-                tabWidgets.add(p1Field);
-
-                tabWidgets.add(new UIButton(new UIBounds(contentX + contentWidth / 4, contentY + 28, contentWidth / 4 - 4, rowHeight), "Apply POS1", b -> {
-                    com.x64Dynamics.tfb.geometry.Vec3i p = parseVec3i(p1Field.text());
-                    if (p != null) {
-                        model.setPos1(p);
-                        rebuildTabWidgets();
-                        setStatus("Applied POS1: " + p);
-                    } else {
-                        setStatus("Invalid format: use 'X Y Z'");
-                    }
+                // Quick Navigation & Saved Projects
+                tabWidgets.add(new UIButton(new UIBounds(contentX, contentY + 54, contentWidth / 3 - 6, rowHeight), TFBLocalization.tr("tfb.home.open_editor"), b -> {
+                    tabBar.setActiveTab(WorkspaceTab.ARCHITECTURE);
                 }));
-
-                String p2Coord = sel.pos2() != null ? sel.pos2().x() + " " + sel.pos2().y() + " " + sel.pos2().z() : "";
-                UITextField p2Field = new UITextField(new UIBounds(contentX + (contentWidth / 4) * 2, contentY + 28, contentWidth / 4 - 4, rowHeight), p2Coord, "POS2 (X Y Z)", null);
-                tabWidgets.add(p2Field);
-
-                tabWidgets.add(new UIButton(new UIBounds(contentX + (contentWidth / 4) * 3, contentY + 28, contentWidth / 4 - 4, rowHeight), "Apply POS2", b -> {
-                    com.x64Dynamics.tfb.geometry.Vec3i p = parseVec3i(p2Field.text());
-                    if (p != null) {
-                        model.setPos2(p);
-                        rebuildTabWidgets();
-                        setStatus("Applied POS2: " + p);
-                    } else {
-                        setStatus("Invalid format: use 'X Y Z'");
-                    }
-                }));
-
-                // Row 3: Region operations (Expand, Contract, Center, Clear)
-                tabWidgets.add(new UIButton(new UIBounds(contentX, contentY + 56, contentWidth / 4 - 4, rowHeight), "Expand (+1)", b -> {
-                    model.expandSelection(1);
-                    rebuildTabWidgets();
-                    setStatus("Expanded selection by 1 block.");
-                }));
-                tabWidgets.add(new UIButton(new UIBounds(contentX + contentWidth / 4, contentY + 56, contentWidth / 4 - 4, rowHeight), "Contract (-1)", b -> {
-                    model.contractSelection(1);
-                    rebuildTabWidgets();
-                    setStatus("Contracted selection by 1 block.");
-                }));
-                tabWidgets.add(new UIButton(new UIBounds(contentX + (contentWidth / 4) * 2, contentY + 56, contentWidth / 4 - 4, rowHeight), "Center Origin", b -> {
-                    model.centerSelection();
-                    rebuildTabWidgets();
-                    setStatus("Centered origin inside selection.");
-                }));
-                tabWidgets.add(new UIButton(new UIBounds(contentX + (contentWidth / 4) * 3, contentY + 56, contentWidth / 4 - 4, rowHeight), "Clear All", b -> {
-                    model.clearSelection();
-                    rebuildTabWidgets();
-                    setStatus("Cleared entire selection.");
-                }));
-
-                // Row 4: Selection Stats & Grid Snap
-                String info = "Size: " + model.width() + "x" + model.height() + "x" + model.depth() + " | Vol: " + sel.volume() + " blocks";
-                tabWidgets.add(new UIButton(new UIBounds(contentX, contentY + 84, contentWidth / 2 - 4, rowHeight), info, b -> {}));
-                tabWidgets.add(new UISlider(new UIBounds(contentX + contentWidth / 2, contentY + 84, contentWidth / 2 - 4, rowHeight), "Grid Snap", 1, 16, sel.gridSnap(), sel::setGridSnap));
-            }
-
-            case MATERIALS -> {
-                List<StylePreset> presets = Arrays.asList(StylePreset.values());
-                tabWidgets.add(new UIDropdown<>(new UIBounds(contentX, contentY, contentWidth / 2 - 6, rowHeight), "Style Preset", presets, presets.indexOf(model.stylePreset()), model::setStylePreset));
-
-                materialSearchField = new UITextField(new UIBounds(contentX + contentWidth / 2, contentY, contentWidth / 2 - 6, rowHeight), "", "Search blocks...", q -> {
-                    List<BlockTaxonomyEntry> results = SearchableTaxonomyBrowser.search(q, null, null, null);
-                    setStatus("Found " + results.size() + " taxonomy blocks matching '" + q + "'.");
-                });
-                tabWidgets.add(materialSearchField);
-
-                int roleY = contentY + 28;
-                MaterialRole[] displayRoles = { MaterialRole.FOUNDATION, MaterialRole.WALL_PRIMARY, MaterialRole.ROOF_SLOPE, MaterialRole.PILLAR };
-                for (int i = 0; i < displayRoles.length; i++) {
-                    MaterialRole role = displayRoles[i];
-                    String blockName = model.activePalette().get(role).toString();
-                    tabWidgets.add(new UIButton(new UIBounds(contentX, roleY + i * 24, contentWidth - 12, rowHeight), role.name() + ": " + blockName, b -> {
-                        setStatus("Role: " + role.name() + " | Harmony: " + Math.round(model.paletteHarmonyScore() * 100) + "%");
+                List<String> saved = BlueprintStorage.listSavedNames();
+                if (!saved.isEmpty()) {
+                    UIDropdown<String> recentDropdown = new UIDropdown<>(
+                        new UIBounds(contentX + contentWidth / 3, contentY + 54, contentWidth / 3 - 6, rowHeight),
+                        "Recent", saved, 0, name -> {}
+                    );
+                    tabWidgets.add(recentDropdown);
+                    tabWidgets.add(new UIButton(new UIBounds(contentX + (contentWidth / 3) * 2, contentY + 54, contentWidth / 3 - 6, rowHeight), TFBLocalization.tr("tfb.ui.open_design"), b -> {
+                        String chosen = recentDropdown.selected();
+                        if (chosen != null) {
+                            BlueprintStorage.load(chosen).ifPresent(bp -> {
+                                model.loadBlueprint(bp);
+                                refreshHierarchy();
+                                setStatus(TFBLocalization.tr("tfb.status.loaded", chosen));
+                                tabBar.setActiveTab(WorkspaceTab.ARCHITECTURE);
+                            });
+                        }
+                    }));
+                } else {
+                    tabWidgets.add(new UIButton(new UIBounds(contentX + contentWidth / 3, contentY + 54, (contentWidth * 2) / 3 - 6, rowHeight), TFBLocalization.tr("tfb.home.no_saved"), b -> {
+                        tabBar.setActiveTab(WorkspaceTab.PROJECTS);
                     }));
                 }
             }
 
-            case TERRAIN -> {
-                List<FoundationStrategy> strategies = Arrays.asList(FoundationStrategy.values());
-                tabWidgets.add(new UIDropdown<>(new UIBounds(contentX, contentY, contentWidth - 12, rowHeight), "Foundation Strategy", strategies, strategies.indexOf(model.foundationStrategy()), model::setFoundationStrategy));
-
-                tabWidgets.add(new UIToggleButton(new UIBounds(contentX, contentY + 28, contentWidth / 2 - 6, rowHeight), "Preserve Natural Terrain", model.preserveTerrain(), model::setPreserveTerrain));
-                tabWidgets.add(new UIToggleButton(new UIBounds(contentX + contentWidth / 2, contentY + 28, contentWidth / 2 - 6, rowHeight), "Clear Vegetation", model.clearVegetation(), model::setClearVegetation));
-            }
-
-            case INTERIORS -> {
-                tabWidgets.add(new UIToggleButton(new UIBounds(contentX, contentY, contentWidth / 2 - 6, rowHeight), "Generate Room Floorplans", model.enableInteriors(), model::setEnableInteriors));
-                tabWidgets.add(new UIToggleButton(new UIBounds(contentX + contentWidth / 2, contentY, contentWidth / 2 - 6, rowHeight), "Procedural Furnishing", model.furnishRooms(), model::setFurnishRooms));
-                tabWidgets.add(new UISlider(new UIBounds(contentX, contentY + 28, contentWidth - 12, rowHeight), "Furnishing Density (%)", 10, 100, (int) (model.furnishingDensity() * 100), val -> model.setFurnishingDensity(val / 100.0f)));
-            }
-
-            case CONSTRUCTION -> {
-                List<PreviewFilterMode> filterModes = Arrays.asList(PreviewFilterMode.values());
-                tabWidgets.add(new UIDropdown<>(new UIBounds(contentX, contentY, contentWidth / 2 - 6, rowHeight), "Preview Layer", filterModes, filterModes.indexOf(model.previewBuffer().filterMode()), model.previewBuffer()::setFilterMode));
-
-                tabWidgets.add(new UIToggleButton(new UIBounds(contentX + contentWidth / 2, contentY, contentWidth / 2 - 6, rowHeight), "Instant Build", model.instantBuild(), model::setInstantBuild));
-
-                tabWidgets.add(new UISlider(new UIBounds(contentX, contentY + 28, contentWidth / 2 - 6, rowHeight), "Rate (blocks/t)", 1, 512, model.blocksPerTick(), model::setBlocksPerTick));
-                tabWidgets.add(new UISlider(new UIBounds(contentX + contentWidth / 2, contentY + 28, contentWidth / 2 - 6, rowHeight), "Tick Budget (ms)", 1, 50, model.tickBudgetMs(), model::setTickBudgetMs));
-
-                tabWidgets.add(new UIButton(new UIBounds(contentX, contentY + 56, contentWidth / 3 - 6, rowHeight), "Pause Build", b -> setStatus("Build paused.")));
-                tabWidgets.add(new UIButton(new UIBounds(contentX + contentWidth / 3, contentY + 56, contentWidth / 3 - 6, rowHeight), "Resume Build", b -> setStatus("Build resumed.")));
-                tabWidgets.add(new UIButton(new UIBounds(contentX + (contentWidth / 3) * 2, contentY + 56, contentWidth / 3 - 6, rowHeight), "Cancel Build", b -> setStatus("Build cancelled.")));
-            }
-
-            case EDITING -> {
-                tabWidgets.add(new UIButton(new UIBounds(contentX, contentY, contentWidth / 4 - 6, rowHeight), "Rotate 90° CW", b -> {
-                    model.setRotation(model.rotation() == Rotation.NONE ? Rotation.CLOCKWISE_90 : (model.rotation() == Rotation.CLOCKWISE_90 ? Rotation.CLOCKWISE_180 : (model.rotation() == Rotation.CLOCKWISE_180 ? Rotation.COUNTERCLOCKWISE_90 : Rotation.NONE)));
-                    setStatus("Rotated design.");
+            case ARCHITECTURE -> {
+                // Row 1: Essential Home Dimensions & Floors
+                tabWidgets.add(new UISlider(new UIBounds(contentX, contentY, contentWidth / 3 - 6, rowHeight), TFBLocalization.tr("tfb.ui.width"), 7, 48, model.width(), w -> {
+                    model.setWidth(w);
+                    refreshHierarchy();
                 }));
-                tabWidgets.add(new UIButton(new UIBounds(contentX + contentWidth / 4, contentY, contentWidth / 4 - 6, rowHeight), "Mirror X", b -> {
-                    model.setMirrorAxis(model.mirrorAxis() == Axis.X ? null : Axis.X);
-                    setStatus("Toggled X mirror.");
+                tabWidgets.add(new UISlider(new UIBounds(contentX + contentWidth / 3, contentY, contentWidth / 3 - 6, rowHeight), TFBLocalization.tr("tfb.ui.depth"), 7, 48, model.depth(), d -> {
+                    model.setDepth(d);
+                    refreshHierarchy();
                 }));
-                tabWidgets.add(new UIButton(new UIBounds(contentX + (contentWidth / 4) * 2, contentY, contentWidth / 4 - 6, rowHeight), "Mirror Z", b -> {
-                    model.setMirrorAxis(model.mirrorAxis() == Axis.Z ? null : Axis.Z);
-                    setStatus("Toggled Z mirror.");
-                }));
-                tabWidgets.add(new UIButton(new UIBounds(contentX + (contentWidth / 4) * 3, contentY, contentWidth / 4 - 6, rowHeight), "Reset Transform", b -> {
-                    model.setRotation(Rotation.NONE);
-                    model.setMirrorAxis(null);
-                    setStatus("Reset transforms.");
+                tabWidgets.add(new UISlider(new UIBounds(contentX + (contentWidth / 3) * 2, contentY, contentWidth / 3 - 6, rowHeight), TFBLocalization.tr("tfb.ui.floors"), 0, 4, model.requestedStories(), s -> {
+                    model.setRequestedStories(s);
+                    refreshHierarchy();
                 }));
 
-                tabWidgets.add(new UISlider(new UIBounds(contentX, contentY + 28, contentWidth / 2 - 6, rowHeight), "Grid Snap", 1, 16, model.selectionManager().gridSnap(), model.selectionManager()::setGridSnap));
+                // Row 2: Style, Roof & Footprint Layout
+                List<StylePreset> styles = Arrays.asList(StylePreset.values());
+                tabWidgets.add(new UIDropdown<>(new UIBounds(contentX, contentY + 26, contentWidth / 3 - 6, rowHeight), TFBLocalization.tr("tfb.ui.style"), styles, styles.indexOf(model.stylePreset()), st -> {
+                    model.setStylePreset(st);
+                    refreshHierarchy();
+                }));
+
+                List<RoofGenerator.RoofType> roofShapes = Arrays.asList(RoofGenerator.RoofType.values());
+                tabWidgets.add(new UIDropdown<>(new UIBounds(contentX + contentWidth / 3, contentY + 26, contentWidth / 3 - 6, rowHeight), TFBLocalization.tr("tfb.ui.roof"), roofShapes, roofShapes.indexOf(model.roofShape()), rf -> {
+                    model.setRoofShape(rf);
+                    refreshHierarchy();
+                }));
+
+                List<WingConfiguration> wingConfigs = Arrays.asList(WingConfiguration.values());
+                tabWidgets.add(new UIDropdown<>(new UIBounds(contentX + (contentWidth / 3) * 2, contentY + 26, contentWidth / 3 - 6, rowHeight), TFBLocalization.tr("tfb.ui.layout"), wingConfigs, wingConfigs.indexOf(model.wingConfiguration()), wc -> {
+                    model.setWingConfiguration(wc);
+                    refreshHierarchy();
+                }));
+
+                // Row 3: Essential Home Features & Variation
+                tabWidgets.add(new UIToggleButton(new UIBounds(contentX, contentY + 52, contentWidth / 4 - 4, rowHeight), TFBLocalization.tr("tfb.ui.furnish"), model.furnishRooms(), v -> {
+                    model.setFurnishRooms(v);
+                    refreshHierarchy();
+                }));
+                tabWidgets.add(new UIToggleButton(new UIBounds(contentX + contentWidth / 4, contentY + 52, contentWidth / 4 - 4, rowHeight), TFBLocalization.tr("tfb.ui.porch_garden"), model.addPorchAndGarden(), v -> {
+                    model.setAddPorchAndGarden(v);
+                    refreshHierarchy();
+                }));
+                tabWidgets.add(new UIToggleButton(new UIBounds(contentX + (contentWidth / 4) * 2, contentY + 52, contentWidth / 4 - 4, rowHeight), TFBLocalization.tr("tfb.ui.chimney"), model.addChimney(), v -> {
+                    model.setAddChimney(v);
+                    refreshHierarchy();
+                }));
+                tabWidgets.add(new UIButton(new UIBounds(contentX + (contentWidth / 4) * 3, contentY + 52, contentWidth / 4 - 4, rowHeight), TFBLocalization.tr("tfb.ui.new_variation"), b -> {
+                    model.randomizeSeed();
+                    refreshHierarchy();
+                    setStatus("Generated new home variation (seed " + model.proceduralSeed() + ").");
+                }));
+
+                // Row 4: Integrated World Selection Actions
+                WorldSelectionManager sel = model.selectionManager();
+                tabWidgets.add(new UIButton(new UIBounds(contentX, contentY + 78, contentWidth / 4 - 4, rowHeight), TFBLocalization.tr("tfb.ui.expand"), b -> {
+                    model.expandSelection(1);
+                    rebuildTabWidgets();
+                }));
+                tabWidgets.add(new UIButton(new UIBounds(contentX + contentWidth / 4, contentY + 78, contentWidth / 4 - 4, rowHeight), TFBLocalization.tr("tfb.ui.contract"), b -> {
+                    model.contractSelection(1);
+                    rebuildTabWidgets();
+                }));
+                tabWidgets.add(new UIButton(new UIBounds(contentX + (contentWidth / 4) * 2, contentY + 78, contentWidth / 4 - 4, rowHeight), TFBLocalization.tr("tfb.ui.center"), b -> {
+                    model.centerSelection();
+                    rebuildTabWidgets();
+                }));
+                tabWidgets.add(new UIButton(new UIBounds(contentX + (contentWidth / 4) * 3, contentY + 78, contentWidth / 4 - 4, rowHeight), TFBLocalization.tr("tfb.ui.clear"), b -> {
+                    model.clearSelection();
+                    rebuildTabWidgets();
+                }));
             }
 
-            case BLUEPRINTS -> {
+            case MATERIALS -> {
+                List<StylePreset> styles = Arrays.asList(StylePreset.values());
+                tabWidgets.add(new UIDropdown<>(new UIBounds(contentX, contentY, contentWidth / 2 - 6, rowHeight), TFBLocalization.tr("tfb.ui.style"), styles, styles.indexOf(model.stylePreset()), preset -> {
+                    model.setStylePreset(preset);
+                    rebuildTabWidgets();
+                    setStatus("Applied style: " + preset.displayName());
+                }));
+
+                int discoveredCount = BlockTaxonomyRegistry.getInstance().all().size();
+                tabWidgets.add(new UIButton(new UIBounds(contentX + contentWidth / 2, contentY, contentWidth / 2 - 6, rowHeight),
+                    "Discovered Blocks: " + discoveredCount + " (Harmony: " + Math.round(model.paletteHarmonyScore() * 100) + "%)", b -> {}));
+
+                materialSearchField = new UITextField(new UIBounds(contentX, contentY + 26, contentWidth / 2 - 6, rowHeight), "", "Search vanilla & modded blocks...", null);
+                tabWidgets.add(materialSearchField);
+
+                List<BlockTaxonomyEntry> results = SearchableTaxonomyBrowser.search(materialSearchField.text(), null, null, null);
+                UIScrollList<BlockTaxonomyEntry> matList = new UIScrollList<>(
+                    new UIBounds(contentX, contentY + 50, contentWidth - 6, 56), 14, results,
+                    (entry, idx) -> {
+                        model.activePalette().set(MaterialRole.WALL_PRIMARY, entry.block());
+                        model.generatePreview();
+                        setStatus("Overrode primary wall: " + entry.block().asString());
+                    }
+                );
+                matList.setLabelProvider(e -> e.block().asString() + " [" + e.substance().name() + "]");
+                tabWidgets.add(matList);
+
+                tabWidgets.add(new UIButton(new UIBounds(contentX + contentWidth / 2, contentY + 26, contentWidth / 2 - 6, rowHeight), "Search / Reset", b -> {
+                    matList.setItems(SearchableTaxonomyBrowser.search(materialSearchField.text(), null, null, null));
+                }));
+            }
+
+            case LIBRARY -> {
+                tabWidgets.add(new UIButton(new UIBounds(contentX, contentY, contentWidth - 6, rowHeight),
+                    "Active Tool: " + (model.activeBrush() != null ? model.activeBrush().displayName() : "None") + " — Select a category & tool on the left.", b -> {}));
+                tabWidgets.add(new UISlider(new UIBounds(contentX, contentY + 28, contentWidth / 3 - 6, rowHeight), TFBLocalization.tr("tfb.ui.width"), 3, 64, model.width(), model::setWidth));
+                tabWidgets.add(new UISlider(new UIBounds(contentX + contentWidth / 3, contentY + 28, contentWidth / 3 - 6, rowHeight), "Height", 3, 48, model.height(), model::setHeight));
+                tabWidgets.add(new UISlider(new UIBounds(contentX + (contentWidth / 3) * 2, contentY + 28, contentWidth / 3 - 6, rowHeight), TFBLocalization.tr("tfb.ui.depth"), 3, 64, model.depth(), model::setDepth));
+            }
+
+            case PROJECTS -> {
                 blueprintNameField = new UITextField(new UIBounds(contentX, contentY, contentWidth / 2 - 6, rowHeight), "My Home Design", "Design Name", null);
                 blueprintAuthorField = new UITextField(new UIBounds(contentX + contentWidth / 2, contentY, contentWidth / 4 - 6, rowHeight), "KyroXova", "Author", null);
                 tabWidgets.add(blueprintNameField);
                 tabWidgets.add(blueprintAuthorField);
 
-                tabWidgets.add(new UIButton(new UIBounds(contentX + (contentWidth / 4) * 3, contentY, contentWidth / 4 - 6, rowHeight), "Save Design", b -> {
+                tabWidgets.add(new UIButton(new UIBounds(contentX + (contentWidth / 4) * 3, contentY, contentWidth / 4 - 6, rowHeight), TFBLocalization.tr("tfb.ui.save_design"), b -> {
                     ParametricBlueprint bp = model.toBlueprint(blueprintNameField.text(), blueprintAuthorField.text());
                     try {
-                        com.x64Dynamics.tfb.persistence.BlueprintStorage.save(bp);
-                        setStatus("Saved home design: " + bp.metadata().name());
+                        BlueprintStorage.save(bp);
+                        setStatus(TFBLocalization.tr("tfb.status.saved", bp.metadata().name()));
                         rebuildTabWidgets();
                     } catch (Exception ex) {
                         setStatus("Save failed: " + ex.getMessage());
                     }
                 }));
 
-                List<String> savedNames = com.x64Dynamics.tfb.persistence.BlueprintStorage.listSavedNames();
+                List<String> savedNames = BlueprintStorage.listSavedNames();
                 if (!savedNames.isEmpty()) {
                     UIDropdown<String> savedDropdown = new UIDropdown<>(
                         new UIBounds(contentX, contentY + 28, (contentWidth * 3) / 4 - 6, rowHeight),
-                        "Saved Designs",
-                        savedNames,
-                        0,
-                        name -> {}
+                        "Saved Designs", savedNames, 0, name -> {}
                     );
                     tabWidgets.add(savedDropdown);
-                    tabWidgets.add(new UIButton(new UIBounds(contentX + (contentWidth * 3) / 4, contentY + 28, contentWidth / 4 - 6, rowHeight), "Open Design", b -> {
+                    tabWidgets.add(new UIButton(new UIBounds(contentX + (contentWidth * 3) / 4, contentY + 28, contentWidth / 4 - 6, rowHeight), TFBLocalization.tr("tfb.ui.open_design"), b -> {
                         String chosen = savedDropdown.selected();
                         if (chosen != null) {
-                            com.x64Dynamics.tfb.persistence.BlueprintStorage.load(chosen).ifPresentOrElse(bp -> {
+                            BlueprintStorage.load(chosen).ifPresentOrElse(bp -> {
                                 model.loadBlueprint(bp);
-                                setStatus("Loaded design: " + chosen);
+                                setStatus(TFBLocalization.tr("tfb.status.loaded", chosen));
                                 rebuildTabWidgets();
                             }, () -> setStatus("Could not load design: " + chosen));
                         }
                     }));
                 } else {
-                    tabWidgets.add(new UIButton(new UIBounds(contentX, contentY + 28, contentWidth - 6, rowHeight), "No saved designs yet. Click 'Save Design' above to save current home.", b -> {}));
+                    tabWidgets.add(new UIButton(new UIBounds(contentX, contentY + 28, contentWidth - 6, rowHeight), TFBLocalization.tr("tfb.home.no_saved"), b -> {}));
                 }
             }
 
             case SETTINGS -> {
-                tabWidgets.add(new UIToggleButton(new UIBounds(contentX, contentY, contentWidth / 3 - 6, rowHeight), "Architect Flight", com.x64Dynamics.tfb.ui.TFBClientController.getInstance().isFlightActive(), active -> {
-                    com.x64Dynamics.tfb.ui.TFBClientController.getInstance().setFlightActive(active);
-                    if (flightButton != null) flightButton.setLabel(active ? "Flight: ON" : "Flight: OFF");
-                    setStatus(active ? "Architect Flight activated." : "Architect Flight paused.");
+                tabWidgets.add(new UIToggleButton(new UIBounds(contentX, contentY, contentWidth / 3 - 6, rowHeight), "Architect Flight", TFBClientController.getInstance().isFlightActive(), active -> {
+                    TFBClientController.getInstance().setFlightActive(active);
+                    if (flightButton != null) flightButton.setLabel(TFBLocalization.tr(active ? "tfb.ui.flight_on" : "tfb.ui.flight_off"));
                 }));
-                tabWidgets.add(new UISlider(new UIBounds(contentX + contentWidth / 3, contentY, contentWidth / 3 - 6, rowHeight), "Flight Speed", 1, 4, Math.round(com.x64Dynamics.tfb.ui.TFBClientController.getInstance().getFlightSpeed()), speed -> {
-                    com.x64Dynamics.tfb.ui.TFBClientController.getInstance().setFlightSpeed(speed);
-                    setStatus("Flight speed set to " + speed + "x.");
+                tabWidgets.add(new UISlider(new UIBounds(contentX + contentWidth / 3, contentY, contentWidth / 3 - 6, rowHeight), "Flight Speed", 1, 4, Math.round(TFBClientController.getInstance().getFlightSpeed()), speed -> {
+                    TFBClientController.getInstance().setFlightSpeed(speed);
                 }));
-                tabWidgets.add(new UIToggleButton(new UIBounds(contentX + (contentWidth / 3) * 2, contentY, contentWidth / 3 - 6, rowHeight), "Noclip Camera", com.x64Dynamics.tfb.ui.TFBClientController.getInstance().isNoclip(), noclip -> {
-                    com.x64Dynamics.tfb.ui.TFBClientController.getInstance().setNoclip(noclip);
-                    setStatus(noclip ? "Noclip free-camera activated." : "Normal collision restored.");
-                }));
-                tabWidgets.add(new UIButton(new UIBounds(contentX, contentY + 28, contentWidth - 6, rowHeight), "Hotkeys: B=Workspace | H=Flight | P=Preview | G=Build | [/]=Speed | Ctrl+Z/Y=Undo/Redo", b -> {}));
+                tabWidgets.add(new UIToggleButton(new UIBounds(contentX + (contentWidth / 3) * 2, contentY, contentWidth / 3 - 6, rowHeight), "Noclip Camera", TFBClientController.getInstance().isNoclip(), TFBClientController.getInstance()::setNoclip));
+
+                tabWidgets.add(new UISlider(new UIBounds(contentX, contentY + 28, contentWidth / 3 - 6, rowHeight), TFBLocalization.tr("tfb.ui.grid_snap"), 1, 16, model.selectionManager().gridSnap(), model.selectionManager()::setGridSnap));
+                tabWidgets.add(new UIButton(new UIBounds(contentX + contentWidth / 3, contentY + 28, (contentWidth * 2) / 3 - 6, rowHeight), "B=Studio | H=Flight | P=Preview | G=Build | Ctrl+Z/Y=Undo/Redo", b -> {}));
             }
         }
     }
 
-    private com.x64Dynamics.tfb.geometry.Vec3i parseVec3i(String str) {
-        if (str == null) return null;
-        String[] parts = str.replaceAll("[(),]", " ").trim().split("\\s+");
-        if (parts.length >= 3) {
-            try {
-                int x = Integer.parseInt(parts[0]);
-                int y = Integer.parseInt(parts[1]);
-                int z = Integer.parseInt(parts[2]);
-                return new com.x64Dynamics.tfb.geometry.Vec3i(x, y, z);
-            } catch (NumberFormatException ignored) {}
-        }
-        return null;
+    private void applyHomeTemplate(int w, int d, int stories, StylePreset style, WingConfiguration wing) {
+        model.setActiveBrush(new ArchitecturalBrushes.HouseBrush());
+        model.setWidth(w);
+        model.setDepth(d);
+        model.setRequestedStories(stories);
+        model.setStylePreset(style);
+        model.setWingConfiguration(wing);
+        model.generatePreview();
+        refreshHierarchy();
+        setStatus("Created " + style.displayName() + " home (" + w + "x" + d + ", " + stories + "F).");
+        tabBar.setActiveTab(WorkspaceTab.ARCHITECTURE);
     }
 
     public void setStatus(String message) {
@@ -474,15 +505,11 @@ public class ArchitectWorkspaceScreen {
     }
 
     public void render(IGuiGraphicsContext graphics, int mouseX, int mouseY) {
-        int sidebarWidth = Math.max(120, width / 5);
+        int sidebarWidth = Math.max(132, width / 5);
         int headerHeight = 24;
         int tabBarHeight = 22;
         int tabContentHeight = 114;
         int footerHeight = 18;
-
-        // 1. Transparent Architectural Viewport Architecture
-        // Notice: The central viewport (from sidebarWidth to width, and below tab drawer to footer)
-        // is deliberately left completely transparent so the Minecraft world and live 3D preview remain 100% visible!
 
         // Header Bar
         graphics.fill(0, 0, width, headerHeight, 0xEE0F172A);
@@ -492,13 +519,13 @@ public class ArchitectWorkspaceScreen {
         graphics.fill(sidebarWidth, headerHeight, width, headerHeight + tabBarHeight, 0xDD0B132B);
         graphics.drawBorder(sidebarWidth, headerHeight, width - sidebarWidth, tabBarHeight, 0xFF1E293B);
 
-        // Tab Content Floating Shelf (translucent dock over the upper screen)
+        // Tab Content Floating Shelf (translucent dock leaving center world 3D preview visible)
         if (!tabWidgets.isEmpty()) {
             graphics.fill(sidebarWidth + 2, headerHeight + tabBarHeight, width - 4, headerHeight + tabBarHeight + tabContentHeight, 0xD00F172A);
             graphics.drawBorder(sidebarWidth + 2, headerHeight + tabBarHeight, width - sidebarWidth - 6, tabContentHeight, 0xFF25334D);
         }
 
-        // Left Sidebar (Brushes & Categories)
+        // Left Sidebar (Building Hierarchy or Tool Library)
         graphics.fill(0, headerHeight, sidebarWidth, height - footerHeight, 0xEE0B132B);
         graphics.drawBorder(0, headerHeight, sidebarWidth, height - headerHeight - footerHeight, 0xFF1E293B);
 
@@ -506,27 +533,42 @@ public class ArchitectWorkspaceScreen {
         graphics.fill(0, height - footerHeight, width, height, 0xEE0B0F19);
         graphics.drawBorder(0, height - footerHeight, width, footerHeight, 0xFF1E293B);
 
-        // 2. Header Title & Badges
-        graphics.drawText("TFB Home Builder", 8, 8, 0xFF38BDF8, true);
+        // Header Title & Badges
+        graphics.drawText(TFBLocalization.tr("tfb.studio.title"), 8, 8, 0xFF38BDF8, true);
         String sizeBadge = model.width() + "x" + model.depth() + " | " + model.generatedStories() + "F | " + model.generatedRoomCount() + "R";
-        graphics.drawText("[" + sizeBadge + "]", 112, 8, 0xFF94A3B8, false);
-        graphics.drawText(model.totalBlockCount() + " blks", 208, 8, 0xFF34D399, false);
+        graphics.drawText("[" + sizeBadge + "]", 78, 8, 0xFF94A3B8, false);
+        graphics.drawText(model.totalBlockCount() + " blks", 180, 8, 0xFF34D399, false);
 
-        // 3. Sidebar Category Header
-        graphics.drawText("HOME / TOOLS", 8, headerHeight + 6, 0xFF64748B, false);
+        // Sidebar Header
+        String sidebarTitle = model.activeTab() == WorkspaceTab.LIBRARY
+            ? TFBLocalization.tr("tfb.nav.library").toUpperCase(Locale.ROOT)
+            : TFBLocalization.tr("tfb.hierarchy.title");
+        graphics.drawText(sidebarTitle, 8, headerHeight + 6, 0xFF64748B, false);
 
-        // 4. Render main widgets
+        // Home Dashboard Welcome Banner
+        if (model.activeTab() == WorkspaceTab.HOME) {
+            int cx = sidebarWidth + 12;
+            graphics.drawText(TFBLocalization.tr("tfb.home.welcome"), cx, 50, 0xFFF8FAFC, true);
+            graphics.drawText(TFBLocalization.tr("tfb.home.subtitle"), cx, 62, 0xFF94A3B8, false);
+            BuildingPlan plan = model.latestPlan();
+            if (plan != null) {
+                String validStr = TFBLocalization.tr("tfb.status.valid", plan.validation().reachableRoomCount(), plan.validation().totalRoomCount());
+                graphics.drawText(TFBLocalization.tr("tfb.home.active_project") + ": " + validStr, cx, 134, 0xFF34D399, false);
+            }
+        }
+
+        // Render main widgets & active tab widgets
         for (UIWidget widget : widgets) {
             widget.render(graphics, mouseX, mouseY);
         }
-
-        // 5. Render active tab widgets
         for (UIWidget widget : tabWidgets) {
             widget.render(graphics, mouseX, mouseY);
         }
 
-        // 6. Footer Status
-        String status = (System.currentTimeMillis() < statusMessageExpiry) ? statusMessage : "Pos: " + model.origin() + " | Ready";
+        // Footer Status
+        String status = (System.currentTimeMillis() < statusMessageExpiry)
+            ? statusMessage
+            : "Pos: " + model.origin() + " | " + TFBLocalization.tr("tfb.status.ready");
         graphics.drawText(status, 8, height - footerHeight + 5, 0xFFCBD5E1, false);
     }
 

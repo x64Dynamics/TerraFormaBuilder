@@ -1,24 +1,23 @@
 package com.x64Dynamics.tfb.ui.model;
 
+import com.x64Dynamics.tfb.i18n.TFBLocalization;
+
 public enum WorkspaceTab {
-    ARCHITECTURE("Architecture", "Brushes, building types, dimensions, roofs, and facades"),
-    SELECTION("Selection", "POS1, POS2, region bounds, volume, expand/contract, and presets"),
-    MATERIALS("Materials", "Universal taxonomy, palettes, styles, and block substitution"),
-    TERRAIN("Terrain", "Foundation strategies, excavation, leveling, and adaptation"),
-    INTERIORS("Interiors", "Room layout planning, furnishing presets, and decor"),
-    CONSTRUCTION("Construction", "Build progress, scheduling, tick budgets, and checkpoints"),
-    EDITING("Editing", "Transforms, rotate, mirror, duplicate, and undo/redo history"),
-    BLUEPRINTS("Blueprints", "Save, load, import, export, and browse designs"),
-    SETTINGS("Settings", "Snapping, preview visuals, performance, and keybindings");
+    HOME("tfb.nav.home", "tfb.nav.home.desc"),
+    ARCHITECTURE("tfb.nav.design", "tfb.nav.design.desc"),
+    MATERIALS("tfb.nav.materials", "tfb.nav.materials.desc"),
+    LIBRARY("tfb.nav.library", "tfb.nav.library.desc"),
+    PROJECTS("tfb.nav.projects", "tfb.nav.projects.desc"),
+    SETTINGS("tfb.nav.settings", "tfb.nav.settings.desc");
 
-    private final String title;
-    private final String description;
+    private final String titleKey;
+    private final String descKey;
 
-    WorkspaceTab(String title, String description) {
-        this.title = title;
-        this.description = description;
+    WorkspaceTab(String titleKey, String descKey) {
+        this.titleKey = titleKey;
+        this.descKey = descKey;
     }
 
-    public String title() { return title; }
-    public String description() { return description; }
+    public String title() { return TFBLocalization.tr(titleKey); }
+    public String description() { return TFBLocalization.tr(descKey); }
 }
