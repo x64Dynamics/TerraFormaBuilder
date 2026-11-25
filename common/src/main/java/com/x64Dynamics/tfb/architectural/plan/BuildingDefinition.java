@@ -3,6 +3,7 @@ package com.x64Dynamics.tfb.architectural.plan;
 import com.x64Dynamics.tfb.architectural.RoofGenerator;
 import com.x64Dynamics.tfb.architectural.WingConfiguration;
 import com.x64Dynamics.tfb.geometry.BoundingBox3i;
+import com.x64Dynamics.tfb.geometry.Direction;
 import com.x64Dynamics.tfb.material.MaterialPalette;
 import com.x64Dynamics.tfb.material.StylePreset;
 
@@ -19,6 +20,8 @@ public record BuildingDefinition(
     MaterialPalette palette,
     RoofGenerator.RoofType roofType,
     int requestedStories,
+    int storyHeight,
+    Direction facing,
     boolean addPorchAndGarden,
     boolean addChimney,
     boolean furnishInterior,
@@ -34,6 +37,27 @@ public record BuildingDefinition(
         wingConfiguration = wingConfiguration != null ? wingConfiguration : WingConfiguration.SINGLE_RECTANGLE;
         style = style != null ? style : StylePreset.MEDIEVAL;
         roofType = roofType != null ? roofType : RoofGenerator.RoofType.GABLE;
+        storyHeight = Math.max(3, Math.min(8, storyHeight <= 0 ? 4 : storyHeight));
+        facing = (facing != null && facing != Direction.UP && facing != Direction.DOWN) ? facing : Direction.SOUTH;
         furnishingDensity = Math.max(0.0f, Math.min(1.0f, furnishingDensity));
+    }
+
+    public BuildingDefinition(
+        String id,
+        BoundingBox3i footprintBounds,
+        WingConfiguration wingConfiguration,
+        StylePreset style,
+        MaterialPalette palette,
+        RoofGenerator.RoofType roofType,
+        int requestedStories,
+        boolean addPorchAndGarden,
+        boolean addChimney,
+        boolean furnishInterior,
+        float furnishingDensity,
+        long seed
+    ) {
+        this(id, footprintBounds, wingConfiguration, style, palette, roofType,
+            requestedStories, 4, Direction.SOUTH,
+            addPorchAndGarden, addChimney, furnishInterior, furnishingDensity, seed);
     }
 }
