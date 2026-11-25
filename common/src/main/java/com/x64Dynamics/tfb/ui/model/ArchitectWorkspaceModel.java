@@ -256,6 +256,19 @@ public class ArchitectWorkspaceModel {
         return report;
     }
 
+    public synchronized com.x64Dynamics.tfb.architectural.AutoArchitectEngine.AutoDesignReport runAutoModeComplex() {
+        this.cityMode = false;
+        this.shapeEditorMode = false;
+        var report = com.x64Dynamics.tfb.architectural.AutoArchitectEngine.autoPopulateComplex(
+            origin, gridPlacement, liveLevelAccess, null, proceduralSeed
+        );
+        this.stylePreset = report.chosenStyle();
+        this.roofShape = report.chosenRoof();
+        this.wingConfiguration = report.chosenWings();
+        syncGridComplexToPreview();
+        return report;
+    }
+
     public synchronized int syncGridEditorToPreview() {
         List<PlacementTarget> targets = gridEditor.toPlacementTargets(origin, activePalette());
         this.cachedPreviewTargets = targets;

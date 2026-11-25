@@ -758,6 +758,12 @@ public class ArchitectWorkspaceScreen {
                     setStatus("Loaded Village Square (" + n + " blocks)");
                     rebuildTabWidgets();
                 }));
+
+                tabWidgets.add(new UIButton(new UIBounds(sideX, canvasY + 104, sideW, 14), "Auto Complex (Zero-Input)", b -> {
+                    var rep = model.runAutoModeComplex();
+                    setStatus("Auto Complex: " + rep.biomeTheme().name() + " / " + rep.chosenStyle().name() + " (" + gp.registry().allBuildings().size() + " blds)");
+                    rebuildTabWidgets();
+                }));
             }
 
             case GRID_EDITOR -> {

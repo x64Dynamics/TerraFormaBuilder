@@ -61,4 +61,19 @@ public class AutoArchitectEngineTest {
         var res = ctrl.generateComplex();
         assertTrue(res.targets().size() >= 300);
     }
+
+    @Test
+    public void testWorkspaceModelAutoComplexAndDesign() {
+        var model = new com.x64Dynamics.tfb.ui.model.ArchitectWorkspaceModel();
+        model.setOrigin(new Vec3i(0, 64, 0));
+        model.setLiveLevelAccess(flatWorldWithBlock("minecraft:snow_block", 64));
+        var homeReport = model.runAutoModeDesign();
+        assertEquals(AutoArchitectEngine.DetectedBiomeTheme.SNOWY_ALPINE, homeReport.biomeTheme());
+        assertFalse(model.cachedPreviewTargets().isEmpty());
+
+        var complexReport = model.runAutoModeComplex();
+        assertEquals(AutoArchitectEngine.DetectedBiomeTheme.SNOWY_ALPINE, complexReport.biomeTheme());
+        assertFalse(model.gridPlacement().registry().allBuildings().isEmpty());
+        assertFalse(model.cachedPreviewTargets().isEmpty());
+    }
 }
