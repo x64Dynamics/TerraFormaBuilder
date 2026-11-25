@@ -302,6 +302,12 @@ public final class IntelligentHomeGenerator {
                 }
             }
 
+            // Hallway/stairwell ceiling lantern on every floor for spawn-safe lighting
+            Vec3i hallLamp = new Vec3i(minX + width / 2, ceilingY, minZ + depth / 2);
+            if (!map.containsKey(hallLamp)) {
+                put(map, hallLamp, palette.get(MaterialRole.LIGHT_SOURCE).withProperty("hanging", "true"), MaterialRole.LIGHT_SOURCE);
+            }
+
             floorPlans.add(new BuildingPlan.FloorPlan(s, floorY, ceilingY, plan.plannedRooms(), plan.connections()));
         }
 

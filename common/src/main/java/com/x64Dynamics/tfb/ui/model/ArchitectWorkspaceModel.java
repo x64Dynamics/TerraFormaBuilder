@@ -227,6 +227,14 @@ public class ArchitectWorkspaceModel {
         return targets.size();
     }
 
+    public synchronized com.x64Dynamics.tfb.architectural.assets.AuthoredAsset saveGridAsAsset(String name) throws java.io.IOException {
+        String assetName = (name != null && !name.isBlank()) ? name.trim() : "grid_structure";
+        String id = assetName.toLowerCase(java.util.Locale.ROOT).replaceAll("[^a-z0-9_-]", "_");
+        var asset = gridEditor.toAuthoredAsset(id, assetName, activePalette());
+        com.x64Dynamics.tfb.architectural.assets.AuthoredAssetRegistry.getInstance().save(asset);
+        return asset;
+    }
+
     public synchronized int generateConnectedEstate() {
         this.cityMode = false;
         this.shapeEditorMode = false;

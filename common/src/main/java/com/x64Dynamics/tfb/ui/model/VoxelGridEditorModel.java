@@ -191,4 +191,32 @@ public final class VoxelGridEditorModel {
         }
         return vol;
     }
+
+    public void fillRect(int x1, int z1, int x2, int z2) {
+        int minX = Math.max(0, Math.min(x1, x2));
+        int maxX = Math.min(width - 1, Math.max(x1, x2));
+        int minZ = Math.max(0, Math.min(z1, z2));
+        int maxZ = Math.min(depth - 1, Math.max(z1, z2));
+        pushUndoSnapshot();
+        for (int x = minX; x <= maxX; x++) {
+            for (int z = minZ; z <= maxZ; z++) {
+                setWithMirror(x, activeSliceY, z, activeRole);
+            }
+        }
+    }
+
+    public com.x64Dynamics.tfb.architectural.assets.AuthoredAsset toAuthoredAsset(String id, String name, MaterialPalette palette) {
+        List<com.x64Dynamics.tfb.architectural.assets.AuthoredAsset.RelativeBlock> blocks = new ArrayList<>();
+        for (var e : cells.entrySet()) {
+            Vec3i p = e.getKey();
+            blocks.add(new com.x64Dynamics.tfb.architectural.assets.AuthoredAsset.RelativeBlock(
+                p.x(), p.y(), p.z(), palette.get(e.getValue()).asString(), e.getValue().name()
+            ));
+        }
+        return new com.x64Dynamics.tfb.architectural.assets.AuthoredAsset(
+            id, name, com.x64Dynamics.tfb.architectural.assets.AuthoredAsset.AssetCategory.BUILDING,
+            width, height, depth, 0,
+            com.x64Dynamics.tfb.geometry.Direction.SOUTH, true, blocks
+        );
+    }
 }

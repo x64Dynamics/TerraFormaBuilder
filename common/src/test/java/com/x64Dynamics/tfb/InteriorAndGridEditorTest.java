@@ -85,5 +85,9 @@ public class InteriorAndGridEditorTest {
         grid.stampHollowRoom(1);
         assertEquals(MaterialRole.FOUNDATION, grid.cellAt(1, 0, 1));
         assertEquals(MaterialRole.FLOOR, grid.cellAt(3, 0, 3));
+
+        grid.fillRect(2, 2, 4, 4);
+        var asset = grid.toAuthoredAsset("test_grid", "Test Grid", StylePreset.MEDIEVAL.createPalette());
+        assertTrue("AuthoredAsset from grid should have blocks", asset.blocks().size() >= 16);
     }
 }
