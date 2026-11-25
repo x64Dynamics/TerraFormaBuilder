@@ -46,9 +46,9 @@ public final class ClientEntrypoint implements ClientModInitializer {
         ArchitectFlightController.tick(mc);
         ArchitectWorldRenderer.renderGizmos();
 
-        if (mc.screen == null) {
+        if (mc.gui.screen() == null) {
             while (ArchitectKeyMappings.OPEN_WORKSPACE.consumeClick()) {
-                mc.setScreen(new TerraFormaScreen());
+                mc.gui.setScreen(new TerraFormaScreen());
             }
 
             while (ArchitectKeyMappings.TOGGLE_FLIGHT.consumeClick()) {
@@ -127,7 +127,7 @@ public final class ClientEntrypoint implements ClientModInitializer {
 
     public static boolean onMouseScroll(double scrollDelta) {
         Minecraft mc = Minecraft.getInstance();
-        if (mc.screen != null || mc.player == null) return false;
+        if (mc.gui.screen() != null || mc.player == null) return false;
         if (!ClientController.getInstance().isArchitectMode()) return false;
         if (scrollDelta == 0) return false;
 
@@ -150,7 +150,7 @@ public final class ClientEntrypoint implements ClientModInitializer {
 
     public static boolean onMouseButton(int button, int action) {
         Minecraft mc = Minecraft.getInstance();
-        if (mc.screen != null || mc.player == null || mc.level == null) return false;
+        if (mc.gui.screen() != null || mc.player == null || mc.level == null) return false;
         ClientController controller = ClientController.getInstance();
         if (!controller.isArchitectMode() || action != 1) return false;
 

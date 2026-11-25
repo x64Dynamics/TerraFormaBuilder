@@ -3,7 +3,7 @@ package com.x64Dynamics.tfb.client;
 import com.x64Dynamics.tfb.material.BlockIdentifier;
 import com.x64Dynamics.tfb.material.BlockStateNormalizer;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -19,7 +19,7 @@ public final class BlockStateParser {
     public static BlockState parse(BlockIdentifier id) {
         if (id == null) return Blocks.AIR.defaultBlockState();
 
-        ResourceLocation loc = ResourceLocation.fromNamespaceAndPath(id.namespace(), id.path());
+        Identifier loc = Identifier.fromNamespaceAndPath(id.namespace(), id.path());
         Block block = BuiltInRegistries.BLOCK.getValue(loc);
         if (block == null || block == Blocks.AIR && !id.path().equals("air")) {
             return Blocks.STONE.defaultBlockState();
@@ -44,7 +44,7 @@ public final class BlockStateParser {
 
     public static BlockIdentifier fromBlockState(BlockState state) {
         if (state == null) return BlockIdentifier.of("minecraft:air");
-        ResourceLocation loc = BuiltInRegistries.BLOCK.getKey(state.getBlock());
+        Identifier loc = BuiltInRegistries.BLOCK.getKey(state.getBlock());
         BlockIdentifier id = BlockIdentifier.of(loc.toString());
         for (Property<?> prop : state.getProperties()) {
             id = id.withProperty(prop.getName(), state.getValue(prop).toString().toLowerCase());

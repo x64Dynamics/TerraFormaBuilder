@@ -28,7 +28,7 @@ public final class ArchitectCommands {
             Commands.literal("tfb")
                 .then(Commands.literal("open").executes(ctx -> {
                     Minecraft mc = Minecraft.getInstance();
-                    mc.execute(() -> mc.setScreen(new TerraFormaScreen()));
+                    mc.execute(() -> mc.gui.setScreen(new TerraFormaScreen()));
                     return 1;
                 }))
                 .then(Commands.literal("mode").executes(ctx -> {

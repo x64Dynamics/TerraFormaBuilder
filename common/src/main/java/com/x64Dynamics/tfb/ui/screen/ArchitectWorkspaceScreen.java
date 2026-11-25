@@ -772,6 +772,80 @@ public class ArchitectWorkspaceScreen {
             }
 
             case GRID_EDITOR -> {
+                boolean chunkGrid = model.isModularChunkGridMode();
+                tabWidgets.add(new UIButton(
+                    new UIBounds(contentX, contentY, contentWidth / 2 - 2, rowHeight),
+                    chunkGrid ? "Mode: 5x5x5 Chunk Grid (Dreamer)" : "Mode: Voxel Painter (16x16)",
+                    b -> {
+                        model.setModularChunkGridMode(!chunkGrid);
+                        rebuildTabWidgets();
+                    }
+                ));
+
+                if (chunkGrid) {
+                    var mg = model.modularGrid();
+                    int halfRem = (contentWidth / 2 - 4) / 2;
+                    tabWidgets.add(new UIToggleButton(
+                        new UIBounds(contentX + contentWidth / 2 + 2, contentY, halfRem, rowHeight),
+                        "In-World",
+                        model.isInWorldGridMode(),
+                        v -> {
+                            model.setInWorldGridMode(v);
+                            setStatus(v ? "In-World 5x5x5 Grid ON: close GUI, Left-Click places/stacks, Right-Click removes" : "In-World 5x5x5 Grid OFF");
+                            rebuildTabWidgets();
+                        }
+                    ));
+                    tabWidgets.add(new UIButton(
+                        new UIBounds(contentX + contentWidth / 2 + halfRem + 4, contentY, halfRem, rowHeight),
+                        "Sync 3D (" + mg.modules().size() + ")",
+                        b -> {
+                            int n = model.syncModularGridToPreview();
+                            setStatus("Synced " + mg.modules().size() + " connected modules (" + n + " blocks)");
+                        }
+                    ));
+
+                    int ctrlW = (contentWidth - 12) / 5;
+                    tabWidgets.add(new UIButton(new UIBounds(contentX, contentY + 22, ctrlW, rowHeight), "Flr- (" + mg.activeFloor() + ")", b -> {
+                        mg.setActiveFloor(mg.activeFloor() - 1);
+                        rebuildTabWidgets();
+                    }));
+                    tabWidgets.add(new UIButton(new UIBounds(contentX + ctrlW + 2, contentY + 22, ctrlW, rowHeight), "Flr+ (" + mg.activeFloor() + ")", b -> {
+                        mg.setActiveFloor(mg.activeFloor() + 1);
+                        rebuildTabWidgets();
+                    }));
+                    tabWidgets.add(new UIButton(new UIBounds(contentX + (ctrlW + 2) * 2, contentY + 22, ctrlW, rowHeight), "Size " + mg.cellSize() + "x" + mg.cellHeight(), b -> {
+                        int next = mg.cellSize() >= 7 ? 5 : mg.cellSize() + 1;
+                        mg.setCellSize(next);
+                        mg.setCellHeight(next);
+                        model.syncModularGridToPreview();
+                        rebuildTabWidgets();
+                    }));
+                    tabWidgets.add(new UIButton(new UIBounds(contentX + (ctrlW + 2) * 3, contentY + 22, ctrlW, rowHeight), "+Stack", b -> {
+                        var sel = mg.selectedCell();
+                        mg.stackOrPlace(sel.gx(), sel.gz(), model.stylePreset(), model.activePalette(), model.roofShape());
+                        model.syncModularGridToPreview();
+                        rebuildTabWidgets();
+                    }));
+                    tabWidgets.add(new UIButton(new UIBounds(contentX + (ctrlW + 2) * 4, contentY + 22, ctrlW, rowHeight), "Clear", b -> {
+                        mg.clear();
+                        model.syncModularGridToPreview();
+                        rebuildTabWidgets();
+                    }));
+
+                    int canvasY = contentY + 46;
+                    int canvasSize = Math.min(contentWidth - 8, 128);
+                    tabWidgets.add(new UIModularGridCanvas(
+                        new UIBounds(contentX, canvasY, canvasSize, canvasSize),
+                        mg,
+                        model::stylePreset,
+                        model::activePalette,
+                        model::roofShape,
+                        () -> {
+                            int n = model.syncModularGridToPreview();
+                            setStatus("Grid: " + mg.modules().size() + " modules (" + n + " blocks)");
+                        }
+                    ));
+                } else {
                 var ge = model.gridEditor();
                 int toolW = (contentWidth - 12) / 5;
                 var tools = VoxelGridEditorModel.GridTool.values();
@@ -844,6 +918,7 @@ public class ArchitectWorkspaceScreen {
                     model.syncGridEditorToPreview();
                     rebuildTabWidgets();
                 }));
+                }
             }
 
             case MATERIALS -> {

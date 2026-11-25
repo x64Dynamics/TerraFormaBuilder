@@ -63,10 +63,10 @@ public final class ArchitectClientEvents {
             ArchitectWorldRenderer.renderGizmos();
 
             while (ArchitectKeyMappings.OPEN_WORKSPACE.consumeClick()) {
-                if (mc.screen instanceof TerraFormaScreen) {
-                    mc.setScreen(null);
-                } else if (mc.screen == null) {
-                    mc.setScreen(new TerraFormaScreen());
+                if (mc.gui.screen() instanceof TerraFormaScreen) {
+                    mc.gui.setScreen(null);
+                } else if (mc.gui.screen() == null) {
+                    mc.gui.setScreen(new TerraFormaScreen());
                 }
             }
 
@@ -98,7 +98,7 @@ public final class ArchitectClientEvents {
                 mc.player.sendOverlayMessage(Component.literal(String.format("§b[TFB] Flight Speed: §e%.1fx", spd)));
             }
 
-            if (ClientController.getInstance().isArchitectMode() && mc.screen == null) {
+            if (ClientController.getInstance().isArchitectMode() && mc.gui.screen() == null) {
                 BuilderHotbarModel hotbar = BuilderHotbarModel.getInstance();
                 for (int i = 0; i < 9; i++) {
                     if (mc.options.keyHotbarSlots[i].consumeClick()) {
@@ -115,7 +115,7 @@ public final class ArchitectClientEvents {
         @SubscribeEvent
         public static boolean onMouseScroll(InputEvent.MouseScrollingEvent event) {
             Minecraft mc = Minecraft.getInstance();
-            if (mc.screen != null || mc.player == null) return false;
+            if (mc.gui.screen() != null || mc.player == null) return false;
             if (!ClientController.getInstance().isArchitectMode()) return false;
 
             double scrollDelta = event.getDeltaY();
@@ -142,7 +142,7 @@ public final class ArchitectClientEvents {
         @SubscribeEvent
         public static boolean onMouseButton(InputEvent.MouseButton.Pre event) {
             Minecraft mc = Minecraft.getInstance();
-            if (mc.screen != null || mc.player == null || mc.level == null) return false;
+            if (mc.gui.screen() != null || mc.player == null || mc.level == null) return false;
             ClientController controller = ClientController.getInstance();
             if (!controller.isArchitectMode() || event.getAction() != 1) return false;
 

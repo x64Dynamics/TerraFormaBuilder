@@ -157,7 +157,7 @@ public final class ArchitectClientEvents {
                 double scroll = event.getScrollDeltaY();
                 if (scroll != 0) {
                     BuilderHotbarModel hotbar = BuilderHotbarModel.getInstance();
-                    if (Screen.hasShiftDown()) {
+                    if (mc.hasShiftDown()) {
                         if (scroll > 0) {
                             hotbar.prevPage();
                         } else {
@@ -181,7 +181,7 @@ public final class ArchitectClientEvents {
 
             ResourceLocation layerName = event.getName();
             if (VanillaGuiLayers.HOTBAR.equals(layerName)
-                    || VanillaGuiLayers.EXPERIENCE_BAR.equals(layerName)
+                    || VanillaGuiLayers.EXPERIENCE_LEVEL.equals(layerName)
                     || VanillaGuiLayers.SELECTED_ITEM_NAME.equals(layerName)) {
                 event.setCanceled(true);
             }

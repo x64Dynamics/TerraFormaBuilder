@@ -16,9 +16,9 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.client.event.RenderLevelStageEvent;
+import net.minecraftforge.client.event.RenderHighlightEvent;
 
 import java.util.List;
 
@@ -27,9 +27,7 @@ public final class ArchitectWorldRenderer {
     private ArchitectWorldRenderer() {}
 
     @SubscribeEvent
-    public static void onRenderLevelStage(RenderLevelStageEvent event) {
-        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS) return;
-
+    public static void onRenderHighlight(RenderHighlightEvent.Block event) {
         ClientController controller = ClientController.getInstance();
         if (!controller.isPreviewActive()) return;
 
@@ -38,7 +36,7 @@ public final class ArchitectWorldRenderer {
 
         Camera camera = event.getCamera();
         Vec3 camPos = camera.getPosition();
-        PoseStack poseStack = event.getPoseStack();
+        PoseStack poseStack = new PoseStack();
         MultiBufferSource.BufferSource bufferSource = mc.renderBuffers().bufferSource();
 
         BoundingBox3i box = controller.model().boundingBox();
@@ -53,7 +51,7 @@ public final class ArchitectWorldRenderer {
 
         // 1. Render primary cyan bounding box wireframe
         VertexConsumer lineConsumer = bufferSource.getBuffer(RenderType.lines());
-        ShapeRenderer.renderLineBox(poseStack, lineConsumer, minX, minY, minZ, maxX, maxY, maxZ, 0.22f, 0.74f, 0.97f, 1.0f);
+        ShapeRenderer.renderLineBox(poseStack.last(), lineConsumer, minX, minY, minZ, maxX, maxY, maxZ, 0.22f, 0.74f, 0.97f, 1.0f);
 
         // 2. Render POS1 and POS2 distinct markers
         var gp = controller.model().gridPlacement();
@@ -61,7 +59,7 @@ public final class ArchitectWorldRenderer {
             for (var bld : gp.registry().allBuildings()) {
                 BoundingBox3i gb = gp.grid().toWorldBounds(bld);
                 boolean sel = bld.id().equals(gp.selectedBuildingId());
-                ShapeRenderer.renderLineBox(poseStack, lineConsumer, gb.min().x() - camPos.x, gb.min().y() - camPos.y, gb.min().z() - camPos.z, gb.max().x() + 1.0 - camPos.x, gb.max().y() + 1.0 - camPos.y, gb.max().z() + 1.0 - camPos.z, sel ? 0.98f : 0.2f, sel ? 0.8f : 0.85f, sel ? 0.08f : 0.45f, 1.0f);
+                ShapeRenderer.renderLineBox(poseStack.last(), lineConsumer, gb.min().x() - camPos.x, gb.min().y() - camPos.y, gb.min().z() - camPos.z, gb.max().x() + 1.0 - camPos.x, gb.max().y() + 1.0 - camPos.y, gb.max().z() + 1.0 - camPos.z, sel ? 0.98f : 0.2f, sel ? 0.8f : 0.85f, sel ? 0.08f : 0.45f, 1.0f);
             }
         }
         Vec3i p1 = controller.model().selectionManager().pos1();
@@ -70,7 +68,7 @@ public final class ArchitectWorldRenderer {
             double p1y = p1.y() - camPos.y;
             double p1z = p1.z() - camPos.z;
             // Vibrant green marker for POS1
-            ShapeRenderer.renderLineBox(poseStack, lineConsumer, p1x - 0.02, p1y - 0.02, p1z - 0.02, p1x + 1.02, p1y + 1.02, p1z + 1.02, 0.15f, 0.95f, 0.25f, 1.0f);
+            ShapeRenderer.renderLineBox(poseStack.last(), lineConsumer, p1x - 0.02, p1y - 0.02, p1z - 0.02, p1x + 1.02, p1y + 1.02, p1z + 1.02, 0.15f, 0.95f, 0.25f, 1.0f);
         }
 
         Vec3i p2 = controller.model().selectionManager().pos2();
@@ -79,7 +77,7 @@ public final class ArchitectWorldRenderer {
             double p2y = p2.y() - camPos.y;
             double p2z = p2.z() - camPos.z;
             // Vibrant amber/gold marker for POS2
-            ShapeRenderer.renderLineBox(poseStack, lineConsumer, p2x - 0.02, p2y - 0.02, p2z - 0.02, p2x + 1.02, p2y + 1.02, p2z + 1.02, 1.0f, 0.65f, 0.05f, 1.0f);
+            ShapeRenderer.renderLineBox(poseStack.last(), lineConsumer, p2x - 0.02, p2y - 0.02, p2z - 0.02, p2x + 1.02, p2y + 1.02, p2z + 1.02, 1.0f, 0.65f, 0.05f, 1.0f);
         }
 
         // 3. Render face handles on center of each face
@@ -89,16 +87,16 @@ public final class ArchitectWorldRenderer {
         double hSize = 0.35;
 
         // +X & -X handles (red accent)
-        ShapeRenderer.renderLineBox(poseStack, lineConsumer, maxX - hSize, midY - hSize, midZ - hSize, maxX + hSize, midY + hSize, midZ + hSize, 0.95f, 0.2f, 0.2f, 1.0f);
-        ShapeRenderer.renderLineBox(poseStack, lineConsumer, minX - hSize, midY - hSize, midZ - hSize, minX + hSize, midY + hSize, midZ + hSize, 0.95f, 0.2f, 0.2f, 1.0f);
+        ShapeRenderer.renderLineBox(poseStack.last(), lineConsumer, maxX - hSize, midY - hSize, midZ - hSize, maxX + hSize, midY + hSize, midZ + hSize, 0.95f, 0.2f, 0.2f, 1.0f);
+        ShapeRenderer.renderLineBox(poseStack.last(), lineConsumer, minX - hSize, midY - hSize, midZ - hSize, minX + hSize, midY + hSize, midZ + hSize, 0.95f, 0.2f, 0.2f, 1.0f);
 
         // +Y & -Y handles (green accent)
-        ShapeRenderer.renderLineBox(poseStack, lineConsumer, midX - hSize, maxY - hSize, midZ - hSize, midX + hSize, maxY + hSize, midZ + hSize, 0.2f, 0.95f, 0.2f, 1.0f);
-        ShapeRenderer.renderLineBox(poseStack, lineConsumer, midX - hSize, minY - hSize, midZ - hSize, midX + hSize, minY + hSize, midZ + hSize, 0.2f, 0.95f, 0.2f, 1.0f);
+        ShapeRenderer.renderLineBox(poseStack.last(), lineConsumer, midX - hSize, maxY - hSize, midZ - hSize, midX + hSize, maxY + hSize, midZ + hSize, 0.2f, 0.95f, 0.2f, 1.0f);
+        ShapeRenderer.renderLineBox(poseStack.last(), lineConsumer, midX - hSize, minY - hSize, midZ - hSize, midX + hSize, minY + hSize, midZ + hSize, 0.2f, 0.95f, 0.2f, 1.0f);
 
         // +Z & -Z handles (blue accent)
-        ShapeRenderer.renderLineBox(poseStack, lineConsumer, midX - hSize, midY - hSize, maxZ - hSize, midX + hSize, midY + hSize, maxZ + hSize, 0.2f, 0.5f, 0.95f, 1.0f);
-        ShapeRenderer.renderLineBox(poseStack, lineConsumer, midX - hSize, midY - hSize, minZ - hSize, midX + hSize, midY + hSize, minZ + hSize, 0.2f, 0.5f, 0.95f, 1.0f);
+        ShapeRenderer.renderLineBox(poseStack.last(), lineConsumer, midX - hSize, midY - hSize, maxZ - hSize, midX + hSize, midY + hSize, maxZ + hSize, 0.2f, 0.5f, 0.95f, 1.0f);
+        ShapeRenderer.renderLineBox(poseStack.last(), lineConsumer, midX - hSize, midY - hSize, minZ - hSize, midX + hSize, midY + hSize, minZ + hSize, 0.2f, 0.5f, 0.95f, 1.0f);
 
         // 4. Render ghost preview voxels from WorldPreviewBuffer
         if (controller.model().isShapeEditorMode() && controller.model().selectedSectionId() != null) {
@@ -111,9 +109,9 @@ public final class ArchitectWorldRenderer {
                 double sy1 = sb.min().y() + sec.stories() * 4.0 + 1.03 - camPos.y;
                 double sz1 = sb.max().z() + 1.03 - camPos.z;
                 if (sec.isLocked()) {
-                    ShapeRenderer.renderLineBox(poseStack, lineConsumer, sx0, sy0, sz0, sx1, sy1, sz1, 1.0f, 0.78f, 0.1f, 1.0f);
+                    ShapeRenderer.renderLineBox(poseStack.last(), lineConsumer, sx0, sy0, sz0, sx1, sy1, sz1, 1.0f, 0.78f, 0.1f, 1.0f);
                 } else {
-                    ShapeRenderer.renderLineBox(poseStack, lineConsumer, sx0, sy0, sz0, sx1, sy1, sz1, 0.18f, 0.95f, 0.45f, 1.0f);
+                    ShapeRenderer.renderLineBox(poseStack.last(), lineConsumer, sx0, sy0, sz0, sx1, sy1, sz1, 0.18f, 0.95f, 0.45f, 1.0f);
                 }
             });
         }
@@ -135,7 +133,7 @@ public final class ArchitectWorldRenderer {
             float r = 0.35f, g = 0.85f, b = 1.0f, a = 0.55f;
             if (voxel.invalidPlacement()) {
                 r = 1.0f; g = 0.15f; b = 0.15f; a = 0.95f; // Red conflict highlight
-                ShapeRenderer.renderLineBox(poseStack, lineConsumer, vx, vy, vz, vx + 1.0, vy + 1.0, vz + 1.0, r, g, b, a);
+                ShapeRenderer.renderLineBox(poseStack.last(), lineConsumer, vx, vy, vz, vx + 1.0, vy + 1.0, vz + 1.0, r, g, b, a);
             } else {
                 // Render real 3D textured block models with orientations, stairs, slabs, and decor
                 BlockState state = BlockStateParser.parse(voxel.block());
@@ -145,7 +143,7 @@ public final class ArchitectWorldRenderer {
                     mc.getBlockRenderer().renderSingleBlock(state, poseStack, bufferSource, 0x00F000F0, OverlayTexture.NO_OVERLAY);
                     poseStack.popPose();
                 } else {
-                    ShapeRenderer.renderLineBox(poseStack, lineConsumer, vx, vy, vz, vx + 1.0, vy + 1.0, vz + 1.0, r, g, b, a);
+                    ShapeRenderer.renderLineBox(poseStack.last(), lineConsumer, vx, vy, vz, vx + 1.0, vy + 1.0, vz + 1.0, r, g, b, a);
                 }
             }
             if (++count >= maxRenderCount) break;

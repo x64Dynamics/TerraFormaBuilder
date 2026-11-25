@@ -18,7 +18,7 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.client.event.RenderLevelStageEvent;
+import net.minecraftforge.client.event.RenderHighlightEvent;
 
 import java.util.List;
 
@@ -27,9 +27,7 @@ public final class ArchitectWorldRenderer {
     private ArchitectWorldRenderer() {}
 
     @SubscribeEvent
-    public static void onRenderLevelStage(RenderLevelStageEvent event) {
-        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS) return;
-
+    public static void onRenderHighlight(RenderHighlightEvent.Block event) {
         ClientController controller = ClientController.getInstance();
         if (!controller.isPreviewActive()) return;
 

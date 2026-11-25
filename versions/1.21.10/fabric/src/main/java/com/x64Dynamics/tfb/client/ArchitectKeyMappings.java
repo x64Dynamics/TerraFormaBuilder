@@ -3,13 +3,15 @@ package com.x64Dynamics.tfb.client;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.resources.ResourceLocation;
 import org.lwjgl.glfw.GLFW;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
 
 public final class ArchitectKeyMappings {
-    public static final String CATEGORY = "key.categories.terraformabuilder";
+    public static final KeyMapping.Category CATEGORY =
+            new KeyMapping.Category(ResourceLocation.fromNamespaceAndPath("terraformabuilder", "general"));
 
     public static final KeyMapping OPEN_WORKSPACE = new KeyMapping(
             "key.terraformabuilder.workspace",

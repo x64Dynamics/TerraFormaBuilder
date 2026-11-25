@@ -20,7 +20,7 @@ import net.minecraftforge.client.event.CustomizeGuiOverlayEvent;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 import java.util.List;
@@ -141,10 +141,10 @@ public final class ArchitectClientEvents {
         }
 
         @SubscribeEvent
-        public static void onMouseScroll(InputEvent.MouseScrollingEvent event) {
+        public static boolean onMouseScroll(InputEvent.MouseScrollingEvent event) {
             Minecraft mc = Minecraft.getInstance();
-            if (mc.screen != null || mc.player == null) return;
-            if (!ClientController.getInstance().isArchitectMode()) return;
+            if (mc.screen != null || mc.player == null) return false;
+            if (!ClientController.getInstance().isArchitectMode()) return false;
 
             double scrollDelta = event.getDeltaY();
             if (scrollDelta != 0) {
@@ -162,16 +162,17 @@ public final class ArchitectClientEvents {
                         hotbar.nextSlot();
                     }
                 }
-                event.setCanceled(true);
+                return true;
             }
+            return false;
         }
 
         @SubscribeEvent
-        public static void onMouseButton(InputEvent.MouseButton.Pre event) {
+        public static boolean onMouseButton(InputEvent.MouseButton.Pre event) {
             Minecraft mc = Minecraft.getInstance();
-            if (mc.screen != null || mc.player == null || mc.level == null) return;
+            if (mc.screen != null || mc.player == null || mc.level == null) return false;
             ClientController controller = ClientController.getInstance();
-            if (!controller.isArchitectMode() || event.getAction() != 1) return;
+            if (!controller.isArchitectMode() || event.getAction() != 1) return false;
 
             if (mc.hitResult instanceof net.minecraft.world.phys.BlockHitResult bhr
                     && bhr.getType() == net.minecraft.world.phys.HitResult.Type.BLOCK) {
@@ -180,14 +181,15 @@ public final class ArchitectClientEvents {
                 if (event.getButton() == 0) {
                     controller.model().setPos1(pos);
                     mc.player.displayClientMessage(Component.literal("§a[TFB] POS1 set to (" + pos.x() + ", " + pos.y() + ", " + pos.z() + ")"), true);
-                    event.setCanceled(true);
+                    return true;
                 } else if (event.getButton() == 1) {
                     controller.model().setPos2(pos);
                     ArchitectWorkspaceModel m = controller.model();
                     mc.player.displayClientMessage(Component.literal("§6[TFB] POS2 set to (" + pos.x() + ", " + pos.y() + ", " + pos.z() + ") §8| §b" + m.width() + "x" + m.height() + "x" + m.depth()), true);
-                    event.setCanceled(true);
+                    return true;
                 }
             }
+            return false;
         }
 
         @SubscribeEvent

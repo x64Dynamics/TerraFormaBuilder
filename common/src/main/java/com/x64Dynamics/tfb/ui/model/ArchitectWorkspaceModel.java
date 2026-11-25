@@ -219,6 +219,51 @@ public class ArchitectWorkspaceModel {
     private final VoxelGridEditorModel gridEditor = new VoxelGridEditorModel(16, 16, 16);
     public VoxelGridEditorModel gridEditor() { return gridEditor; }
 
+    private final com.x64Dynamics.tfb.grid.ModularGridSession modularGrid =
+        new com.x64Dynamics.tfb.grid.ModularGridSession(new Vec3i(0, 64, 0), 5, 5);
+    private boolean modularChunkGridMode = true;
+    private boolean inWorldGridMode = false;
+    public com.x64Dynamics.tfb.grid.ModularGridSession modularGrid() { return modularGrid; }
+    public boolean isModularChunkGridMode() { return modularChunkGridMode; }
+    public void setModularChunkGridMode(boolean enabled) { this.modularChunkGridMode = enabled; }
+    public boolean isInWorldGridMode() { return inWorldGridMode; }
+    public void setInWorldGridMode(boolean enabled) {
+        this.inWorldGridMode = enabled;
+        if (enabled) {
+            this.modularChunkGridMode = true;
+            syncModularGridToPreview();
+        }
+    }
+
+    public synchronized int syncModularGridToPreview() {
+        modularGrid.setOrigin(origin);
+        gridPlacement.grid().setOrigin(origin);
+        gridPlacement.grid().setCellSize(modularGrid.cellSize());
+        gridPlacement.grid().resizeGrid(16, 16);
+        gridPlacement.registry().clear();
+        int idx = 0;
+        for (var mcCell : modularGrid.modules().values()) {
+            var c = mcCell.coord();
+            var bld = new com.x64Dynamics.tfb.grid.GridBuilding(
+                "mod_" + (++idx), c.gx(), c.gz(), origin.y() + c.gy() * modularGrid.cellHeight(),
+                modularGrid.cellSize(), modularGrid.cellSize(), 1, modularGrid.cellHeight(),
+                com.x64Dynamics.tfb.grid.GridBuilding.FootprintShape.SQUARE,
+                com.x64Dynamics.tfb.geometry.Direction.SOUTH,
+                mcCell.style(), mcCell.palette(), mcCell.roofType(),
+                com.x64Dynamics.tfb.grid.GridBuilding.BuildingFunction.RESIDENTIAL, false, proceduralSeed + idx
+            );
+            gridPlacement.registry().register(bld);
+            if (c.equals(modularGrid.selectedCell())) {
+                gridPlacement.selectBuilding(bld.id());
+            }
+        }
+        List<PlacementTarget> targets = modularGrid.buildPlacementTargets();
+        this.cachedPreviewTargets = targets;
+        this.cachedBuildPlan = new ProgressiveBuildPlan(targets);
+        this.previewBuffer.updateFromTargets(targets, liveLevelAccess);
+        return targets.size();
+    }
+
     private final com.x64Dynamics.tfb.grid.StructurePlacementController gridPlacement =
         new com.x64Dynamics.tfb.grid.StructurePlacementController(
             com.x64Dynamics.tfb.grid.GridManager.defaultProjectGrid(new Vec3i(0, 64, 0)),
@@ -459,6 +504,12 @@ public class ArchitectWorkspaceModel {
     }
 
     public void setPos1(Vec3i pos) {
+        if (inWorldGridMode && pos != null) {
+            var cell = modularGrid.worldToCell(pos);
+            modularGrid.stackOrPlace(cell.gx(), cell.gz(), stylePreset, activePalette(), roofShape);
+            syncModularGridToPreview();
+            return;
+        }
         selectionManager.setPos1(pos);
         if (selectionManager.primaryBox() != null) {
             this.origin = selectionManager.primaryBox().min();
@@ -470,6 +521,12 @@ public class ArchitectWorkspaceModel {
     }
 
     public void setPos2(Vec3i pos) {
+        if (inWorldGridMode && pos != null) {
+            var cell = modularGrid.worldToCell(pos);
+            modularGrid.removeTopModule(cell.gx(), cell.gz());
+            syncModularGridToPreview();
+            return;
+        }
         selectionManager.setPos2(pos);
         if (selectionManager.primaryBox() != null) {
             this.origin = selectionManager.primaryBox().min();

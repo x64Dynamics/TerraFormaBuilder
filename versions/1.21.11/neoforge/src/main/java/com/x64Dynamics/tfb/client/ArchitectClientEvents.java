@@ -10,7 +10,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.api.distmarker.Dist;
@@ -57,6 +57,7 @@ public final class ArchitectClientEvents {
             }
 
             ArchitectFlightController.tick(mc);
+            ArchitectWorldRenderer.renderGizmos();
 
             if (mc.screen == null) {
                 while (ArchitectKeyMappings.OPEN_WORKSPACE.consumeClick()) {
@@ -157,7 +158,7 @@ public final class ArchitectClientEvents {
                 double scroll = event.getScrollDeltaY();
                 if (scroll != 0) {
                     BuilderHotbarModel hotbar = BuilderHotbarModel.getInstance();
-                    if (Screen.hasShiftDown()) {
+                    if (mc.hasShiftDown()) {
                         if (scroll > 0) {
                             hotbar.prevPage();
                         } else {
@@ -179,9 +180,9 @@ public final class ArchitectClientEvents {
         public static void onRenderGuiLayerPre(RenderGuiLayerEvent.Pre event) {
             if (!ClientController.getInstance().isArchitectMode()) return;
 
-            ResourceLocation layerName = event.getName();
+            Identifier layerName = event.getName();
             if (VanillaGuiLayers.HOTBAR.equals(layerName)
-                    || VanillaGuiLayers.EXPERIENCE_BAR.equals(layerName)
+                    || VanillaGuiLayers.EXPERIENCE_LEVEL.equals(layerName)
                     || VanillaGuiLayers.SELECTED_ITEM_NAME.equals(layerName)) {
                 event.setCanceled(true);
             }

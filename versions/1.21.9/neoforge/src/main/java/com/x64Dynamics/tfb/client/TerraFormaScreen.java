@@ -5,6 +5,9 @@ import com.x64Dynamics.tfb.ui.rendering.IGuiGraphicsContext;
 import com.x64Dynamics.tfb.ui.screen.ArchitectWorkspaceScreen;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 
 import com.x64Dynamics.tfb.TerraFormaBuilder;
@@ -60,7 +63,7 @@ public class TerraFormaScreen extends Screen {
 
             @Override
             public void drawTooltip(String tooltip, int mx, int my) {
-                guiGraphics.renderTooltip(font, Component.literal(tooltip), mx, my);
+                guiGraphics.setTooltipForNextFrame(font, Component.literal(tooltip), mx, my);
             }
 
             @Override
@@ -88,56 +91,56 @@ public class TerraFormaScreen extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (screen.mouseClicked((int) mouseX, (int) mouseY, button)) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+        if (screen.mouseClicked((int) event.x(), (int) event.y(), event.button())) {
             return true;
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, isDoubleClick);
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        if (screen.mouseDragged((int) mouseX, (int) mouseY, button, dragX, dragY)) {
+    public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
+        if (screen.mouseDragged((int) event.x(), (int) event.y(), event.button(), dragX, dragY)) {
             return true;
         }
-        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+        return super.mouseDragged(event, dragX, dragY);
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (screen.mouseReleased((int) mouseX, (int) mouseY, button)) {
+    public boolean mouseReleased(MouseButtonEvent event) {
+        if (screen.mouseReleased((int) event.x(), (int) event.y(), event.button())) {
             return true;
         }
-        return super.mouseReleased(mouseX, mouseY, button);
+        return super.mouseReleased(event);
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (screen.keyPressed(keyCode, scanCode, modifiers)) {
+    public boolean keyPressed(KeyEvent event) {
+        if (screen.keyPressed(event.key(), event.scancode(), event.modifiers())) {
             return true;
         }
-        if (hasControlDown()) {
-            if (keyCode == 90) {
-                if (hasShiftDown()) {
+        if (this.minecraft != null && this.minecraft.hasControlDown()) {
+            if (event.key() == 90) {
+                if (this.minecraft.hasShiftDown()) {
                     ClientController.getInstance().model().redo();
                 } else {
                     ClientController.getInstance().model().undo();
                 }
                 return true;
-            } else if (keyCode == 89) {
+            } else if (event.key() == 89) {
                 ClientController.getInstance().model().redo();
                 return true;
             }
         }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(event);
     }
 
     @Override
-    public boolean charTyped(char codePoint, int modifiers) {
-        if (screen.charTyped(codePoint, modifiers)) {
+    public boolean charTyped(CharacterEvent event) {
+        if (screen.charTyped((char) event.codepoint(), 0)) {
             return true;
         }
-        return super.charTyped(codePoint, modifiers);
+        return super.charTyped(event);
     }
 
     @Override

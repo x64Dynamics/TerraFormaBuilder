@@ -60,10 +60,11 @@ public final class ArchitectClientEvents {
             }
 
             ArchitectFlightController.tick(mc);
+            ArchitectWorldRenderer.renderGizmos();
 
-            if (mc.screen == null) {
+            if (mc.gui.screen() == null) {
                 while (ArchitectKeyMappings.OPEN_WORKSPACE.consumeClick()) {
-                    mc.setScreen(new TerraFormaScreen());
+                    mc.gui.setScreen(new TerraFormaScreen());
                 }
 
                 while (ArchitectKeyMappings.TOGGLE_FLIGHT.consumeClick()) {
@@ -141,7 +142,7 @@ public final class ArchitectClientEvents {
             if (!controller.isArchitectMode()) return;
 
             Minecraft mc = Minecraft.getInstance();
-            if (mc.screen == null && mc.player != null) {
+            if (mc.gui.screen() == null && mc.player != null) {
                 double scroll = event.getScrollDeltaY();
                 if (scroll != 0) {
                     BuilderHotbarModel hotbar = BuilderHotbarModel.getInstance();
@@ -183,7 +184,7 @@ public final class ArchitectClientEvents {
         @SubscribeEvent
         public static void onMouseButton(InputEvent.MouseButton.Pre event) {
             Minecraft mc = Minecraft.getInstance();
-            if (mc.screen != null || mc.player == null || mc.level == null) return;
+            if (mc.gui.screen() != null || mc.player == null || mc.level == null) return;
             ClientController controller = ClientController.getInstance();
             if (!controller.isArchitectMode() || event.getAction() != 1) return;
 

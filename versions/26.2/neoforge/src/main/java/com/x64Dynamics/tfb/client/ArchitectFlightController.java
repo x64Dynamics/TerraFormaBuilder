@@ -20,10 +20,10 @@ public final class ArchitectFlightController {
         boolean architectMode = controller.isArchitectMode();
         controller.model().cameraController().setActive(architectMode);
         if (architectMode) controller.model().cameraController().tick(0.05f);
-        boolean detachMouse = architectMode && controller.isGridMouseDetached() && mc.screen == null;
+        boolean detachMouse = architectMode && controller.isGridMouseDetached() && mc.gui.screen() == null;
         if (detachMouse && mc.mouseHandler.isMouseGrabbed()) {
             mc.mouseHandler.releaseMouse();
-        } else if (!detachMouse && wasGridMouseDetached && mc.screen == null && !mc.mouseHandler.isMouseGrabbed()) {
+        } else if (!detachMouse && wasGridMouseDetached && mc.gui.screen() == null && !mc.mouseHandler.isMouseGrabbed()) {
             mc.mouseHandler.grabMouse();
         }
         wasGridMouseDetached = detachMouse;
@@ -48,7 +48,7 @@ public final class ArchitectFlightController {
         mc.player.getAbilities().flying = true;
         mc.player.resetFallDistance();
 
-        if (mc.screen != null) {
+        if (mc.gui.screen() != null) {
             mc.player.setDeltaMovement(0, 0, 0);
             return;
         }

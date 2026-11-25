@@ -27,8 +27,7 @@ public final class ArchitectWorldRenderer {
     private ArchitectWorldRenderer() {}
 
     @SubscribeEvent
-    public static void onRenderLevelStage(RenderLevelStageEvent event) {
-        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS) return;
+    public static void onRenderLevelStage(RenderLevelStageEvent.AfterTranslucentBlocks event) {
 
         ClientController controller = ClientController.getInstance();
         if (!controller.isPreviewActive()) return;

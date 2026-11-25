@@ -59,7 +59,7 @@ public final class ArchitectFlightController {
         float multiplier = 1.0f;
         if (mc.options.keySprint.isDown()) {
             multiplier = 2.5f;
-        } else if (Screen.hasAltDown()) {
+        } else if (mc.hasAltDown()) {
             multiplier = 0.25f;
         }
 
@@ -101,7 +101,7 @@ public final class ArchitectFlightController {
         }
 
         mc.player.setDeltaMovement(moveX, moveY, moveZ);
-        mc.player.hasImpulse = true;
+        mc.player.needsSync = true;
     }
 
     public static void restorePreviousState(Minecraft mc) {
