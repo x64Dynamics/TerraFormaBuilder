@@ -8,7 +8,7 @@ import com.x64Dynamics.tfb.ui.hotbar.BuilderHotbarSlot;
 import com.x64Dynamics.tfb.ui.model.ArchitectWorkspaceModel;
 import net.fabricmc.api.ClientModInitializer;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.Level;
@@ -44,35 +44,23 @@ public final class ClientEntrypoint implements ClientModInitializer {
             while (TFBKeyMappings.TOGGLE_FLIGHT.consumeClick()) {
                 TFBClientController.getInstance().toggleFlight();
                 boolean active = TFBClientController.getInstance().isFlightActive();
-                mc.player.displayClientMessage(
-                    Component.literal("§b[TFB] Architect Flight: " + (active ? "§aEnabled" : "§cDisabled")),
-                    true
-                );
+                mc.player.sendOverlayMessage(Component.literal("§b[TFB] Architect Flight: " + (active ? "§aEnabled" : "§cDisabled")));
             }
 
             while (TFBKeyMappings.SPEED_UP.consumeClick()) {
                 TFBClientController.getInstance().adjustFlightSpeed(0.2f);
-                mc.player.displayClientMessage(
-                    Component.literal(String.format("§b[TFB] Flight Speed: §e%.1fx", TFBClientController.getInstance().getFlightSpeed())),
-                    true
-                );
+                mc.player.sendOverlayMessage(Component.literal(String.format("§b[TFB] Flight Speed: §e%.1fx", TFBClientController.getInstance().getFlightSpeed())));
             }
 
             while (TFBKeyMappings.SPEED_DOWN.consumeClick()) {
                 TFBClientController.getInstance().adjustFlightSpeed(-0.2f);
-                mc.player.displayClientMessage(
-                    Component.literal(String.format("§b[TFB] Flight Speed: §e%.1fx", TFBClientController.getInstance().getFlightSpeed())),
-                    true
-                );
+                mc.player.sendOverlayMessage(Component.literal(String.format("§b[TFB] Flight Speed: §e%.1fx", TFBClientController.getInstance().getFlightSpeed())));
             }
 
             while (TFBKeyMappings.TOGGLE_PREVIEW.consumeClick()) {
                 TFBClientController.getInstance().togglePreview();
                 boolean active = TFBClientController.getInstance().isPreviewActive();
-                mc.player.displayClientMessage(
-                    Component.literal("§b[TFB] In-World Preview: " + (active ? "§aEnabled" : "§cDisabled")),
-                    true
-                );
+                mc.player.sendOverlayMessage(Component.literal("§b[TFB] In-World Preview: " + (active ? "§aEnabled" : "§cDisabled")));
             }
 
             while (TFBKeyMappings.EXECUTE_BUILD.consumeClick()) {
@@ -81,17 +69,17 @@ public final class ClientEntrypoint implements ClientModInitializer {
 
             while (TFBKeyMappings.UNDO.consumeClick()) {
                 if (TFBClientController.getInstance().model().undo()) {
-                    mc.player.displayClientMessage(Component.literal("§e[TFB] Reverted last design operation."), true);
+                    mc.player.sendOverlayMessage(Component.literal("§e[TFB] Reverted last design operation."));
                 } else {
-                    mc.player.displayClientMessage(Component.literal("§7[TFB] Nothing to undo."), true);
+                    mc.player.sendOverlayMessage(Component.literal("§7[TFB] Nothing to undo."));
                 }
             }
 
             while (TFBKeyMappings.REDO.consumeClick()) {
                 if (TFBClientController.getInstance().model().redo()) {
-                    mc.player.displayClientMessage(Component.literal("§e[TFB] Restored undone design operation."), true);
+                    mc.player.sendOverlayMessage(Component.literal("§e[TFB] Restored undone design operation."));
                 } else {
-                    mc.player.displayClientMessage(Component.literal("§7[TFB] Nothing to redo."), true);
+                    mc.player.sendOverlayMessage(Component.literal("§7[TFB] Nothing to redo."));
                 }
             }
 
@@ -104,10 +92,7 @@ public final class ClientEntrypoint implements ClientModInitializer {
                     case COUNTERCLOCKWISE_90 -> com.x64Dynamics.tfb.geometry.Rotation.NONE;
                 };
                 model.setRotation(next);
-                mc.player.displayClientMessage(
-                    Component.literal("§b[TFB] Rotation: §e" + next.name()),
-                    true
-                );
+                mc.player.sendOverlayMessage(Component.literal("§b[TFB] Rotation: §e" + next.name()));
             }
 
             // Builder Hotbar number keys 1–9
@@ -117,7 +102,7 @@ public final class ClientEntrypoint implements ClientModInitializer {
                         BuilderHotbarModel.getInstance().setSlot(i);
                         BuilderHotbarSlot s = BuilderHotbarModel.getInstance().getActiveSlotData();
                         if (s != null) {
-                            mc.player.displayClientMessage(Component.literal("§b[TFB Tool " + (i + 1) + "] §f" + s.name()), true);
+                            mc.player.sendOverlayMessage(Component.literal("§b[TFB Tool " + (i + 1) + "] §f" + s.name()));
                         }
                     }
                 }
@@ -125,7 +110,7 @@ public final class ClientEntrypoint implements ClientModInitializer {
         }
     }
 
-    public static void onRenderHud(GuiGraphics guiGraphics, float partialTick) {
+    public static void onRenderHud(GuiGraphicsExtractor guiGraphics, float partialTick) {
         Minecraft mc = Minecraft.getInstance();
         TFBInWorldHud.render(guiGraphics, mc);
     }
@@ -137,7 +122,7 @@ public final class ClientEntrypoint implements ClientModInitializer {
         if (scrollDelta == 0) return false;
 
         BuilderHotbarModel hotbar = BuilderHotbarModel.getInstance();
-        if (net.minecraft.client.gui.screens.Screen.hasShiftDown()) {
+        if (Minecraft.getInstance().hasShiftDown()) {
             if (scrollDelta > 0) {
                 hotbar.prevPage();
             } else {
@@ -153,17 +138,14 @@ public final class ClientEntrypoint implements ClientModInitializer {
         return true;
     }
 
-    private static void executeBuild(Minecraft mc) {
+    public static void executeBuild(Minecraft mc) {
         Level level = mc.level;
         if (level == null || mc.player == null) return;
 
         ArchitectWorkspaceModel model = TFBClientController.getInstance().model();
         List<PlacementTarget> targets = model.cachedPreviewTargets();
             if (targets.isEmpty()) {
-                mc.player.displayClientMessage(
-                    Component.nullToEmpty("§c[TFB] Build failed: No preview blocks available! Set POS1/POS2 or configure a brush in Workspace [B]."),
-                    false
-                );
+                mc.player.sendSystemMessage(Component.nullToEmpty("§c[TFB] Build failed: No preview blocks available! Set POS1/POS2 or configure a brush in Workspace [B]."));
                 return;
             }
 
@@ -195,10 +177,7 @@ public final class ClientEntrypoint implements ClientModInitializer {
                         serverLevel.playSound(null, mc.player.getX(), mc.player.getY(), mc.player.getZ(),
                             net.minecraft.sounds.SoundEvents.ANVIL_USE, net.minecraft.sounds.SoundSource.BLOCKS, 1.0f, 1.0f);
                         mc.execute(() -> {
-                            mc.player.displayClientMessage(
-                                Component.nullToEmpty("§a[TFB] Construction complete! Successfully placed " + finalPlaced + " blocks with server lighting."),
-                                false
-                            );
+                            mc.player.sendSystemMessage(Component.nullToEmpty("§a[TFB] Construction complete! Successfully placed " + finalPlaced + " blocks with server lighting."));
                         });
                     });
                     return;
@@ -215,9 +194,6 @@ public final class ClientEntrypoint implements ClientModInitializer {
                 }
             }
 
-            mc.player.displayClientMessage(
-                Component.nullToEmpty("§a[TFB] Construction complete! Successfully placed " + placed + " client blocks."),
-                false
-            );
+            mc.player.sendSystemMessage(Component.nullToEmpty("§a[TFB] Construction complete! Successfully placed " + placed + " client blocks."));
         }
 }

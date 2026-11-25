@@ -10,7 +10,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.api.distmarker.Dist;
@@ -33,6 +33,9 @@ public final class TFBClientEvents {
     public static class ModEvents {
         @SubscribeEvent
         public static void onRegisterKeyMappings(RegisterKeyMappingsEvent event) {
+            event.registerCategory(TFBKeyMappings.CATEGORY);
+            event.registerCategory(TFBKeyMappings.CATEGORY);
+            event.registerCategory(TFBKeyMappings.CATEGORY);
             for (var key : TFBKeyMappings.ALL) {
                 event.register(key);
             }
@@ -56,35 +59,23 @@ public final class TFBClientEvents {
                 while (TFBKeyMappings.TOGGLE_FLIGHT.consumeClick()) {
                     TFBClientController.getInstance().toggleFlight();
                     boolean active = TFBClientController.getInstance().isFlightActive();
-                    mc.player.displayClientMessage(
-                        Component.literal("§b[TFB] Architect Flight: " + (active ? "§aEnabled" : "§cDisabled")),
-                        true
-                    );
+                    mc.player.sendOverlayMessage(Component.literal("§b[TFB] Architect Flight: " + (active ? "§aEnabled" : "§cDisabled")));
                 }
 
                 while (TFBKeyMappings.SPEED_UP.consumeClick()) {
                     TFBClientController.getInstance().adjustFlightSpeed(0.2f);
-                    mc.player.displayClientMessage(
-                        Component.literal(String.format("§b[TFB] Flight Speed: §e%.1fx", TFBClientController.getInstance().getFlightSpeed())),
-                        true
-                    );
+                    mc.player.sendOverlayMessage(Component.literal(String.format("§b[TFB] Flight Speed: §e%.1fx", TFBClientController.getInstance().getFlightSpeed())));
                 }
 
                 while (TFBKeyMappings.SPEED_DOWN.consumeClick()) {
                     TFBClientController.getInstance().adjustFlightSpeed(-0.2f);
-                    mc.player.displayClientMessage(
-                        Component.literal(String.format("§b[TFB] Flight Speed: §e%.1fx", TFBClientController.getInstance().getFlightSpeed())),
-                        true
-                    );
+                    mc.player.sendOverlayMessage(Component.literal(String.format("§b[TFB] Flight Speed: §e%.1fx", TFBClientController.getInstance().getFlightSpeed())));
                 }
 
                 while (TFBKeyMappings.TOGGLE_PREVIEW.consumeClick()) {
                     TFBClientController.getInstance().togglePreview();
                     boolean active = TFBClientController.getInstance().isPreviewActive();
-                    mc.player.displayClientMessage(
-                        Component.literal("§b[TFB] In-World Preview: " + (active ? "§aEnabled" : "§cDisabled")),
-                        true
-                    );
+                    mc.player.sendOverlayMessage(Component.literal("§b[TFB] In-World Preview: " + (active ? "§aEnabled" : "§cDisabled")));
                 }
 
                 while (TFBKeyMappings.EXECUTE_BUILD.consumeClick()) {
@@ -93,17 +84,17 @@ public final class TFBClientEvents {
 
                 while (TFBKeyMappings.UNDO.consumeClick()) {
                     if (TFBClientController.getInstance().model().undo()) {
-                        mc.player.displayClientMessage(Component.literal("§e[TFB] Reverted last design operation."), true);
+                        mc.player.sendOverlayMessage(Component.literal("§e[TFB] Reverted last design operation."));
                     } else {
-                        mc.player.displayClientMessage(Component.literal("§7[TFB] Nothing to undo."), true);
+                        mc.player.sendOverlayMessage(Component.literal("§7[TFB] Nothing to undo."));
                     }
                 }
 
                 while (TFBKeyMappings.REDO.consumeClick()) {
                     if (TFBClientController.getInstance().model().redo()) {
-                        mc.player.displayClientMessage(Component.literal("§e[TFB] Restored undone design operation."), true);
+                        mc.player.sendOverlayMessage(Component.literal("§e[TFB] Restored undone design operation."));
                     } else {
-                        mc.player.displayClientMessage(Component.literal("§7[TFB] Nothing to redo."), true);
+                        mc.player.sendOverlayMessage(Component.literal("§7[TFB] Nothing to redo."));
                     }
                 }
 
@@ -116,10 +107,7 @@ public final class TFBClientEvents {
                         case COUNTERCLOCKWISE_90 -> com.x64Dynamics.tfb.geometry.Rotation.NONE;
                     };
                     model.setRotation(next);
-                    mc.player.displayClientMessage(
-                        Component.literal("§b[TFB] Rotation: §e" + next.name()),
-                        true
-                    );
+                    mc.player.sendOverlayMessage(Component.literal("§b[TFB] Rotation: §e" + next.name()));
                 }
 
                 // Builder Hotbar number keys 1–9
@@ -129,7 +117,7 @@ public final class TFBClientEvents {
                             BuilderHotbarModel.getInstance().setSlot(i);
                             BuilderHotbarSlot s = BuilderHotbarModel.getInstance().getActiveSlotData();
                             if (s != null) {
-                                mc.player.displayClientMessage(Component.literal("§b[TFB Tool " + (i + 1) + "] §f" + s.name()), true);
+                                mc.player.sendOverlayMessage(Component.literal("§b[TFB Tool " + (i + 1) + "] §f" + s.name()));
                             }
                         }
                     }
@@ -147,7 +135,7 @@ public final class TFBClientEvents {
                 double scroll = event.getScrollDeltaY();
                 if (scroll != 0) {
                     BuilderHotbarModel hotbar = BuilderHotbarModel.getInstance();
-                    if (Screen.hasShiftDown()) {
+                    if (mc.hasShiftDown()) {
                         if (scroll > 0) {
                             hotbar.prevPage();
                         } else {
@@ -169,9 +157,9 @@ public final class TFBClientEvents {
         public static void onRenderGuiLayerPre(RenderGuiLayerEvent.Pre event) {
             if (!TFBClientController.getInstance().isArchitectMode()) return;
 
-            ResourceLocation layerName = event.getName();
+            Identifier layerName = event.getName();
             if (VanillaGuiLayers.HOTBAR.equals(layerName)
-                    || VanillaGuiLayers.EXPERIENCE_BAR.equals(layerName)
+                    || VanillaGuiLayers.EXPERIENCE_LEVEL.equals(layerName)
                     || VanillaGuiLayers.SELECTED_ITEM_NAME.equals(layerName)) {
                 event.setCanceled(true);
             }
@@ -194,17 +182,14 @@ public final class TFBClientEvents {
             ArchitectFlightController.restorePreviousState(Minecraft.getInstance());
         }
 
-        private static void executeBuild(Minecraft mc) {
+        public static void executeBuild(Minecraft mc) {
             Level level = mc.level;
             if (level == null || mc.player == null) return;
 
             ArchitectWorkspaceModel model = TFBClientController.getInstance().model();
             List<PlacementTarget> targets = model.cachedPreviewTargets();
             if (targets.isEmpty()) {
-                mc.player.displayClientMessage(
-                    Component.nullToEmpty("§c[TFB] Build failed: No preview blocks available! Set POS1/POS2 or configure a brush in Workspace [B]."),
-                    false
-                );
+                mc.player.sendSystemMessage(Component.nullToEmpty("§c[TFB] Build failed: No preview blocks available! Set POS1/POS2 or configure a brush in Workspace [B]."));
                 return;
             }
 
@@ -236,10 +221,7 @@ public final class TFBClientEvents {
                         serverLevel.playSound(null, mc.player.getX(), mc.player.getY(), mc.player.getZ(),
                             net.minecraft.sounds.SoundEvents.ANVIL_USE, net.minecraft.sounds.SoundSource.BLOCKS, 1.0f, 1.0f);
                         mc.execute(() -> {
-                            mc.player.displayClientMessage(
-                                Component.nullToEmpty("§a[TFB] Construction complete! Successfully placed " + finalPlaced + " blocks with server lighting."),
-                                false
-                            );
+                            mc.player.sendSystemMessage(Component.nullToEmpty("§a[TFB] Construction complete! Successfully placed " + finalPlaced + " blocks with server lighting."));
                         });
                     });
                     return;
@@ -256,10 +238,7 @@ public final class TFBClientEvents {
                 }
             }
 
-            mc.player.displayClientMessage(
-                Component.nullToEmpty("§a[TFB] Construction complete! Successfully placed " + placed + " client blocks."),
-                false
-            );
+            mc.player.sendSystemMessage(Component.nullToEmpty("§a[TFB] Construction complete! Successfully placed " + placed + " client blocks."));
         }
     }
 }

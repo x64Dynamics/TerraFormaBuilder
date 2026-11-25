@@ -6,9 +6,9 @@ import com.x64Dynamics.tfb.ui.hotbar.BuilderHotbarModel;
 import com.x64Dynamics.tfb.ui.hotbar.BuilderHotbarSlot;
 import com.x64Dynamics.tfb.ui.model.ArchitectWorkspaceModel;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -16,7 +16,7 @@ import net.minecraft.world.item.Items;
 public final class TFBInWorldHud {
     private TFBInWorldHud() {}
 
-    public static void render(GuiGraphics g, Minecraft mc) {
+    public static void render(GuiGraphicsExtractor g, Minecraft mc) {
         TFBClientController controller = TFBClientController.getInstance();
         if (!controller.isArchitectMode() || !controller.isHudVisible()) return;
         if (mc.screen != null || mc.player == null) return;
@@ -39,7 +39,7 @@ public final class TFBInWorldHud {
 
             String pageName = BuilderHotbarModel.PAGE_NAMES[hotbarModel.getActivePage()];
             String title = "§b§lTERRAFORMABUILDER §8| §fArchitect Mode §a● ACTIVE §8| §ePg " + (hotbarModel.getActivePage() + 1) + "/4: " + pageName;
-            g.drawString(mc.font, title, bannerX + 6, bannerY + 5, 0xFFFFFFFF, true);
+            g.text(mc.font, title, bannerX + 6, bannerY + 5, 0xFFFFFFFF, true);
 
             BuilderHotbarSlot activeSlot = hotbarModel.getActiveSlotData();
             String toolName = activeSlot != null ? activeSlot.name() : "None";
@@ -47,7 +47,7 @@ public final class TFBInWorldHud {
             String row1 = "§7Tool: §f" + toolName + " §8| §7Size: §b" + workspaceModel.width() + "x" + workspaceModel.height() + "x" + workspaceModel.depth() +
                           " §8| §7Pos: §e(" + origin.x() + "," + origin.y() + "," + origin.z() + ")" +
                           " §8| §7Rot: §6" + workspaceModel.rotation().name();
-            g.drawString(mc.font, row1, bannerX + 6, bannerY + 18, 0xFFFFFFFF, false);
+            g.text(mc.font, row1, bannerX + 6, bannerY + 18, 0xFFFFFFFF, false);
 
             String flightStatus = controller.isFlightActive() ? "§aON" : "§cOFF";
             String previewStatus = controller.isPreviewActive() ? "§aON" : "§cOFF";
@@ -56,10 +56,10 @@ public final class TFBInWorldHud {
                           " §8| §7Style: §d" + workspaceModel.stylePreset().displayName() +
                           " §8| §7Blocks: §a" + workspaceModel.totalBlockCount() +
                           " §8| §7[B] Workspace";
-            g.drawString(mc.font, row2, bannerX + 6, bannerY + 29, 0xFFFFFFFF, false);
+            g.text(mc.font, row2, bannerX + 6, bannerY + 29, 0xFFFFFFFF, false);
 
             String hint = "§6▶ §f" + hotbarModel.getContextualHint();
-            g.drawString(mc.font, hint, bannerX + 6, bannerY + 41, 0xFFFFFFFF, false);
+            g.text(mc.font, hint, bannerX + 6, bannerY + 41, 0xFFFFFFFF, false);
         }
 
         // 2. Bottom Dedicated Builder Hotbar
@@ -79,9 +79,9 @@ public final class TFBInWorldHud {
                 int tx = hotbarX + p * tabW;
                 if (p == hotbarModel.getActivePage()) {
                     g.fill(tx, pageBarY, tx + tabW, hotbarY - 2, 0x4438BDF8);
-                    g.drawCenteredString(mc.font, "§b" + shortPageNames[p], tx + tabW / 2, pageBarY + 2, 0xFF38BDF8);
+                    g.centeredText(mc.font, "§b" + shortPageNames[p], tx + tabW / 2, pageBarY + 2, 0xFF38BDF8);
                 } else {
-                    g.drawCenteredString(mc.font, "§7" + shortPageNames[p], tx + tabW / 2, pageBarY + 2, 0xFF64748B);
+                    g.centeredText(mc.font, "§7" + shortPageNames[p], tx + tabW / 2, pageBarY + 2, 0xFF64748B);
                 }
             }
 
@@ -99,19 +99,19 @@ public final class TFBInWorldHud {
                 if (isSelected) {
                     g.fill(slotX, slotY, slotX + 20, slotY + 20, 0x5538BDF8);
                     drawBorder(g, slotX, slotY, 20, 20, 0xFF38BDF8);
-                    g.drawString(mc.font, String.valueOf(i + 1), slotX + 2, slotY + 1, 0xFFF59E0B, true);
+                    g.text(mc.font, String.valueOf(i + 1), slotX + 2, slotY + 1, 0xFFF59E0B, true);
                 } else {
                     g.fill(slotX, slotY, slotX + 20, slotY + 20, 0x880F172A);
                     drawBorder(g, slotX, slotY, 20, 20, 0xFF334155);
-                    g.drawString(mc.font, String.valueOf(i + 1), slotX + 2, slotY + 1, 0xFF64748B, true);
+                    g.text(mc.font, String.valueOf(i + 1), slotX + 2, slotY + 1, 0xFF64748B, true);
                 }
 
                 if (slot != null) {
-                    Item item = BuiltInRegistries.ITEM.getValue(ResourceLocation.parse(slot.iconItemKey()));
+                    Item item = BuiltInRegistries.ITEM.getValue(Identifier.parse(slot.iconItemKey()));
                     if (item != null && item != Items.AIR) {
-                        g.renderItem(new ItemStack(item), slotX + 2, slotY + 2);
+                        g.item(new ItemStack(item), slotX + 2, slotY + 2);
                     } else {
-                        g.drawCenteredString(mc.font, slot.code(), slotX + 10, slotY + 8, slot.accentColor());
+                        g.centeredText(mc.font, slot.code(), slotX + 10, slotY + 8, slot.accentColor());
                     }
                 }
             }
@@ -119,7 +119,7 @@ public final class TFBInWorldHud {
             // Floating Tooltip Pill over Active Slot
             BuilderHotbarSlot activeSlot = hotbarModel.getActiveSlotData();
             if (activeSlot != null && controller.isTooltipsVisible()) {
-                Item activeItem = BuiltInRegistries.ITEM.getValue(ResourceLocation.parse(activeSlot.iconItemKey()));
+                Item activeItem = BuiltInRegistries.ITEM.getValue(Identifier.parse(activeSlot.iconItemKey()));
                 String tip = activeSlot.name() + " (" + (hotbarModel.getActiveSlot() + 1) + ")";
                 int textWidth = mc.font.width(tip);
                 int tipWidth = textWidth + 28;
@@ -129,14 +129,14 @@ public final class TFBInWorldHud {
                 g.fill(tipX, tipY, tipX + tipWidth, tipY + 16, 0xEE0F172A);
                 drawBorder(g, tipX, tipY, tipWidth, 16, 0xFF38BDF8);
                 if (activeItem != null && activeItem != Items.AIR) {
-                    g.renderItem(new ItemStack(activeItem), tipX + 2, tipY);
+                    g.item(new ItemStack(activeItem), tipX + 2, tipY);
                 }
-                g.drawString(mc.font, tip, tipX + 20, tipY + 4, 0xFFFFFFFF, false);
+                g.text(mc.font, tip, tipX + 20, tipY + 4, 0xFFFFFFFF, false);
             }
         }
     }
 
-    private static void drawBorder(GuiGraphics g, int x, int y, int width, int height, int color) {
+    private static void drawBorder(GuiGraphicsExtractor g, int x, int y, int width, int height, int color) {
         g.fill(x, y, x + width, y + 1, color);
         g.fill(x, y + height - 1, x + width, y + height, color);
         g.fill(x, y + 1, x + 1, y + height, color);

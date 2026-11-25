@@ -9,6 +9,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(MouseHandler.class)
 public abstract class MouseHandlerMixin {
+    @Inject(method = "onPress", at = @At("HEAD"), cancellable = true)
+    private void tfb$onMousePress(long windowPointer, int button, int action, int modifiers, CallbackInfo ci) {
+        if (ClientEntrypoint.onMouseButton(button, action)) {
+            ci.cancel();
+        }
+    }
+
     @Inject(method = "onScroll", at = @At("HEAD"), cancellable = true)
     private void tfb$onMouseScroll(long windowPointer, double xOffset, double yOffset, CallbackInfo ci) {
         if (ClientEntrypoint.onMouseScroll(yOffset)) {

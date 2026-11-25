@@ -6,7 +6,8 @@
   "client": [
     "MinecraftMixin",
     "GuiMixin",
-    "MouseHandlerMixin"
+    "MouseHandlerMixin",
+    "LevelRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1

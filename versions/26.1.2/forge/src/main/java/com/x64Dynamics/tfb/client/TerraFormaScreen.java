@@ -3,15 +3,18 @@ package com.x64Dynamics.tfb.client;
 import com.x64Dynamics.tfb.ui.TFBClientController;
 import com.x64Dynamics.tfb.ui.rendering.IGuiGraphicsContext;
 import com.x64Dynamics.tfb.ui.screen.ArchitectWorkspaceScreen;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 
 public class TerraFormaScreen extends Screen {
     private final ArchitectWorkspaceScreen screen;
 
     public TerraFormaScreen() {
-        super(Component.literal("TerraFormaBuilder Architect Workspace"));
+        super(Component.literal("TerraFormaBuilder Home Studio"));
         this.screen = TFBClientController.getInstance().screen();
     }
 
@@ -19,123 +22,84 @@ public class TerraFormaScreen extends Screen {
     protected void init() {
         super.init();
         screen.setCloseCallback(this::onClose);
+        screen.setBuildCallback(() -> {
+            if (this.minecraft != null) {
+                TFBClientEvents.ForgeBusEvents.executeBuild(this.minecraft);
+            }
+        });
         screen.init(this.width, this.height);
         TFBClientController.getInstance().setArchitectMode(true);
         if (this.minecraft != null && this.minecraft.player != null) {
             com.x64Dynamics.tfb.ui.model.ArchitectWorkspaceModel model = TFBClientController.getInstance().model();
             if (model.origin().x() == 0 && model.origin().y() == 64 && model.origin().z() == 0) {
                 net.minecraft.core.BlockPos playerPos = this.minecraft.player.blockPosition();
-                com.x64Dynamics.tfb.geometry.Vec3i newOrigin = new com.x64Dynamics.tfb.geometry.Vec3i(playerPos.getX(), playerPos.getY(), playerPos.getZ());
-                model.setOrigin(newOrigin);
+                model.setOrigin(new com.x64Dynamics.tfb.geometry.Vec3i(playerPos.getX(), playerPos.getY(), playerPos.getZ()));
             }
         }
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void extractRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
         IGuiGraphicsContext ctx = new IGuiGraphicsContext() {
-            @Override
-            public void fill(int x1, int y1, int x2, int y2, int color) {
-                guiGraphics.fill(x1, y1, x2, y2, color);
+            @Override public void fill(int x1, int y1, int x2, int y2, int color) { guiGraphics.fill(x1, y1, x2, y2, color); }
+            @Override public void drawBorder(int x, int y, int w, int h, int color) {
+                guiGraphics.fill(x, y, x + w, y + 1, color);
+                guiGraphics.fill(x, y + h - 1, x + w, y + h, color);
+                guiGraphics.fill(x, y, x + 1, y + h, color);
+                guiGraphics.fill(x + w - 1, y, x + w, y + h, color);
             }
-
-            @Override
-            public void drawBorder(int x, int y, int width, int height, int color) {
-                guiGraphics.fill(x, y, x + width, y + 1, color);
-                guiGraphics.fill(x, y + height - 1, x + width, y + height, color);
-                guiGraphics.fill(x, y + 1, x + 1, y + height, color);
-                guiGraphics.fill(x + width - 1, y, x + width, y + height, color);
-            }
-
-            @Override
-            public void drawText(String text, int x, int y, int color, boolean shadow) {
-                guiGraphics.drawString(font, text, x, y, color, shadow);
-            }
-
-            @Override
-            public void drawCenteredText(String text, int centerX, int y, int color) {
-                guiGraphics.drawCenteredString(font, text, centerX, y, color);
-            }
-
-            @Override
-            public void drawTooltip(String tooltip, int mx, int my) {
-                guiGraphics.renderTooltip(font, Component.literal(tooltip), mx, my);
-            }
-
-            @Override
-            public void enableScissor(int x, int y, int width, int height) {
-                guiGraphics.enableScissor(x, y, x + width, y + height);
-            }
-
-            @Override
-            public void disableScissor() {
-                guiGraphics.disableScissor();
-            }
+            @Override public void drawText(String text, int x, int y, int color, boolean shadow) { guiGraphics.text(font, text, x, y, color, shadow); }
+            @Override public void drawCenteredText(String text, int cx, int y, int color) { guiGraphics.centeredText(font, text, cx, y, color); }
+            @Override public void drawTooltip(String tooltip, int mx, int my) { guiGraphics.setTooltipForNextFrame(font, Component.literal(tooltip), mx, my); }
+            @Override public void enableScissor(int x, int y, int w, int h) { guiGraphics.enableScissor(x, y, x + w, y + h); }
+            @Override public void disableScissor() { guiGraphics.disableScissor(); }
         };
-
         screen.render(ctx, mouseX, mouseY);
     }
 
+    @Override public void extractBackground(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {}
+    @Override public void extractTransparentBackground(GuiGraphicsExtractor guiGraphics) {}
+
     @Override
-    public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        // Deliberately empty to keep Minecraft world and 3D preview completely clear
+    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+        if (screen.mouseClicked((int) event.x(), (int) event.y(), event.button())) return true;
+        return super.mouseClicked(event, isDoubleClick);
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (screen.mouseClicked((int) mouseX, (int) mouseY, button)) {
-            return true;
-        }
-        return super.mouseClicked(mouseX, mouseY, button);
+    public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
+        if (screen.mouseDragged((int) event.x(), (int) event.y(), event.button(), dragX, dragY)) return true;
+        return super.mouseDragged(event, dragX, dragY);
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        if (screen.mouseDragged((int) mouseX, (int) mouseY, button, dragX, dragY)) {
-            return true;
-        }
-        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    public boolean mouseReleased(MouseButtonEvent event) {
+        if (screen.mouseReleased((int) event.x(), (int) event.y(), event.button())) return true;
+        return super.mouseReleased(event);
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (screen.mouseReleased((int) mouseX, (int) mouseY, button)) {
-            return true;
-        }
-        return super.mouseReleased(mouseX, mouseY, button);
-    }
-
-    @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (screen.keyPressed(keyCode, scanCode, modifiers)) {
-            return true;
-        }
-        if (hasControlDown()) {
-            if (keyCode == 90) {
-                if (hasShiftDown()) {
-                    TFBClientController.getInstance().model().redo();
-                } else {
-                    TFBClientController.getInstance().model().undo();
-                }
+    public boolean keyPressed(KeyEvent event) {
+        if (screen.keyPressed(event.key(), event.scancode(), event.modifiers())) return true;
+        if (this.minecraft != null && this.minecraft.hasControlDown()) {
+            if (event.key() == 90) {
+                if (this.minecraft.hasShiftDown()) TFBClientController.getInstance().model().redo();
+                else TFBClientController.getInstance().model().undo();
                 return true;
-            } else if (keyCode == 89) {
+            } else if (event.key() == 89) {
                 TFBClientController.getInstance().model().redo();
                 return true;
             }
         }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(event);
     }
 
     @Override
-    public boolean charTyped(char codePoint, int modifiers) {
-        if (screen.charTyped(codePoint, modifiers)) {
-            return true;
-        }
-        return super.charTyped(codePoint, modifiers);
+    public boolean charTyped(CharacterEvent event) {
+        if (screen.charTyped((char) event.codepoint(), 0)) return true;
+        return super.charTyped(event);
     }
 
     @Override
-    public boolean isPauseScreen() {
-        return false;
-    }
+    public boolean isPauseScreen() { return false; }
 }

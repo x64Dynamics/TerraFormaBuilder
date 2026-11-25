@@ -18,7 +18,7 @@ public final class Entrypoint {
 
     public Entrypoint() {
         Path configDir = FMLPaths.CONFIGDIR.get();
-        String dist = FMLEnvironment.dist != null ? FMLEnvironment.dist.name() : "UNKNOWN";
+        String dist = FMLEnvironment.getDist().name();
         LOGGER.info(String.format("[%s] Initializing %s on NeoForge (Dist: %s)",
                 TerraFormaBuilder.MOD_ID, TerraFormaBuilder.MOD_ID, dist));
 
@@ -28,7 +28,7 @@ public final class Entrypoint {
         com.x64Dynamics.tfb.city.WorldProjectStorage.setProjectsDir(configDir.resolve("terraformabuilder").resolve("projects"));
         BlockRegistryScanner.scanIfNeeded();
 
-        if (FMLEnvironment.dist == Dist.CLIENT) {
+        if (FMLEnvironment.getDist() == Dist.CLIENT) {
             LOGGER.info(String.format("[%s] Initializing client subsystems on NeoForge (Preview renderer, Workspace UI, Keybindings)",
                     TerraFormaBuilder.MOD_ID));
         }

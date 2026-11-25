@@ -36,6 +36,7 @@ public final class Entrypoint {
                     TerraFormaBuilder.MOD_ID));
             modBus.register(TFBClientEvents.ModBusEvents.class);
             NeoForge.EVENT_BUS.register(TFBClientEvents.ForgeBusEvents.class);
+            NeoForge.EVENT_BUS.register(com.x64Dynamics.tfb.client.TFBClientRenderer.class);
         }
 
         LOGGER.info(String.format("[%s] Successfully initialized on NeoForge platform.", TerraFormaBuilder.MOD_ID));

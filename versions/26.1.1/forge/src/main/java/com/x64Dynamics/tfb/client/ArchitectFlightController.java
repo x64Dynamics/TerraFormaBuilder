@@ -49,7 +49,7 @@ public final class ArchitectFlightController {
         float multiplier = 1.0f;
         if (mc.options.keySprint.isDown()) {
             multiplier = 2.5f;
-        } else if (Screen.hasAltDown()) {
+        } else if (mc.hasAltDown()) {
             multiplier = 0.25f;
         }
 
@@ -91,7 +91,7 @@ public final class ArchitectFlightController {
         }
 
         mc.player.setDeltaMovement(moveX, moveY, moveZ);
-        mc.player.hasImpulse = true;
+        mc.player.needsSync = true;
     }
 
     public static void restorePreviousState(Minecraft mc) {
@@ -102,18 +102,6 @@ public final class ArchitectFlightController {
             if (!hadMayFly) {
                 mc.player.onUpdateAbilities();
             }
-        }
-    }
-
-    public static void toggleFlight(Minecraft mc) {
-        TFBClientController controller = TFBClientController.getInstance();
-        boolean next = !controller.isFlightActive();
-        controller.setFlightActive(next);
-        if (mc.player != null) {
-            mc.player.displayClientMessage(
-                    Component.literal("§b[TFB] Architect Flight: " + (next ? "§aENABLED" : "§cDISABLED")),
-                    true
-            );
         }
     }
 }

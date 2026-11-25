@@ -115,4 +115,30 @@ public class CityDesignerTest {
         int districtCount = model.totalBlockCount();
         assertTrue("Selected district scope should be >= parcel and <= full city", districtCount >= parcelCount && districtCount <= fullCount);
     }
+
+    @Test
+    public void testTerrainGradedCityPlanningWithHeightmap() {
+        BoundingBox3i bounds = BoundingBox3i.fromOriginAndSize(new Vec3i(0, 64, 0), 48, 24, 48);
+        com.x64Dynamics.tfb.terrain.HeightmapGrid grid = new com.x64Dynamics.tfb.terrain.HeightmapGrid(bounds);
+        for (int z = 0; z < 48; z++) {
+            for (int x = 0; x < 48; x++) {
+                grid.setElevation(x, z, 64 + (x / 12));
+            }
+        }
+        WorldProject project = new WorldProject(
+            "hillside-town", "Terrace", "KyroXova", bounds,
+            SettlementPattern.MEDIEVAL_TOWN, StylePreset.MEDIEVAL, 555L
+        );
+        CityPlannerEngine.planCity(project, grid);
+        assertFalse(project.districts().isEmpty());
+        int minParcelY = project.districts().stream()
+            .flatMap(d -> d.parcels().stream())
+            .mapToInt(p -> p.bounds().min().y())
+            .min().orElse(64);
+        int maxParcelY = project.districts().stream()
+            .flatMap(d -> d.parcels().stream())
+            .mapToInt(p -> p.bounds().min().y())
+            .max().orElse(64);
+        assertTrue("Sloped heightmap should place parcels at varying base elevations", maxParcelY > minParcelY);
+    }
 }

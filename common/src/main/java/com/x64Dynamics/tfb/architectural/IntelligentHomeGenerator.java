@@ -329,6 +329,29 @@ public final class IntelligentHomeGenerator {
                 if (Math.abs(wx - doorX) >= 3) {
                     put(map, new Vec3i(wx, minY + 1, maxZ + 1), BlockIdentifier.of("minecraft:grass_block"), MaterialRole.DECORATION);
                     put(map, new Vec3i(wx, minY + 2, maxZ + 1), BlockIdentifier.of("minecraft:poppy"), MaterialRole.DECORATION);
+                    // Open trapdoor shutters flanking ground-floor windows
+                    BlockIdentifier shutter = palette.get(MaterialRole.FRAME)
+                        .withProperty("facing", "south").withProperty("open", "true").withProperty("half", "bottom");
+                    if (wx - 1 > minX) put(map, new Vec3i(wx - 1, minY + 2, maxZ + 1), shutter, MaterialRole.FRAME);
+                    if (wx + 1 < maxX) put(map, new Vec3i(wx + 1, minY + 2, maxZ + 1), shutter, MaterialRole.FRAME);
+                }
+            }
+        }
+
+        // 7. Second-Floor Balcony & Roof Dormer (on multi-story / wide single-rectangle homes)
+        if (def.wingConfiguration() == WingConfiguration.SINGLE_RECTANGLE) {
+            if (stories >= 2 && width >= 11) {
+                Vec3i balDoorPos = new Vec3i(doorX, minY + storyHeight + 1, maxZ);
+                put(map, balDoorPos, doorBase.withProperty("half", "lower"), MaterialRole.DOOR);
+                put(map, balDoorPos.add(0, 1, 0), doorBase.withProperty("half", "upper"), MaterialRole.DOOR);
+                for (PlacementTarget bt : FacadeOrnamentGenerator.generateBalcony(balDoorPos, Direction.SOUTH, 3, 2, palette)) {
+                    put(map, bt.pos(), bt.block(), bt.role());
+                }
+            }
+            if (width >= 13 && def.roofType() == RoofGenerator.RoofType.GABLE) {
+                Vec3i dormerPos = new Vec3i(doorX, wallTopY + 2, maxZ - 1);
+                for (PlacementTarget dt : AdvancedRoofFeatures.generateDormer(dormerPos, Direction.SOUTH, 3, 3, palette)) {
+                    put(map, dt.pos(), dt.block(), dt.role());
                 }
             }
         }

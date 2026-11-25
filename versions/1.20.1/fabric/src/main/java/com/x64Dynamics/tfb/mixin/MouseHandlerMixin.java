@@ -15,4 +15,11 @@ public abstract class MouseHandlerMixin {
             ci.cancel();
         }
     }
+
+    @Inject(method = "onPress", at = @At("HEAD"), cancellable = true)
+    private void tfb$onMousePress(long windowPointer, int button, int action, int modifiers, CallbackInfo ci) {
+        if (ClientEntrypoint.onMouseButton(button, action)) {
+            ci.cancel();
+        }
+    }
 }

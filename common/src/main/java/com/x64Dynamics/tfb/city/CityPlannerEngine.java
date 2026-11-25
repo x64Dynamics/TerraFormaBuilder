@@ -20,6 +20,10 @@ public final class CityPlannerEngine {
     private CityPlannerEngine() { }
 
     public static void planCity(WorldProject project) {
+        planCity(project, null);
+    }
+
+    public static void planCity(WorldProject project, com.x64Dynamics.tfb.terrain.HeightmapGrid heightmap) {
         BoundingBox3i bounds = project.bounds();
         int minX = bounds.min().x(), maxX = bounds.max().x();
         int minZ = bounds.min().z(), maxZ = bounds.max().z();
@@ -127,11 +131,30 @@ public final class CityPlannerEngine {
         project.addDistrict(dSW);
         project.addDistrict(dSE);
 
-        // 6. Generate varied BuildingPlans for every unlocked parcel
+        // 6. Generate varied BuildingPlans for every unlocked parcel (with terrain adaptation if heightmap provided)
         for (CityDistrict d : project.districts()) {
             for (CityParcel p : d.parcels()) {
                 if (!p.isLocked() || p.buildingPlan() == null) {
+                    if (heightmap != null) {
+                        int cx = (p.bounds().min().x() + p.bounds().max().x()) / 2;
+                        int cz = (p.bounds().min().z() + p.bounds().max().z()) / 2;
+                        int elev = heightmap.getElevation(cx, cz);
+                        BoundingBox3i adapted = BoundingBox3i.fromOriginAndSize(
+                            new Vec3i(p.bounds().min().x(), elev, p.bounds().min().z()),
+                            p.bounds().sizeX(), p.bounds().sizeY(), p.bounds().sizeZ()
+                        );
+                        p.setBounds(adapted);
+                    }
                     generateParcelBuilding(p, d);
+                    if (heightmap != null && p.buildingPlan() != null) {
+                        var terrainRes = com.x64Dynamics.tfb.terrain.TerrainAdapter.adapt(
+                            p.bounds(), heightmap, com.x64Dynamics.tfb.terrain.FoundationStrategy.STEPPED_TERRACE, d.style().createPalette()
+                        );
+                        List<PlacementTarget> combined = new ArrayList<>(terrainRes.foundationPlacements());
+                        combined.addAll(p.buildingPlan().targets());
+                        var bp = p.buildingPlan();
+                        p.setBuildingPlan(new BuildingPlan(bp.definition(), bp.floors(), bp.stairwells(), combined, bp.totalBounds(), bp.validation()));
+                    }
                 }
             }
         }

@@ -144,4 +144,23 @@ public class IntelligentHomeGeneratorTest {
         assertTrue(com.x64Dynamics.tfb.persistence.BlueprintStorage.listSavedNames().contains("Test_Nordic_Manor"));
         assertTrue(com.x64Dynamics.tfb.persistence.BlueprintStorage.load("Test_Nordic_Manor").isPresent());
     }
+
+    @Test
+    public void testMultiStoryFacadeShuttersBalconyAndDormer() {
+        BoundingBox3i bounds = BoundingBox3i.fromOriginAndSize(new Vec3i(0, 64, 0), 15, 16, 15);
+        IntelligentHomeGenerator.HomeConfig config = new IntelligentHomeGenerator.HomeConfig(
+            bounds, StylePreset.MEDIEVAL.createPalette(), RoofGenerator.RoofType.GABLE,
+            2, WingConfiguration.SINGLE_RECTANGLE, true, true, true, 1.0f, 101L
+        );
+        IntelligentHomeGenerator.HomeGenerationResult result = IntelligentHomeGenerator.generateHome(config);
+        boolean hasTrapdoorShutter = result.targets().stream()
+            .anyMatch(t -> t.block().path().endsWith("_trapdoor"));
+        boolean hasBalconyFence = result.targets().stream()
+            .anyMatch(t -> t.block().path().endsWith("_fence") && t.pos().y() >= 68);
+        boolean hasDormerGlass = result.targets().stream()
+            .anyMatch(t -> t.role() == MaterialRole.WINDOW && t.pos().y() >= 73);
+        assertTrue("2-story home should have window trapdoor shutters", hasTrapdoorShutter);
+        assertTrue("2-story wide home should have second-floor balcony railing", hasBalconyFence);
+        assertTrue("Wide gable home should have roof dormer glazing", hasDormerGlass);
+    }
 }
