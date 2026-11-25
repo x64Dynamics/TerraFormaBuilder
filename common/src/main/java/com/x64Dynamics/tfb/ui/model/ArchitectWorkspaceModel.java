@@ -110,6 +110,13 @@ public class ArchitectWorkspaceModel {
     private ProgressiveBuildPlan cachedBuildPlan = null;
     private com.x64Dynamics.tfb.architectural.plan.BuildingPlan latestPlan = null;
 
+    // World-Scale City Designer state
+    private boolean cityMode = false;
+    private com.x64Dynamics.tfb.city.WorldProject activeCityProject = null;
+    private com.x64Dynamics.tfb.city.SettlementPattern settlementPattern = com.x64Dynamics.tfb.city.SettlementPattern.MEDIEVAL_TOWN;
+    private String selectedDistrictId = null;
+    private String selectedParcelId = null;
+
     public ArchitectWorkspaceModel() {
         this.selectionManager = new WorldSelectionManager(boundingBox());
         this.selectionManager.setChangeListener(mgr -> {
@@ -373,6 +380,78 @@ public class ArchitectWorkspaceModel {
     public void setProceduralSeed(long seed) { this.proceduralSeed = seed; generatePreview(); }
     public void randomizeSeed() { this.proceduralSeed = (this.proceduralSeed * 6364136223846793005L + 1442695040888963407L) & 0x7FFFFFFFL; generatePreview(); }
 
+    public boolean isCityMode() { return cityMode; }
+    public void setCityMode(boolean cityMode) { this.cityMode = cityMode; generatePreview(); }
+    public com.x64Dynamics.tfb.city.WorldProject activeCityProject() { return activeCityProject; }
+    public com.x64Dynamics.tfb.city.SettlementPattern settlementPattern() { return settlementPattern; }
+    public void setSettlementPattern(com.x64Dynamics.tfb.city.SettlementPattern pattern) {
+        if (pattern != null) {
+            this.settlementPattern = pattern;
+            if (cityMode && activeCityProject != null) {
+                activeCityProject.setPattern(pattern);
+                com.x64Dynamics.tfb.city.CityPlannerEngine.planCity(activeCityProject);
+                generatePreview();
+            }
+        }
+    }
+    public String selectedDistrictId() { return selectedDistrictId; }
+    public void setSelectedDistrictId(String id) { this.selectedDistrictId = id; }
+    public String selectedParcelId() { return selectedParcelId; }
+    public void setSelectedParcelId(String id) { this.selectedParcelId = id; }
+
+    public synchronized void createNewCity(String name, com.x64Dynamics.tfb.city.SettlementPattern pattern, int sizeX, int sizeZ) {
+        this.width = Math.max(24, sizeX);
+        this.depth = Math.max(24, sizeZ);
+        this.height = Math.max(16, this.height);
+        this.settlementPattern = pattern != null ? pattern : com.x64Dynamics.tfb.city.SettlementPattern.MEDIEVAL_TOWN;
+        this.cityMode = true;
+        this.activeCityProject = new com.x64Dynamics.tfb.city.WorldProject(
+            "city-" + Long.toHexString(proceduralSeed),
+            name,
+            "KyroXova",
+            boundingBox(),
+            this.settlementPattern,
+            this.stylePreset,
+            this.proceduralSeed
+        );
+        com.x64Dynamics.tfb.city.CityPlannerEngine.planCity(this.activeCityProject);
+        generatePreview();
+    }
+
+    public synchronized boolean regenerateSelectedParcel() {
+        if (!cityMode || activeCityProject == null || selectedParcelId == null) return false;
+        long nextSeed = (proceduralSeed * 6364136223846793005L + System.nanoTime()) & 0x7FFFFFFFL;
+        boolean ok = com.x64Dynamics.tfb.city.CityPlannerEngine.regenerateParcel(activeCityProject, selectedParcelId, nextSeed);
+        if (ok) generatePreview();
+        return ok;
+    }
+
+    public synchronized boolean toggleSelectedParcelLock() {
+        if (!cityMode || activeCityProject == null || selectedParcelId == null) return false;
+        var opt = activeCityProject.findParcel(selectedParcelId);
+        if (opt.isPresent()) {
+            opt.get().setLocked(!opt.get().isLocked());
+            return true;
+        }
+        return false;
+    }
+
+    public synchronized void loadWorldProject(com.x64Dynamics.tfb.city.WorldProject project) {
+        if (project == null) return;
+        this.activeCityProject = project;
+        this.cityMode = true;
+        this.settlementPattern = project.pattern();
+        this.stylePreset = project.primaryStyle();
+        this.activePalette = project.primaryStyle().createPalette();
+        this.origin = project.bounds().min();
+        this.width = project.bounds().sizeX();
+        this.height = project.bounds().sizeY();
+        this.depth = project.bounds().sizeZ();
+        this.proceduralSeed = project.seed();
+        com.x64Dynamics.tfb.city.CityPlannerEngine.planCity(project);
+        generatePreview();
+    }
+
     public List<PlacementTarget> cachedPreviewTargets() { return cachedPreviewTargets; }
     public ProgressiveBuildPlan cachedBuildPlan() { return cachedBuildPlan; }
     public com.x64Dynamics.tfb.architectural.plan.BuildingPlan latestPlan() { return latestPlan; }
@@ -382,9 +461,17 @@ public class ArchitectWorkspaceModel {
         List<PlacementTarget> targets = new ArrayList<>();
         BoundingBox3i box = boundingBox();
 
-        boolean isUnifiedHome = (activeBrush instanceof ArchitecturalBrushes.HouseBrush);
-
-        if (isUnifiedHome) {
+        if (cityMode && activeCityProject != null) {
+            activeCityProject.setBounds(box);
+            activeCityProject.setPrimaryStyle(stylePreset);
+            activeCityProject.setSeed(proceduralSeed);
+            if (activeCityProject.districts().isEmpty()) {
+                com.x64Dynamics.tfb.city.CityPlannerEngine.planCity(activeCityProject);
+            }
+            targets.addAll(activeCityProject.resolveAllTargets());
+            this.generatedStories = activeCityProject.districts().size();
+            this.generatedRoomCount = activeCityProject.totalParcelCount();
+        } else if (activeBrush instanceof ArchitecturalBrushes.HouseBrush) {
             com.x64Dynamics.tfb.architectural.plan.BuildingDefinition def =
                 new com.x64Dynamics.tfb.architectural.plan.BuildingDefinition(
                     "home-" + Long.toHexString(proceduralSeed),

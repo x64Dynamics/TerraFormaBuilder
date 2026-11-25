@@ -180,7 +180,20 @@ public class ArchitectWorkspaceScreen {
         int listHeight = height - listY - footerHeight - 4;
 
         hierarchyList = new UIScrollList<>(new UIBounds(6, listY, sidebarWidth - 8, listHeight), 15, buildHierarchyItems(), (item, idx) -> {
-            setStatus(item.trim());
+            String trimmed = item.trim();
+            if (model.isCityMode() && model.activeCityProject() != null) {
+                for (var d : model.activeCityProject().districts()) {
+                    for (var p : d.parcels()) {
+                        if (trimmed.contains("[" + p.id() + "]")) {
+                            model.setSelectedParcelId(p.id());
+                            model.setSelectedDistrictId(d.id());
+                            setStatus("Selected Parcel " + p.id() + " (" + p.purpose().name() + (p.isLocked() ? ", LOCKED" : "") + ")");
+                            return;
+                        }
+                    }
+                }
+            }
+            setStatus(trimmed);
         });
         widgets.add(hierarchyList);
 
@@ -235,6 +248,24 @@ public class ArchitectWorkspaceScreen {
 
     private List<String> buildHierarchyItems() {
         List<String> items = new ArrayList<>();
+        if (model.isCityMode() && model.activeCityProject() != null) {
+            var city = model.activeCityProject();
+            items.add("City: " + city.name() + " (" + city.totalParcelCount() + " lots)");
+            items.add("  Roads: " + city.roadNetwork().segments().size() + " | Spaces: " + city.publicSpaces().size());
+            for (var d : city.districts()) {
+                items.add("  [" + d.role().name().substring(0, 3) + "] " + d.name());
+                for (var p : d.parcels()) {
+                    String lock = p.isLocked() ? " *LOCK*" : "";
+                    String sel = p.id().equals(model.selectedParcelId()) ? "> " : "    ";
+                    items.add(sel + "[" + p.id() + "] " + p.purpose().name() + lock);
+                }
+            }
+            for (var ps : city.publicSpaces()) {
+                items.add("  [PUB] " + ps.name());
+            }
+            return items;
+        }
+
         BuildingPlan plan = model.latestPlan();
         if (plan == null) {
             items.add("Home: " + model.width() + "x" + model.depth());
@@ -278,15 +309,24 @@ public class ArchitectWorkspaceScreen {
 
         switch (tab) {
             case HOME -> {
-                // Quick-Start Home Templates
-                tabWidgets.add(new UIButton(new UIBounds(contentX, contentY + 24, contentWidth / 3 - 6, rowHeight), TFBLocalization.tr("tfb.home.cottage"), b -> {
+                // Quick-Start Home & City Templates
+                tabWidgets.add(new UIButton(new UIBounds(contentX, contentY + 24, contentWidth / 4 - 4, rowHeight), TFBLocalization.tr("tfb.home.cottage"), b -> {
+                    model.setCityMode(false);
                     applyHomeTemplate(9, 9, 1, StylePreset.RUSTIC, WingConfiguration.SINGLE_RECTANGLE);
                 }));
-                tabWidgets.add(new UIButton(new UIBounds(contentX + contentWidth / 3, contentY + 24, contentWidth / 3 - 6, rowHeight), TFBLocalization.tr("tfb.home.family"), b -> {
+                tabWidgets.add(new UIButton(new UIBounds(contentX + contentWidth / 4, contentY + 24, contentWidth / 4 - 4, rowHeight), TFBLocalization.tr("tfb.home.family"), b -> {
+                    model.setCityMode(false);
                     applyHomeTemplate(15, 15, 2, StylePreset.MEDIEVAL, WingConfiguration.SINGLE_RECTANGLE);
                 }));
-                tabWidgets.add(new UIButton(new UIBounds(contentX + (contentWidth / 3) * 2, contentY + 24, contentWidth / 3 - 6, rowHeight), TFBLocalization.tr("tfb.home.manor"), b -> {
+                tabWidgets.add(new UIButton(new UIBounds(contentX + (contentWidth / 4) * 2, contentY + 24, contentWidth / 4 - 4, rowHeight), TFBLocalization.tr("tfb.home.manor"), b -> {
+                    model.setCityMode(false);
                     applyHomeTemplate(21, 19, 3, StylePreset.TRADITIONAL, WingConfiguration.L_SHAPED);
+                }));
+                tabWidgets.add(new UIButton(new UIBounds(contentX + (contentWidth / 4) * 3, contentY + 24, contentWidth / 4 - 4, rowHeight), TFBLocalization.tr("tfb.home.city"), b -> {
+                    model.createNewCity("New Settlement", model.settlementPattern(), 48, 48);
+                    refreshHierarchy();
+                    setStatus("Generated city (" + model.activeCityProject().totalParcelCount() + " parcels).");
+                    tabBar.setActiveTab(WorkspaceTab.ARCHITECTURE);
                 }));
 
                 // Quick Navigation & Saved Projects
@@ -304,6 +344,7 @@ public class ArchitectWorkspaceScreen {
                         String chosen = recentDropdown.selected();
                         if (chosen != null) {
                             BlueprintStorage.load(chosen).ifPresent(bp -> {
+                                model.setCityMode(false);
                                 model.loadBlueprint(bp);
                                 refreshHierarchy();
                                 setStatus(TFBLocalization.tr("tfb.status.loaded", chosen));
@@ -319,6 +360,64 @@ public class ArchitectWorkspaceScreen {
             }
 
             case ARCHITECTURE -> {
+                if (model.isCityMode() && model.activeCityProject() != null) {
+                    // City Designer Controls
+                    tabWidgets.add(new UISlider(new UIBounds(contentX, contentY, contentWidth / 2 - 6, rowHeight), "City Width", 24, 96, model.width(), w -> {
+                        model.setWidth(w);
+                        if (model.activeCityProject() != null) com.x64Dynamics.tfb.city.CityPlannerEngine.planCity(model.activeCityProject());
+                        model.generatePreview();
+                        refreshHierarchy();
+                    }));
+                    tabWidgets.add(new UISlider(new UIBounds(contentX + contentWidth / 2, contentY, contentWidth / 2 - 6, rowHeight), "City Depth", 24, 96, model.depth(), d -> {
+                        model.setDepth(d);
+                        if (model.activeCityProject() != null) com.x64Dynamics.tfb.city.CityPlannerEngine.planCity(model.activeCityProject());
+                        model.generatePreview();
+                        refreshHierarchy();
+                    }));
+
+                    List<com.x64Dynamics.tfb.city.SettlementPattern> patterns = Arrays.asList(com.x64Dynamics.tfb.city.SettlementPattern.values());
+                    tabWidgets.add(new UIDropdown<>(new UIBounds(contentX, contentY + 26, contentWidth / 2 - 6, rowHeight), TFBLocalization.tr("tfb.city.pattern"), patterns, patterns.indexOf(model.settlementPattern()), p -> {
+                        model.setSettlementPattern(p);
+                        refreshHierarchy();
+                    }));
+
+                    List<StylePreset> styles = Arrays.asList(StylePreset.values());
+                    tabWidgets.add(new UIDropdown<>(new UIBounds(contentX + contentWidth / 2, contentY + 26, contentWidth / 2 - 6, rowHeight), TFBLocalization.tr("tfb.ui.style"), styles, styles.indexOf(model.stylePreset()), st -> {
+                        model.setStylePreset(st);
+                        if (model.activeCityProject() != null) com.x64Dynamics.tfb.city.CityPlannerEngine.planCity(model.activeCityProject());
+                        model.generatePreview();
+                        refreshHierarchy();
+                    }));
+
+                    tabWidgets.add(new UIButton(new UIBounds(contentX, contentY + 52, contentWidth / 4 - 4, rowHeight), TFBLocalization.tr("tfb.city.regen_city"), b -> {
+                        model.randomizeSeed();
+                        com.x64Dynamics.tfb.city.CityPlannerEngine.planCity(model.activeCityProject());
+                        model.generatePreview();
+                        refreshHierarchy();
+                        setStatus("Regenerated city layout.");
+                    }));
+                    tabWidgets.add(new UIButton(new UIBounds(contentX + contentWidth / 4, contentY + 52, contentWidth / 4 - 4, rowHeight), TFBLocalization.tr("tfb.city.regen_parcel"), b -> {
+                        if (model.regenerateSelectedParcel()) {
+                            refreshHierarchy();
+                            setStatus("Regenerated parcel " + model.selectedParcelId());
+                        } else {
+                            setStatus("Select an unlocked parcel in the hierarchy first.");
+                        }
+                    }));
+                    tabWidgets.add(new UIButton(new UIBounds(contentX + (contentWidth / 4) * 2, contentY + 52, contentWidth / 4 - 4, rowHeight), TFBLocalization.tr("tfb.city.lock_parcel"), b -> {
+                        if (model.toggleSelectedParcelLock()) {
+                            refreshHierarchy();
+                            setStatus("Toggled lock on parcel " + model.selectedParcelId());
+                        } else {
+                            setStatus("Select a parcel in the hierarchy first.");
+                        }
+                    }));
+                    tabWidgets.add(new UIButton(new UIBounds(contentX + (contentWidth / 4) * 3, contentY + 52, contentWidth / 4 - 4, rowHeight), TFBLocalization.tr("tfb.city.single_mode"), b -> {
+                        model.setCityMode(false);
+                        rebuildTabWidgets();
+                    }));
+                    break;
+                }
                 // Row 1: Essential Home Dimensions & Floors
                 tabWidgets.add(new UISlider(new UIBounds(contentX, contentY, contentWidth / 3 - 6, rowHeight), TFBLocalization.tr("tfb.ui.width"), 7, 48, model.width(), w -> {
                     model.setWidth(w);
@@ -438,15 +537,41 @@ public class ArchitectWorkspaceScreen {
                 tabWidgets.add(blueprintAuthorField);
 
                 tabWidgets.add(new UIButton(new UIBounds(contentX + (contentWidth / 4) * 3, contentY, contentWidth / 4 - 6, rowHeight), TFBLocalization.tr("tfb.ui.save_design"), b -> {
-                    ParametricBlueprint bp = model.toBlueprint(blueprintNameField.text(), blueprintAuthorField.text());
                     try {
-                        BlueprintStorage.save(bp);
-                        setStatus(TFBLocalization.tr("tfb.status.saved", bp.metadata().name()));
+                        if (model.isCityMode() && model.activeCityProject() != null) {
+                            model.activeCityProject().setName(blueprintNameField.text());
+                            model.activeCityProject().setAuthor(blueprintAuthorField.text());
+                            com.x64Dynamics.tfb.city.WorldProjectStorage.save(model.activeCityProject());
+                            setStatus(TFBLocalization.tr("tfb.status.saved", model.activeCityProject().name()));
+                        } else {
+                            ParametricBlueprint bp = model.toBlueprint(blueprintNameField.text(), blueprintAuthorField.text());
+                            BlueprintStorage.save(bp);
+                            setStatus(TFBLocalization.tr("tfb.status.saved", bp.metadata().name()));
+                        }
                         rebuildTabWidgets();
                     } catch (Exception ex) {
                         setStatus("Save failed: " + ex.getMessage());
                     }
                 }));
+
+                List<String> savedCities = com.x64Dynamics.tfb.city.WorldProjectStorage.listSavedProjects();
+                if (!savedCities.isEmpty()) {
+                    UIDropdown<String> cityDropdown = new UIDropdown<>(
+                        new UIBounds(contentX, contentY + 56, (contentWidth * 3) / 4 - 6, rowHeight),
+                        "Saved Cities", savedCities, 0, name -> {}
+                    );
+                    tabWidgets.add(cityDropdown);
+                    tabWidgets.add(new UIButton(new UIBounds(contentX + (contentWidth * 3) / 4, contentY + 56, contentWidth / 4 - 6, rowHeight), TFBLocalization.tr("tfb.city.open_project"), b -> {
+                        String chosen = cityDropdown.selected();
+                        if (chosen != null) {
+                            com.x64Dynamics.tfb.city.WorldProjectStorage.load(chosen).ifPresent(proj -> {
+                                model.loadWorldProject(proj);
+                                setStatus(TFBLocalization.tr("tfb.status.loaded", chosen));
+                                rebuildTabWidgets();
+                            });
+                        }
+                    }));
+                }
 
                 List<String> savedNames = BlueprintStorage.listSavedNames();
                 if (!savedNames.isEmpty()) {
