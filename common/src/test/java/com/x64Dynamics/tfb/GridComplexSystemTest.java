@@ -151,5 +151,12 @@ public class GridComplexSystemTest {
         ));
         var res = loaded.generateComplex();
         assertTrue(res.targets().size() > 200);
+
+        for (GridComplexPresets.PresetKind kind : GridComplexPresets.PresetKind.values()) {
+            GridComplexPresets.populate(kind, loaded, 64, StylePreset.MEDIEVAL, 99L);
+            var presetRes = loaded.generateComplex();
+            assertTrue("Preset " + kind + " should generate >= 300 blocks", presetRes.targets().size() >= 300);
+            assertFalse("Preset " + kind + " should form connections", presetRes.connections().isEmpty());
+        }
     }
 }

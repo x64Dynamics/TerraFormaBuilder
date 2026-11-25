@@ -708,6 +708,51 @@ public class ArchitectWorkspaceScreen {
                     }
                     setStatus("Camera focused on selection");
                 }));
+
+                int qW = (sideW - 6) / 4;
+                tabWidgets.add(new UIButton(new UIBounds(sideX, canvasY + 72, qW, 14), "<Orb", b -> {
+                    cam.setActive(true);
+                    cam.rotate(-22.5f, 0f);
+                    cam.tick(0.2f);
+                    setStatus("Camera yaw: " + Math.round(cam.yaw()));
+                }));
+                tabWidgets.add(new UIButton(new UIBounds(sideX + qW + 2, canvasY + 72, qW, 14), "Orb>", b -> {
+                    cam.setActive(true);
+                    cam.rotate(22.5f, 0f);
+                    cam.tick(0.2f);
+                    setStatus("Camera yaw: " + Math.round(cam.yaw()));
+                }));
+                tabWidgets.add(new UIButton(new UIBounds(sideX + (qW + 2) * 2, canvasY + 72, qW, 14), "Z+", b -> {
+                    cam.setActive(true);
+                    cam.zoom(-4.0);
+                    cam.tick(0.2f);
+                    setStatus("Zoom: " + Math.round(cam.zoomDistance()));
+                }));
+                tabWidgets.add(new UIButton(new UIBounds(sideX + (qW + 2) * 3, canvasY + 72, qW, 14), "Z-", b -> {
+                    cam.setActive(true);
+                    cam.zoom(4.0);
+                    cam.tick(0.2f);
+                    setStatus("Zoom: " + Math.round(cam.zoomDistance()));
+                }));
+
+                tabWidgets.add(new UIButton(new UIBounds(sideX, canvasY + 88, halfW, 14), "Preset: Estate", b -> {
+                    com.x64Dynamics.tfb.grid.GridComplexPresets.populate(
+                        com.x64Dynamics.tfb.grid.GridComplexPresets.PresetKind.MANOR_ESTATE,
+                        gp, model.origin().y(), model.stylePreset(), model.proceduralSeed()
+                    );
+                    int n = model.syncGridComplexToPreview();
+                    setStatus("Loaded Manor Estate (" + n + " blocks)");
+                    rebuildTabWidgets();
+                }));
+                tabWidgets.add(new UIButton(new UIBounds(sideX + halfW + 4, canvasY + 88, halfW, 14), "Preset: Village", b -> {
+                    com.x64Dynamics.tfb.grid.GridComplexPresets.populate(
+                        com.x64Dynamics.tfb.grid.GridComplexPresets.PresetKind.VILLAGE_SQUARE,
+                        gp, model.origin().y(), model.stylePreset(), model.proceduralSeed()
+                    );
+                    int n = model.syncGridComplexToPreview();
+                    setStatus("Loaded Village Square (" + n + " blocks)");
+                    rebuildTabWidgets();
+                }));
             }
 
             case GRID_EDITOR -> {
