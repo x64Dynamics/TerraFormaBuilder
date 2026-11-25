@@ -159,6 +159,21 @@ public final class VoxelGridEditorModel {
         cells.clear();
     }
 
+    public void stampHollowRoom(int margin) {
+        int m = Math.max(0, Math.min(Math.min(width, depth) / 2 - 2, margin));
+        pushUndoSnapshot();
+        for (int x = m; x < width - m; x++) {
+            for (int z = m; z < depth - m; z++) {
+                boolean isEdge = (x == m || x == width - 1 - m || z == m || z == depth - 1 - m);
+                if (activeSliceY == 0) {
+                    setSingle(x, 0, z, isEdge ? MaterialRole.FOUNDATION : MaterialRole.FLOOR);
+                } else if (isEdge) {
+                    setSingle(x, activeSliceY, z, activeRole);
+                }
+            }
+        }
+    }
+
     public List<PlacementTarget> toPlacementTargets(Vec3i origin, MaterialPalette palette) {
         List<PlacementTarget> targets = new ArrayList<>(cells.size());
         for (var e : cells.entrySet()) {

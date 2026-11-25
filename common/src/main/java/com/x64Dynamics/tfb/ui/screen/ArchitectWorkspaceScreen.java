@@ -669,13 +669,18 @@ public class ArchitectWorkspaceScreen {
                 }
 
                 int actY = canvasY + swatches.length * 16 + 2;
-                int halfSide = Math.max(28, (sideW - 4) / 2);
-                tabWidgets.add(new UIButton(new UIBounds(sideX, actY, halfSide, 14), "Copy Y+", b -> {
+                int thirdSide = Math.max(20, (sideW - 4) / 3);
+                tabWidgets.add(new UIButton(new UIBounds(sideX, actY, thirdSide, 14), "Room", b -> {
+                    ge.stampHollowRoom(1);
+                    model.syncGridEditorToPreview();
+                    rebuildTabWidgets();
+                }));
+                tabWidgets.add(new UIButton(new UIBounds(sideX + thirdSide + 2, actY, thirdSide, 14), "Copy+", b -> {
                     ge.copySliceUp();
                     model.syncGridEditorToPreview();
                     rebuildTabWidgets();
                 }));
-                tabWidgets.add(new UIButton(new UIBounds(sideX + halfSide + 4, actY, halfSide, 14), "Clear", b -> {
+                tabWidgets.add(new UIButton(new UIBounds(sideX + (thirdSide + 2) * 2, actY, thirdSide, 14), "Clear", b -> {
                     ge.clearAll();
                     model.syncGridEditorToPreview();
                     rebuildTabWidgets();

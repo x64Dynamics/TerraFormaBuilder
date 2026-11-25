@@ -227,6 +227,16 @@ public class ArchitectWorkspaceModel {
         return targets.size();
     }
 
+    public synchronized int generateConnectedEstate() {
+        this.cityMode = false;
+        this.shapeEditorMode = false;
+        List<PlacementTarget> estate = com.x64Dynamics.tfb.architectural.ConnectedBuildingComposer.generateConnectedEstate(origin, activePalette());
+        this.cachedPreviewTargets = estate;
+        this.cachedBuildPlan = new ProgressiveBuildPlan(estate);
+        this.previewBuffer.updateFromTargets(estate, liveLevelAccess);
+        return estate.size();
+    }
+
     public synchronized com.x64Dynamics.tfb.architectural.assets.AuthoredAsset captureSelectionAsAsset(String name) throws java.io.IOException {
         String assetName = (name != null && !name.isBlank()) ? name.trim() : "captured_asset";
         String id = assetName.toLowerCase(java.util.Locale.ROOT).replaceAll("[^a-z0-9_-]", "_");

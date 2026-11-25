@@ -79,5 +79,11 @@ public class InteriorAndGridEditorTest {
 
         List<PlacementTarget> estate = ConnectedBuildingComposer.generateConnectedEstate(Vec3i.ZERO, StylePreset.MEDIEVAL.createPalette());
         assertTrue("Connected estate should have >= 400 blocks", estate.size() >= 400);
+
+        grid.clearAll();
+        grid.setActiveSliceY(0);
+        grid.stampHollowRoom(1);
+        assertEquals(MaterialRole.FOUNDATION, grid.cellAt(1, 0, 1));
+        assertEquals(MaterialRole.FLOOR, grid.cellAt(3, 0, 3));
     }
 }

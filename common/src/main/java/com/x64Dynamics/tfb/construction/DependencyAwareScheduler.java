@@ -30,6 +30,8 @@ public final class DependencyAwareScheduler {
             // 1. Blocks requiring support underneath (floor/ground)
             if (path.contains("door") || path.contains("rail") || path.contains("carpet") ||
                 path.contains("pressure_plate") || path.contains("flower") || path.contains("campfire") ||
+                path.contains("candle") || path.contains("_bed") ||
+                (path.contains("lantern") && !"true".equalsIgnoreCase(block.property("hanging"))) ||
                 (path.contains("torch") && !path.contains("wall_torch"))) {
 
                 Vec3i supportBelow = pos.add(0, -1, 0);
@@ -60,8 +62,8 @@ public final class DependencyAwareScheduler {
                 }
             }
 
-            // 4. Hanging lanterns depend on ceiling block above
-            if (path.contains("lantern") && "true".equalsIgnoreCase(block.property("hanging"))) {
+            // 4. Hanging lanterns and chains depend on ceiling block above
+            if ((path.contains("lantern") && "true".equalsIgnoreCase(block.property("hanging"))) || path.contains("chain")) {
                 Vec3i supportAbove = pos.add(0, 1, 0);
                 if (blockMap.containsKey(supportAbove)) {
                     graph.addDependency(pos, supportAbove);
