@@ -12,12 +12,12 @@ ROOT = Path(__file__).resolve().parents[2]
 CMA_ROOT = Path(os.environ.get("CMA_ROOT", r"E:\CMA"))
 
 
-def run_cmd(cmd: list[str], cwd: Path = ROOT, env: dict[str, str] | None = None) -> tuple[int, str]:
+def run_cmd(cmd: list[str], cwd: Path = ROOT, env: dict[str, str] | None = None, capture: bool = False) -> tuple[int, str]:
     merged = dict(os.environ)
     if env:
         merged.update(env)
-    proc = subprocess.run(cmd, cwd=cwd, env=merged, capture_output=True, text=True)
-    return proc.returncode, (proc.stdout or "") + (proc.stderr or "")
+    proc = subprocess.run(cmd, cwd=cwd, env=merged, capture_output=capture, text=True, timeout=600)
+    return proc.returncode, ((proc.stdout or "") + (proc.stderr or "")) if capture else ""
 
 
 def discover_cma_instances() -> list[dict]:
@@ -28,6 +28,7 @@ def discover_cma_instances() -> list[dict]:
         ["pwsh", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(script), "list"],
         cwd=CMA_ROOT,
         env={"CMA_CODEX_WORKSPACES_ROOT": r"E:\Git Repos\Codex Workspaces"},
+        capture=True,
     )
     if code != 0:
         return []

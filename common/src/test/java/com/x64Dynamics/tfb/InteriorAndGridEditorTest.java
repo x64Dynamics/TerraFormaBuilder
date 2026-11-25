@@ -76,5 +76,8 @@ public class InteriorAndGridEditorTest {
         grid.setActiveTool(VoxelGridEditorModel.GridTool.EXTRUDE_UP);
         grid.applyAt(0, 0);
         assertEquals(MaterialRole.WALL_PRIMARY, grid.cellAt(0, 7, 0));
+
+        List<PlacementTarget> estate = ConnectedBuildingComposer.generateConnectedEstate(Vec3i.ZERO, StylePreset.MEDIEVAL.createPalette());
+        assertTrue("Connected estate should have >= 400 blocks", estate.size() >= 400);
     }
 }

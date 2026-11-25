@@ -358,6 +358,15 @@ public final class IntelligentHomeGenerator {
                     put(map, dt.pos(), dt.block(), dt.role());
                 }
             }
+            if (def.addChimney() && width >= 9 && depth >= 9) {
+                Vec3i chimneyBase = new Vec3i(minX + 2, minY + 1, minZ + 2);
+                int chimneyTop = wallTopY + roofHeight + 1;
+                BlockIdentifier brick = BlockIdentifier.of("minecraft:bricks");
+                for (int y = chimneyBase.y(); y < chimneyTop; y++) {
+                    put(map, new Vec3i(chimneyBase.x(), y, chimneyBase.z()), brick, MaterialRole.WALL_PRIMARY);
+                }
+                put(map, new Vec3i(chimneyBase.x(), chimneyTop, chimneyBase.z()), BlockIdentifier.of("minecraft:campfire[lit=true]"), MaterialRole.DECORATION);
+            }
         }
 
         // 8. Live Terrain Adaptation (foundations, stilts, retaining walls, cut-and-fill)

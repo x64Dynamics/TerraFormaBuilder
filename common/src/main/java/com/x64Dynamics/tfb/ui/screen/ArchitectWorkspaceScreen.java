@@ -667,6 +667,19 @@ public class ArchitectWorkspaceScreen {
                         rebuildTabWidgets();
                     }));
                 }
+
+                int actY = canvasY + swatches.length * 16 + 2;
+                int halfSide = Math.max(28, (sideW - 4) / 2);
+                tabWidgets.add(new UIButton(new UIBounds(sideX, actY, halfSide, 14), "Copy Y+", b -> {
+                    ge.copySliceUp();
+                    model.syncGridEditorToPreview();
+                    rebuildTabWidgets();
+                }));
+                tabWidgets.add(new UIButton(new UIBounds(sideX + halfSide + 4, actY, halfSide, 14), "Clear", b -> {
+                    ge.clearAll();
+                    model.syncGridEditorToPreview();
+                    rebuildTabWidgets();
+                }));
             }
 
             case MATERIALS -> {

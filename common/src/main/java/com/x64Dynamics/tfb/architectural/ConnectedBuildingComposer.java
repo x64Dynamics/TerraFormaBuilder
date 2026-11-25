@@ -387,4 +387,21 @@ public final class ConnectedBuildingComposer {
         targets.addAll(generateCoveredWalkway(sw, nw, 3, arcadeHeight, palette));
         return targets;
     }
+
+    /**
+     * Generates a multi-building connected estate: a central manor house linked to a flanking
+     * watchtower and courtyard cloister via covered walkways.
+     */
+    public static List<PlacementTarget> generateConnectedEstate(Vec3i origin, MaterialPalette palette) {
+        List<BuildingSection> sections = List.of(
+            new BuildingSection("manor", BoundingBox3i.fromOriginAndSize(origin, 13, 10, 11), BuildingSection.SectionShape.RECTANGLE, RoofGenerator.RoofType.GABLE, 2, true),
+            new BuildingSection("east_wing", BoundingBox3i.fromOriginAndSize(origin.add(18, 0, 1), 9, 9, 9), BuildingSection.SectionShape.RECTANGLE, RoofGenerator.RoofType.HIP, 2, false)
+        );
+        CompositionResult comp = composeCompound(sections, palette);
+        List<PlacementTarget> all = new ArrayList<>(comp.targets());
+        all.addAll(generateCoveredWalkway(origin.add(12, 0, 5), origin.add(18, 0, 5), 3, 3, palette));
+        all.addAll(TowerGenerator.generateTower(origin.add(-5, 0, 5), TowerGenerator.TowerConfig.defaultKeep(3, 14), palette));
+        all.addAll(TowerGenerator.generateConnectedBattlementWall(origin.add(-2, 0, 5), origin.add(0, 0, 5), 4, palette));
+        return all;
+    }
 }
