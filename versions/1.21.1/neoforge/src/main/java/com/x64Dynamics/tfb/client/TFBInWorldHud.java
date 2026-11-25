@@ -44,8 +44,14 @@ public final class TFBInWorldHud {
             BuilderHotbarSlot activeSlot = hotbarModel.getActiveSlotData();
             String toolName = activeSlot != null ? activeSlot.name() : "None";
             Vec3i origin = workspaceModel.origin();
+            Vec3i p1 = workspaceModel.selectionManager().pos1();
+            Vec3i p2 = workspaceModel.selectionManager().pos2();
+            String posDisplay = (p1 != null && p2 != null)
+                ? "§aP1:(" + p1.x() + "," + p1.y() + "," + p1.z() + ") §6P2:(" + p2.x() + "," + p2.y() + "," + p2.z() + ")"
+                : "§e(" + origin.x() + "," + origin.y() + "," + origin.z() + ")";
+
             String row1 = "§7Tool: §f" + toolName + " §8| §7Size: §b" + workspaceModel.width() + "x" + workspaceModel.height() + "x" + workspaceModel.depth() +
-                          " §8| §7Pos: §e(" + origin.x() + "," + origin.y() + "," + origin.z() + ")" +
+                          " §8| §7Pos: " + posDisplay +
                           " §8| §7Rot: §6" + workspaceModel.rotation().name();
             g.drawString(mc.font, row1, bannerX + 6, bannerY + 18, 0xFFFFFFFF, false);
 

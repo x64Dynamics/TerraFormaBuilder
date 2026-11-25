@@ -211,21 +211,62 @@ public final class TFBClientEvents {
         }
 
         @SubscribeEvent
+        public static void onLeftClickBlock(PlayerInteractEvent.LeftClickBlock event) {
+            if (!event.getLevel().isClientSide()) return;
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.player == null) return;
+
+            TFBClientController controller = TFBClientController.getInstance();
+            if (controller.isArchitectMode()) {
+                BuilderHotbarSlot activeSlot = BuilderHotbarModel.getInstance().getActiveSlotData();
+                boolean isSelectionTool = activeSlot != null && ("Select Box".equals(activeSlot.name()) || "SEL".equals(activeSlot.code()));
+
+                if (isSelectionTool || event.getItemStack().is(Items.STICK)) {
+                    BlockPos clicked = event.getPos();
+                    Vec3i pos = new Vec3i(clicked.getX(), clicked.getY(), clicked.getZ());
+                    controller.model().setPos1(pos);
+                    mc.player.displayClientMessage(
+                        Component.literal("§a[TFB] POS1 set to (" + pos.x() + ", " + pos.y() + ", " + pos.z() + ")"),
+                        true
+                    );
+                    event.setCanceled(true);
+                }
+            }
+        }
+
+        @SubscribeEvent
         public static void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
             if (!event.getLevel().isClientSide()) return;
             Minecraft mc = Minecraft.getInstance();
             if (mc.player == null) return;
 
-            if (event.getItemStack().is(Items.STICK) || TFBClientController.getInstance().isArchitectMode()) {
-                BlockPos clicked = event.getPos();
-                BlockPos target = clicked.above();
-                Vec3i origin = new Vec3i(target.getX(), target.getY(), target.getZ());
-                TFBClientController.getInstance().setTargetPosition(origin);
-                mc.player.displayClientMessage(
-                    Component.literal("§b[TFB] Set construction origin to (" + origin.x() + ", " + origin.y() + ", " + origin.z() + ")"),
-                    true
-                );
-                event.setCanceled(true);
+            TFBClientController controller = TFBClientController.getInstance();
+            if (controller.isArchitectMode()) {
+                BuilderHotbarSlot activeSlot = BuilderHotbarModel.getInstance().getActiveSlotData();
+                boolean isSelectionTool = activeSlot != null && ("Select Box".equals(activeSlot.name()) || "SEL".equals(activeSlot.code()));
+
+                if (isSelectionTool || event.getItemStack().is(Items.STICK)) {
+                    BlockPos clicked = event.getPos();
+                    Vec3i pos = new Vec3i(clicked.getX(), clicked.getY(), clicked.getZ());
+                    controller.model().setPos2(pos);
+                    ArchitectWorkspaceModel m = controller.model();
+                    mc.player.displayClientMessage(
+                        Component.literal("§6[TFB] POS2 set to (" + pos.x() + ", " + pos.y() + ", " + pos.z() + ") §8| §b" +
+                            m.width() + "x" + m.height() + "x" + m.depth() + " (" + ((long) m.width() * m.height() * m.depth()) + " blocks)"),
+                        true
+                    );
+                    event.setCanceled(true);
+                } else {
+                    BlockPos clicked = event.getPos();
+                    BlockPos target = clicked.above();
+                    Vec3i origin = new Vec3i(target.getX(), target.getY(), target.getZ());
+                    controller.setTargetPosition(origin);
+                    mc.player.displayClientMessage(
+                        Component.literal("§b[TFB] Set construction origin to (" + origin.x() + ", " + origin.y() + ", " + origin.z() + ")"),
+                        true
+                    );
+                    event.setCanceled(true);
+                }
             }
         }
 
@@ -236,6 +277,43 @@ public final class TFBClientEvents {
             ArchitectWorkspaceModel model = TFBClientController.getInstance().model();
             List<PlacementTarget> targets = model.cachedPreviewTargets();
 
+            if (targets.isEmpty()) {
+                mc.player.displayClientMessage(
+                    Component.literal("§c[TFB] Build failed: No preview blocks available! Set POS1/POS2 or configure a brush in Workspace [B]."),
+                    false
+                );
+                return;
+            }
+
+            net.minecraft.server.MinecraftServer server = mc.getSingleplayerServer();
+            if (server != null) {
+                net.minecraft.server.level.ServerLevel serverLevel = server.getLevel(level.dimension());
+                if (serverLevel != null) {
+                    server.execute(() -> {
+                        int placed = 0;
+                        for (PlacementTarget target : targets) {
+                            Vec3i pos = target.pos();
+                            BlockPos bp = new BlockPos(pos.x(), pos.y(), pos.z());
+                            BlockState state = BlockStateParser.parse(target.block());
+                            if (serverLevel.setBlock(bp, state, 3)) {
+                                placed++;
+                            }
+                        }
+                        final int finalPlaced = placed;
+                        serverLevel.playSound(null, mc.player.getX(), mc.player.getY(), mc.player.getZ(),
+                            net.minecraft.sounds.SoundEvents.ANVIL_USE, net.minecraft.sounds.SoundSource.BLOCKS, 1.0f, 1.0f);
+                        mc.execute(() -> {
+                            mc.player.displayClientMessage(
+                                Component.literal("§a[TFB] Construction complete! Successfully placed " + finalPlaced + " blocks with server lighting."),
+                                false
+                            );
+                        });
+                    });
+                    return;
+                }
+            }
+
+            // Fallback for multiplayer / dedicated server environments
             int placed = 0;
             for (PlacementTarget target : targets) {
                 Vec3i pos = target.pos();
@@ -247,7 +325,7 @@ public final class TFBClientEvents {
             }
 
             mc.player.displayClientMessage(
-                Component.literal("§a[TFB] Construction complete! Successfully placed " + placed + " blocks."),
+                Component.literal("§a[TFB] Construction complete! Successfully placed " + placed + " client blocks."),
                 false
             );
         }

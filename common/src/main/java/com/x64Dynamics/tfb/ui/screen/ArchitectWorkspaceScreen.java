@@ -58,6 +58,11 @@ public class ArchitectWorkspaceScreen {
     private UITextField blueprintNameField;
     private UITextField blueprintAuthorField;
     private UITextField materialSearchField;
+    private UITextField selectionNameField;
+
+    // Callbacks
+    private Runnable closeCallback;
+    private Runnable buildCallback;
 
     // Status message
     private String statusMessage = "Ready. Configure architectural parameters and preview in-world.";
@@ -68,6 +73,8 @@ public class ArchitectWorkspaceScreen {
     }
 
     public ArchitectWorkspaceModel model() { return model; }
+    public void setCloseCallback(Runnable cb) { this.closeCallback = cb; }
+    public void setBuildCallback(Runnable cb) { this.buildCallback = cb; }
 
     public void init(int screenWidth, int screenHeight) {
         this.width = screenWidth;
@@ -98,7 +105,11 @@ public class ArchitectWorkspaceScreen {
             setStatus("Generated preview with " + model.totalBlockCount() + " blocks.");
         });
         instantBuildButton = new UIButton(new UIBounds(width - (actionBtnWidth * 4 + 20), actionY, actionBtnWidth, actionBtnHeight), "Build", b -> {
-            setStatus("Started construction (" + model.totalBlockCount() + " blocks).");
+            if (buildCallback != null) {
+                buildCallback.run();
+            } else {
+                setStatus("Started construction (" + model.totalBlockCount() + " blocks).");
+            }
         });
         undoButton = new UIButton(new UIBounds(width - (actionBtnWidth * 3 + 16), actionY, actionBtnWidth, actionBtnHeight), "Undo", b -> {
             if (model.undo()) setStatus("Reverted last edit.");
@@ -109,7 +120,9 @@ public class ArchitectWorkspaceScreen {
             else setStatus("Nothing to redo.");
         });
         closeButton = new UIButton(new UIBounds(width - (actionBtnWidth + 8), actionY, actionBtnWidth, actionBtnHeight), "Close", b -> {
-            // Handled by platform adapter to close screen
+            if (closeCallback != null) {
+                closeCallback.run();
+            }
         });
 
         widgets.add(flightButton);
@@ -178,6 +191,61 @@ public class ArchitectWorkspaceScreen {
                 tabWidgets.add(new UIToggleButton(new UIBounds(contentX + (contentWidth / 5) * 2, contentY + 56, contentWidth / 5 - 4, rowHeight), "Shutters", model.addWindowShutters(), model::setAddWindowShutters));
                 tabWidgets.add(new UIToggleButton(new UIBounds(contentX + (contentWidth / 5) * 3, contentY + 56, contentWidth / 5 - 4, rowHeight), "Balconies", model.addBalconies(), model::setAddBalconies));
                 tabWidgets.add(new UIToggleButton(new UIBounds(contentX + (contentWidth / 5) * 4, contentY + 56, contentWidth / 5 - 4, rowHeight), "Dormers", model.addDormers(), model::setAddDormers));
+            }
+
+            case SELECTION -> {
+                com.x64Dynamics.tfb.editing.WorldSelectionManager sel = model.selectionManager();
+                String p1Str = sel.pos1() != null ? "(" + sel.pos1().x() + "," + sel.pos1().y() + "," + sel.pos1().z() + ")" : "None";
+                String p2Str = sel.pos2() != null ? "(" + sel.pos2().x() + "," + sel.pos2().y() + "," + sel.pos2().z() + ")" : "None";
+
+                // Row 1: POS1 and POS2 indicators & setters
+                tabWidgets.add(new UIButton(new UIBounds(contentX, contentY, contentWidth / 4 - 4, rowHeight), "POS1: " + p1Str, b -> {
+                    model.setPos1(model.origin());
+                    rebuildTabWidgets();
+                    setStatus("POS1 set to origin: " + model.origin());
+                }));
+                tabWidgets.add(new UIButton(new UIBounds(contentX + contentWidth / 4, contentY, contentWidth / 4 - 4, rowHeight), "Clear POS1", b -> {
+                    sel.clearPositions();
+                    rebuildTabWidgets();
+                    setStatus("Cleared POS1.");
+                }));
+                tabWidgets.add(new UIButton(new UIBounds(contentX + (contentWidth / 4) * 2, contentY, contentWidth / 4 - 4, rowHeight), "POS2: " + p2Str, b -> {
+                    model.setPos2(model.boundingBox().max());
+                    rebuildTabWidgets();
+                    setStatus("POS2 set to max bounds: " + model.boundingBox().max());
+                }));
+                tabWidgets.add(new UIButton(new UIBounds(contentX + (contentWidth / 4) * 3, contentY, contentWidth / 4 - 4, rowHeight), "Clear POS2", b -> {
+                    sel.clearPositions();
+                    rebuildTabWidgets();
+                    setStatus("Cleared POS2.");
+                }));
+
+                // Row 2: Region operations (Expand, Contract, Center, Clear)
+                tabWidgets.add(new UIButton(new UIBounds(contentX, contentY + 28, contentWidth / 4 - 4, rowHeight), "Expand (+1)", b -> {
+                    model.expandSelection(1);
+                    rebuildTabWidgets();
+                    setStatus("Expanded selection by 1 block.");
+                }));
+                tabWidgets.add(new UIButton(new UIBounds(contentX + contentWidth / 4, contentY, contentWidth / 4 - 4, rowHeight), "Contract (-1)", b -> {
+                    model.contractSelection(1);
+                    rebuildTabWidgets();
+                    setStatus("Contracted selection by 1 block.");
+                }));
+                tabWidgets.add(new UIButton(new UIBounds(contentX + (contentWidth / 4) * 2, contentY, contentWidth / 4 - 4, rowHeight), "Center Origin", b -> {
+                    model.centerSelection();
+                    rebuildTabWidgets();
+                    setStatus("Centered origin inside selection.");
+                }));
+                tabWidgets.add(new UIButton(new UIBounds(contentX + (contentWidth / 4) * 3, contentY, contentWidth / 4 - 4, rowHeight), "Clear All", b -> {
+                    model.clearSelection();
+                    rebuildTabWidgets();
+                    setStatus("Cleared entire selection.");
+                }));
+
+                // Row 3: Selection Stats & Grid Snap
+                String info = "Size: " + model.width() + "x" + model.height() + "x" + model.depth() + " | Vol: " + sel.volume() + " blocks";
+                tabWidgets.add(new UIButton(new UIBounds(contentX, contentY + 56, contentWidth / 2 - 4, rowHeight), info, b -> {}));
+                tabWidgets.add(new UISlider(new UIBounds(contentX + contentWidth / 2, contentY + 56, contentWidth / 2 - 4, rowHeight), "Grid Snap", 1, 16, sel.gridSnap(), sel::setGridSnap));
             }
 
             case MATERIALS -> {

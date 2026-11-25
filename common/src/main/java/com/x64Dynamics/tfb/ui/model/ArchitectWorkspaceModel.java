@@ -106,6 +106,14 @@ public class ArchitectWorkspaceModel {
 
     public ArchitectWorkspaceModel() {
         this.selectionManager = new WorldSelectionManager(boundingBox());
+        this.selectionManager.setChangeListener(mgr -> {
+            if (mgr.primaryBox() != null) {
+                this.origin = mgr.primaryBox().min();
+                this.width = mgr.primaryBox().sizeX();
+                this.height = mgr.primaryBox().sizeY();
+                this.depth = mgr.primaryBox().sizeZ();
+            }
+        });
         pushHistorySnapshot();
         generatePreview();
     }
@@ -148,6 +156,60 @@ public class ArchitectWorkspaceModel {
 
     public WorldSelectionManager selectionManager() { return selectionManager; }
     public WorldPreviewBuffer previewBuffer() { return previewBuffer; }
+
+    public void setPos1(Vec3i pos) {
+        selectionManager.setPos1(pos);
+        if (selectionManager.primaryBox() != null) {
+            this.origin = selectionManager.primaryBox().min();
+            this.width = selectionManager.primaryBox().sizeX();
+            this.height = selectionManager.primaryBox().sizeY();
+            this.depth = selectionManager.primaryBox().sizeZ();
+        }
+        generatePreview();
+    }
+
+    public void setPos2(Vec3i pos) {
+        selectionManager.setPos2(pos);
+        if (selectionManager.primaryBox() != null) {
+            this.origin = selectionManager.primaryBox().min();
+            this.width = selectionManager.primaryBox().sizeX();
+            this.height = selectionManager.primaryBox().sizeY();
+            this.depth = selectionManager.primaryBox().sizeZ();
+        }
+        generatePreview();
+    }
+
+    public void clearSelection() {
+        selectionManager.clearPositions();
+        generatePreview();
+    }
+
+    public void expandSelection(int amount) {
+        selectionManager.expandSelection(amount);
+        if (selectionManager.primaryBox() != null) {
+            this.origin = selectionManager.primaryBox().min();
+            this.width = selectionManager.primaryBox().sizeX();
+            this.height = selectionManager.primaryBox().sizeY();
+            this.depth = selectionManager.primaryBox().sizeZ();
+        }
+        generatePreview();
+    }
+
+    public void contractSelection(int amount) {
+        selectionManager.contractSelection(amount);
+        if (selectionManager.primaryBox() != null) {
+            this.origin = selectionManager.primaryBox().min();
+            this.width = selectionManager.primaryBox().sizeX();
+            this.height = selectionManager.primaryBox().sizeY();
+            this.depth = selectionManager.primaryBox().sizeZ();
+        }
+        generatePreview();
+    }
+
+    public void centerSelection() {
+        Vec3i c = selectionManager.center();
+        setOrigin(c);
+    }
 
     public Rotation rotation() { return rotation; }
     public void setRotation(Rotation rotation) { this.rotation = rotation; generatePreview(); }

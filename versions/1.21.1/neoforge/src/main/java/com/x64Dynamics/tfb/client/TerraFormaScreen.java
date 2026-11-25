@@ -18,8 +18,22 @@ public class TerraFormaScreen extends Screen {
     @Override
     protected void init() {
         super.init();
+        screen.setCloseCallback(this::onClose);
+        screen.setBuildCallback(() -> {
+            if (this.minecraft != null) {
+                TFBClientEvents.GameEvents.executeBuild(this.minecraft);
+            }
+        });
         screen.init(this.width, this.height);
         TFBClientController.getInstance().setArchitectMode(true);
+        if (this.minecraft != null && this.minecraft.player != null) {
+            com.x64Dynamics.tfb.ui.model.ArchitectWorkspaceModel model = TFBClientController.getInstance().model();
+            if (model.origin().x() == 0 && model.origin().y() == 64 && model.origin().z() == 0) {
+                net.minecraft.core.BlockPos playerPos = this.minecraft.player.blockPosition();
+                com.x64Dynamics.tfb.geometry.Vec3i newOrigin = new com.x64Dynamics.tfb.geometry.Vec3i(playerPos.getX(), playerPos.getY(), playerPos.getZ());
+                model.setOrigin(newOrigin);
+            }
+        }
     }
 
     @Override

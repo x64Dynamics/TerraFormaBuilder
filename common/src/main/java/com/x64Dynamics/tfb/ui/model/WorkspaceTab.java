@@ -2,6 +2,7 @@ package com.x64Dynamics.tfb.ui.model;
 
 public enum WorkspaceTab {
     ARCHITECTURE("Architecture", "Brushes, building types, dimensions, roofs, and facades"),
+    SELECTION("Selection", "POS1, POS2, region bounds, volume, expand/contract, and presets"),
     MATERIALS("Materials", "Universal taxonomy, palettes, styles, and block substitution"),
     TERRAIN("Terrain", "Foundation strategies, excavation, leveling, and adaptation"),
     INTERIORS("Interiors", "Room layout planning, furnishing presets, and decor"),
