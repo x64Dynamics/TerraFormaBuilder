@@ -279,6 +279,7 @@ public final class ArchitectClientEvents {
 
             ClientController controller = ClientController.getInstance();
             if (controller.isArchitectMode()) {
+                if (controller.model().isInWorldGridMode()) { event.setCanceled(true); return; }
                 BlockPos clicked = event.getPos();
                 Vec3i pos = new Vec3i(clicked.getX(), clicked.getY(), clicked.getZ());
                 controller.model().setPos1(pos);
@@ -298,6 +299,7 @@ public final class ArchitectClientEvents {
 
             ClientController controller = ClientController.getInstance();
             if (controller.isArchitectMode()) {
+                if (controller.model().isInWorldGridMode()) { event.setCanceled(true); return; }
                 BlockPos clicked = event.getPos();
                 Vec3i pos = new Vec3i(clicked.getX(), clicked.getY(), clicked.getZ());
                 controller.model().setPos2(pos);

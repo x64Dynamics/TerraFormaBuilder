@@ -33,7 +33,7 @@ public final class BuilderHotbarModel {
     private void initPages() {
         // --- Page 0: Architecture ---
         List<BuilderHotbarSlot> archPage = new ArrayList<>();
-        archPage.add(new BuilderHotbarSlot("HSE", "House", "Architecture", "minecraft:oak_door", 0xFF38BDF8, BrushRegistry.get("house"), "[L-Click] Set Origin | [R-Click] Drag Bounds | [R] Rotate 45° | [G] Build"));
+        archPage.add(new BuilderHotbarSlot("HSE", "House", "Architecture", "minecraft:oak_door", 0xFF38BDF8, BrushRegistry.get("house"), "[L-Click] Set Origin | [R-Click] Drag Bounds | [R] Rotate 90° | [G] Build"));
         archPage.add(new BuilderHotbarSlot("GRD", "Grid Painter", "Architecture", "minecraft:scaffolding", 0xFF22C55E, BrushRegistry.get("building"), "[L-Click] Paste Grid Building Preview | [R-Click] Remove | [G] Build & Next"));
         archPage.add(new BuilderHotbarSlot("ROM", "Room", "Architecture", "minecraft:oak_planks", 0xFF818CF8, BrushRegistry.get("room"), "[L-Click] Footprint | Floorplan Subdivide | [G] Build"));
         archPage.add(new BuilderHotbarSlot("WAL", "Wall", "Architecture", "minecraft:cobblestone_wall", 0xFFA78BFA, BrushRegistry.get("wall"), "[L-Click] Point A | [R-Click] Point B | Height 3-12 | [G] Build"));

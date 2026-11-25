@@ -800,153 +800,50 @@ public class ArchitectWorkspaceScreen {
             }
 
             case GRID_EDITOR -> {
-                boolean chunkGrid = model.isModularChunkGridMode();
-                tabWidgets.add(new UIButton(
-                    new UIBounds(contentX, contentY, contentWidth / 2 - 2, rowHeight),
-                    chunkGrid ? "Mode: 5x5x5 Chunk Grid (Dreamer)" : "Mode: Voxel Painter (16x16)",
-                    b -> {
-                        model.setModularChunkGridMode(!chunkGrid);
+                var mg = model.modularGrid();
+                int halfW = (contentWidth - 6) / 2;
+
+                tabWidgets.add(new UIToggleButton(
+                    new UIBounds(contentX, contentY, halfW, rowHeight),
+                    "In-World Chunk Grid",
+                    model.isInWorldGridMode(),
+                    v -> {
+                        model.setInWorldGridMode(v);
+                        setStatus(v ? "In-World Grid ON: Left-Click places/stacks, Right-Click removes" : "In-World Grid OFF");
                         rebuildTabWidgets();
                     }
                 ));
+                tabWidgets.add(new UIButton(
+                    new UIBounds(contentX + halfW + 4, contentY, halfW, rowHeight),
+                    "Paint in World (Close)",
+                    b -> {
+                        model.setInWorldGridMode(true);
+                        if (closeCallback != null) closeCallback.run();
+                    }
+                ));
 
-                if (chunkGrid) {
-                    var mg = model.modularGrid();
-                    int halfRem = (contentWidth / 2 - 4) / 2;
-                    tabWidgets.add(new UIToggleButton(
-                        new UIBounds(contentX + contentWidth / 2 + 2, contentY, halfRem, rowHeight),
-                        "In-World",
-                        model.isInWorldGridMode(),
-                        v -> {
-                            model.setInWorldGridMode(v);
-                            setStatus(v ? "In-World 5x5x5 Grid ON: close GUI, Left-Click places/stacks, Right-Click removes" : "In-World 5x5x5 Grid OFF");
-                            rebuildTabWidgets();
-                        }
-                    ));
-                    tabWidgets.add(new UIButton(
-                        new UIBounds(contentX + contentWidth / 2 + halfRem + 4, contentY, halfRem, rowHeight),
-                        "Sync 3D (" + mg.modules().size() + ")",
-                        b -> {
-                            int n = model.syncModularGridToPreview();
-                            setStatus("Synced " + mg.modules().size() + " connected modules (" + n + " blocks)");
-                        }
-                    ));
-
-                    int ctrlW = (contentWidth - 12) / 5;
-                    tabWidgets.add(new UIButton(new UIBounds(contentX, contentY + 22, ctrlW, rowHeight), "Flr- (" + mg.activeFloor() + ")", b -> {
-                        mg.setActiveFloor(mg.activeFloor() - 1);
-                        rebuildTabWidgets();
-                    }));
-                    tabWidgets.add(new UIButton(new UIBounds(contentX + ctrlW + 2, contentY + 22, ctrlW, rowHeight), "Flr+ (" + mg.activeFloor() + ")", b -> {
-                        mg.setActiveFloor(mg.activeFloor() + 1);
-                        rebuildTabWidgets();
-                    }));
-                    tabWidgets.add(new UIButton(new UIBounds(contentX + (ctrlW + 2) * 2, contentY + 22, ctrlW, rowHeight), "Size " + mg.cellSize() + "x" + mg.cellHeight(), b -> {
-                        int next = mg.cellSize() >= 7 ? 5 : mg.cellSize() + 1;
-                        mg.setCellSize(next);
-                        mg.setCellHeight(next);
-                        model.syncModularGridToPreview();
-                        rebuildTabWidgets();
-                    }));
-                    tabWidgets.add(new UIButton(new UIBounds(contentX + (ctrlW + 2) * 3, contentY + 22, ctrlW, rowHeight), "+Stack", b -> {
-                        var sel = mg.selectedCell();
-                        mg.stackOrPlace(sel.gx(), sel.gz(), model.stylePreset(), model.activePalette(), model.roofShape());
-                        model.syncModularGridToPreview();
-                        rebuildTabWidgets();
-                    }));
-                    tabWidgets.add(new UIButton(new UIBounds(contentX + (ctrlW + 2) * 4, contentY + 22, ctrlW, rowHeight), "Clear", b -> {
-                        mg.clear();
-                        model.syncModularGridToPreview();
-                        rebuildTabWidgets();
-                    }));
-
-                    int canvasY = contentY + 46;
-                    int canvasSize = Math.min(contentWidth - 8, 128);
-                    tabWidgets.add(new UIModularGridCanvas(
-                        new UIBounds(contentX, canvasY, canvasSize, canvasSize),
-                        mg,
-                        model::stylePreset,
-                        model::activePalette,
-                        model::roofShape,
-                        () -> {
-                            int n = model.syncModularGridToPreview();
-                            setStatus("Grid: " + mg.modules().size() + " modules (" + n + " blocks)");
-                        }
-                    ));
-                } else {
-                var ge = model.gridEditor();
-                int toolW = (contentWidth - 12) / 5;
-                var tools = VoxelGridEditorModel.GridTool.values();
-                for (int i = 0; i < tools.length; i++) {
-                    var t = tools[i];
-                    String lbl = (ge.activeTool() == t ? "[" + t.label() + "]" : t.label());
-                    tabWidgets.add(new UIButton(new UIBounds(contentX + i * (toolW + 2), contentY, toolW, rowHeight), lbl, b -> {
-                        ge.setActiveTool(t);
-                        rebuildTabWidgets();
-                    }));
-                }
-
-                int ctrlW = (contentWidth - 12) / 5;
-                tabWidgets.add(new UIButton(new UIBounds(contentX, contentY + 22, ctrlW, rowHeight), "Y- (" + ge.activeSliceY() + ")", b -> {
-                    ge.setActiveSliceY(ge.activeSliceY() - 1);
+                int ctrlW = (contentWidth - 12) / 4;
+                tabWidgets.add(new UIButton(new UIBounds(contentX, contentY + 24, ctrlW, rowHeight), "Floor: " + mg.activeFloor(), b -> {
+                    mg.setActiveFloor((mg.activeFloor() + 1) % 4);
                     rebuildTabWidgets();
                 }));
-                tabWidgets.add(new UIButton(new UIBounds(contentX + ctrlW + 2, contentY + 22, ctrlW, rowHeight), "Y+ (" + ge.activeSliceY() + ")", b -> {
-                    ge.setActiveSliceY(ge.activeSliceY() + 1);
+                tabWidgets.add(new UIButton(new UIBounds(contentX + ctrlW + 4, contentY + 24, ctrlW, rowHeight), "Cell: " + mg.cellSize() + "x" + mg.cellHeight(), b -> {
+                    int next = mg.cellSize() >= 7 ? 5 : mg.cellSize() + 1;
+                    mg.setCellSize(next);
+                    mg.setCellHeight(next);
+                    model.syncModularGridToPreview();
                     rebuildTabWidgets();
                 }));
-                tabWidgets.add(new UIToggleButton(new UIBounds(contentX + (ctrlW + 2) * 2, contentY + 22, ctrlW, rowHeight), "Mirror X", ge.isMirrorX(), v -> {
-                    ge.setMirrorX(v);
+                tabWidgets.add(new UIButton(new UIBounds(contentX + (ctrlW + 4) * 2, contentY + 24, ctrlW, rowHeight), "Modules: " + mg.modules().size(), b -> {
+                    int n = model.syncModularGridToPreview();
+                    setStatus("Synced " + mg.modules().size() + " in-world grid modules (" + n + " blocks)");
+                }));
+                tabWidgets.add(new UIButton(new UIBounds(contentX + (ctrlW + 4) * 3, contentY + 24, ctrlW, rowHeight), "Clear Grid", b -> {
+                    mg.clear();
+                    model.syncModularGridToPreview();
                     rebuildTabWidgets();
+                    setStatus("Cleared in-world grid modules.");
                 }));
-                tabWidgets.add(new UIToggleButton(new UIBounds(contentX + (ctrlW + 2) * 3, contentY + 22, ctrlW, rowHeight), "Mirror Z", ge.isMirrorZ(), v -> {
-                    ge.setMirrorZ(v);
-                    rebuildTabWidgets();
-                }));
-                tabWidgets.add(new UIButton(new UIBounds(contentX + (ctrlW + 2) * 4, contentY + 22, ctrlW, rowHeight), "Sync 3D", b -> {
-                    int n = model.syncGridEditorToPreview();
-                    setStatus("Synced " + n + " grid voxels to 3D preview");
-                }));
-
-                int canvasY = contentY + 46;
-                int canvasSize = Math.min(contentWidth / 2, 112);
-                tabWidgets.add(new UIVoxelGridCanvas(new UIBounds(contentX, canvasY, canvasSize, canvasSize), ge, () -> {
-                    model.syncGridEditorToPreview();
-                }));
-
-                int sideX = contentX + canvasSize + 8;
-                int sideW = Math.max(60, contentWidth - canvasSize - 12);
-                MaterialRole[] swatches = {
-                    MaterialRole.WALL_PRIMARY, MaterialRole.FLOOR, MaterialRole.ROOF_SLOPE,
-                    MaterialRole.PILLAR, MaterialRole.WINDOW, MaterialRole.DOOR, MaterialRole.LIGHT_SOURCE
-                };
-                for (int i = 0; i < swatches.length; i++) {
-                    MaterialRole r = swatches[i];
-                    String label = (ge.activeRole() == r ? "> " : "") + r.name();
-                    tabWidgets.add(new UIButton(new UIBounds(sideX, canvasY + i * 16, sideW, 14), label, b -> {
-                        ge.setActiveRole(r);
-                        rebuildTabWidgets();
-                    }));
-                }
-
-                int actY = canvasY + swatches.length * 16 + 2;
-                int thirdSide = Math.max(20, (sideW - 4) / 3);
-                tabWidgets.add(new UIButton(new UIBounds(sideX, actY, thirdSide, 14), "Room", b -> {
-                    ge.stampHollowRoom(1);
-                    model.syncGridEditorToPreview();
-                    rebuildTabWidgets();
-                }));
-                tabWidgets.add(new UIButton(new UIBounds(sideX + thirdSide + 2, actY, thirdSide, 14), "Copy+", b -> {
-                    ge.copySliceUp();
-                    model.syncGridEditorToPreview();
-                    rebuildTabWidgets();
-                }));
-                tabWidgets.add(new UIButton(new UIBounds(sideX + (thirdSide + 2) * 2, actY, thirdSide, 14), "Clear", b -> {
-                    ge.clearAll();
-                    model.syncGridEditorToPreview();
-                    rebuildTabWidgets();
-                }));
-                }
             }
 
             case MATERIALS -> {

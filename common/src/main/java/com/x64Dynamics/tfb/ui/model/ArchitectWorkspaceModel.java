@@ -537,6 +537,12 @@ public class ArchitectWorkspaceModel {
             syncModularGridToPreview();
             return;
         }
+        if (pos != null && activeBrush instanceof ArchitecturalBrushes.HouseBrush && !shapeEditorMode && !cityMode) {
+            this.origin = pos;
+            selectionManager.setPrimaryBox(boundingBox());
+            generatePreview();
+            return;
+        }
         selectionManager.setPos1(pos);
         if (selectionManager.primaryBox() != null) {
             this.origin = selectionManager.primaryBox().min();
@@ -552,6 +558,16 @@ public class ArchitectWorkspaceModel {
             var cell = modularGrid.worldToCell(pos);
             modularGrid.removeTopModule(cell.gx(), cell.gz());
             syncModularGridToPreview();
+            return;
+        }
+        if (pos != null && activeBrush instanceof ArchitecturalBrushes.HouseBrush && !shapeEditorMode && !cityMode) {
+            int minX = Math.min(origin.x(), pos.x());
+            int minZ = Math.min(origin.z(), pos.z());
+            this.origin = new Vec3i(minX, origin.y(), minZ);
+            this.width = Math.max(7, Math.abs(pos.x() - origin.x()) + 1);
+            this.depth = Math.max(7, Math.abs(pos.z() - origin.z()) + 1);
+            selectionManager.setPrimaryBox(boundingBox());
+            generatePreview();
             return;
         }
         selectionManager.setPos2(pos);
@@ -866,6 +882,12 @@ public class ArchitectWorkspaceModel {
             this.generatedStories = activeCityProject.districts().size();
             this.generatedRoomCount = activeCityProject.totalParcelCount();
         } else if (activeBrush instanceof ArchitecturalBrushes.HouseBrush) {
+            Direction facing = switch (this.rotation) {
+                case NONE -> Direction.SOUTH;
+                case CLOCKWISE_90 -> Direction.WEST;
+                case CLOCKWISE_180 -> Direction.NORTH;
+                case COUNTERCLOCKWISE_90 -> Direction.EAST;
+            };
             com.x64Dynamics.tfb.architectural.plan.BuildingDefinition def =
                 new com.x64Dynamics.tfb.architectural.plan.BuildingDefinition(
                     "home-" + Long.toHexString(proceduralSeed),
@@ -875,6 +897,8 @@ public class ArchitectWorkspaceModel {
                     activePalette,
                     roofShape,
                     requestedStories,
+                    5,
+                    facing,
                     addPorchAndGarden,
                     addChimney,
                     enableInteriors && furnishRooms,
@@ -973,8 +997,8 @@ public class ArchitectWorkspaceModel {
             targets = ProceduralVariator.applyFacadeVariation(targets, activePalette, proceduralSeed, proceduralVariation);
         }
 
-        // 5. Transforms (rotation & mirror)
-        if (rotation != Rotation.NONE) {
+        // 5. Transforms (rotation & mirror) - HouseBrush already orients via BuildingDefinition.facing()
+        if (rotation != Rotation.NONE && !(activeBrush instanceof ArchitecturalBrushes.HouseBrush)) {
             targets = ConstructionTransforms.rotate(targets, rotation, origin);
         }
         if (mirrorAxis != null) {

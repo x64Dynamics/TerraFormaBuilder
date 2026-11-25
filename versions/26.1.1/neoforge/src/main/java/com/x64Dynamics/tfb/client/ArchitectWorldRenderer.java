@@ -72,6 +72,35 @@ public final class ArchitectWorldRenderer {
                     gb.min().x() - camPos.x, gb.min().y() - camPos.y, gb.min().z() - camPos.z,
                     sel ? 0xFFFACC15 : 0xFF34D399, 2.0f);
             }
+        if (controller.model().isInWorldGridMode() || !gp.registry().allBuildings().isEmpty()) {
+            var gridBatch = com.x64Dynamics.tfb.grid.GridRendererModel.buildBatch(
+                gp.grid(), gp.registry(), gp.selectedCell(), gp.selectedBuildingId(), controller.model().origin().y()
+            );
+            for (var gl : gridBatch.lines()) {
+                float lr = ((gl.argbColor() >> 16) & 0xFF) / 255.0f;
+                float lg = ((gl.argbColor() >> 8) & 0xFF) / 255.0f;
+                float lb = (gl.argbColor() & 0xFF) / 255.0f;
+                float la = Math.max(0.25f, ((gl.argbColor() >>> 24) & 0xFF) / 255.0f);
+                double gx0 = Math.min(gl.start().x(), gl.end().x()) - camPos.x;
+                double gy0 = Math.min(gl.start().y(), gl.end().y()) - camPos.y;
+                double gz0 = Math.min(gl.start().z(), gl.end().z()) - camPos.z;
+                double gx1 = Math.max(gl.start().x(), gl.end().x()) - camPos.x + 0.02;
+                double gy1 = Math.max(gl.start().y(), gl.end().y()) - camPos.y + 0.02;
+                double gz1 = Math.max(gl.start().z(), gl.end().z()) - camPos.z + 0.02;
+                LevelRenderer.renderLineBox(poseStack, lineConsumer, gx0, gy0, gz0, gx1, gy1, gz1, lr, lg, lb, la);
+            }
+            if (controller.model().isInWorldGridMode() && mc.hitResult instanceof net.minecraft.world.phys.BlockHitResult bhr && bhr.getType() == net.minecraft.world.phys.HitResult.Type.BLOCK) {
+                var mg = controller.model().modularGrid();
+                var aimedCell = mg.worldToCell(new Vec3i(bhr.getBlockPos().getX(), bhr.getBlockPos().getY(), bhr.getBlockPos().getZ()));
+                int cs = mg.cellSize();
+                int ch = mg.cellHeight();
+                int nextFloor = mg.highestFloorAt(aimedCell.gx(), aimedCell.gz()) + 1;
+                double cx0 = mg.origin().x() + aimedCell.gx() * cs - camPos.x;
+                double cy0 = mg.origin().y() + nextFloor * ch - camPos.y;
+                double cz0 = mg.origin().z() + aimedCell.gz() * cs - camPos.z;
+                LevelRenderer.renderLineBox(poseStack, lineConsumer, cx0, cy0, cz0, cx0 + cs, cy0 + ch, cz0 + cs, 0.98f, 0.80f, 0.08f, 1.0f);
+            }
+        }
         }
 
         Vec3i p1 = controller.model().selectionManager().pos1();

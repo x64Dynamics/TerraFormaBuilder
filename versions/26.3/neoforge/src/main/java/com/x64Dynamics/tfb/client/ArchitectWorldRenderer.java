@@ -67,7 +67,7 @@ public final class ArchitectWorldRenderer {
         }
 
         var gp = controller.model().gridPlacement();
-        if (!gp.registry().allBuildings().isEmpty()) {
+        if (controller.model().isInWorldGridMode() || !gp.registry().allBuildings().isEmpty()) {
             var batch = com.x64Dynamics.tfb.grid.GridRendererModel.buildBatch(
                 gp.grid(), gp.registry(), gp.selectedCell(), gp.selectedBuildingId(), gp.grid().origin().y()
             );
@@ -77,6 +77,17 @@ public final class ArchitectWorldRenderer {
                     new net.minecraft.world.phys.Vec3(line.end().x(), line.end().y() + 0.02, line.end().z()),
                     line.argbColor(), line.width()
                 );
+            }
+            if (controller.model().isInWorldGridMode() && mc.hitResult instanceof net.minecraft.world.phys.BlockHitResult bhr && bhr.getType() == net.minecraft.world.phys.HitResult.Type.BLOCK) {
+                var mg = controller.model().modularGrid();
+                var aimedCell = mg.worldToCell(new Vec3i(bhr.getBlockPos().getX(), bhr.getBlockPos().getY(), bhr.getBlockPos().getZ()));
+                int cs = mg.cellSize();
+                int ch = mg.cellHeight();
+                int nextFloor = mg.highestFloorAt(aimedCell.gx(), aimedCell.gz()) + 1;
+                int cx0 = mg.origin().x() + aimedCell.gx() * cs;
+                int cy0 = mg.origin().y() + nextFloor * ch;
+                int cz0 = mg.origin().z() + aimedCell.gz() * cs;
+                Gizmos.cuboid(new net.minecraft.world.phys.AABB(cx0, cy0, cz0, cx0 + cs, cy0 + ch, cz0 + cs), GizmoStyle.stroke(0xFFFACC15, 2.0f));
             }
         }
     }
