@@ -50,14 +50,36 @@ public final class ProceduralVariator {
                     && (Math.abs(p.z() - minZ) <= 1 || Math.abs(p.z() - maxZ) <= 1);
 
                 if (relY <= 1) {
-                    // Ground-contact masonry course
-                    result.add(new PlacementTarget(p, foundation, MaterialRole.FOUNDATION));
+                    // Ground-contact masonry course with natural stone mixing
+                    long h = (p.x() * 73856093L) ^ (p.z() * 83492791L) ^ seed;
+                    BlockIdentifier baseBlk = (Math.abs(h) % 5 == 0 && foundation.path().equals("cobblestone"))
+                        ? BlockIdentifier.of("minecraft:andesite")
+                        : (Math.abs(h) % 7 == 0 && foundation.path().equals("stone_bricks")
+                            ? BlockIdentifier.of("minecraft:mossy_stone_bricks") : foundation);
+                    result.add(new PlacementTarget(p, baseBlk, MaterialRole.FOUNDATION));
                 } else if (nearCorner && (relY % 2 == 0)) {
                     // Alternating corner quoins
                     result.add(new PlacementTarget(p, wallAccent, MaterialRole.WALL_ACCENT));
                 } else if (relY >= 5 && variationRate >= 0.35f) {
                     // Upper-story material zoning
                     result.add(new PlacementTarget(p, wallAccent, MaterialRole.WALL_ACCENT));
+                } else {
+                    result.add(target);
+                }
+            } else if (target.role() == MaterialRole.ROOF_SLOPE) {
+                Vec3i p = target.pos();
+                long h = (p.x() * 73856093L) ^ (p.y() * 19349663L) ^ (p.z() * 83492791L) ^ seed;
+                String rp = target.block().path();
+                if (Math.abs(h) % 6 == 0 && rp.equals("cobblestone_stairs")) {
+                    BlockIdentifier mix = BlockIdentifier.of("minecraft:andesite_stairs");
+                    if (target.block().property("facing") != null) mix = mix.withProperty("facing", target.block().property("facing"));
+                    if (target.block().property("half") != null) mix = mix.withProperty("half", target.block().property("half"));
+                    result.add(new PlacementTarget(p, mix, MaterialRole.ROOF_SLOPE));
+                } else if (Math.abs(h) % 8 == 0 && rp.equals("cobblestone_stairs")) {
+                    BlockIdentifier mix = BlockIdentifier.of("minecraft:mossy_cobblestone_stairs");
+                    if (target.block().property("facing") != null) mix = mix.withProperty("facing", target.block().property("facing"));
+                    if (target.block().property("half") != null) mix = mix.withProperty("half", target.block().property("half"));
+                    result.add(new PlacementTarget(p, mix, MaterialRole.ROOF_SLOPE));
                 } else {
                     result.add(target);
                 }

@@ -231,6 +231,9 @@ public class ArchitectWorkspaceModel {
         this.inWorldGridMode = enabled;
         if (enabled) {
             this.modularChunkGridMode = true;
+            if (modularGrid.modules().isEmpty()) {
+                modularGrid.placeModule(0, 0, 0, stylePreset, activePalette(), roofShape);
+            }
             syncModularGridToPreview();
         }
     }

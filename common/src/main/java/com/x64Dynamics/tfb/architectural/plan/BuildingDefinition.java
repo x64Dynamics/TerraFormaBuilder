@@ -37,7 +37,7 @@ public record BuildingDefinition(
         wingConfiguration = wingConfiguration != null ? wingConfiguration : WingConfiguration.SINGLE_RECTANGLE;
         style = style != null ? style : StylePreset.MEDIEVAL;
         roofType = roofType != null ? roofType : RoofGenerator.RoofType.GABLE;
-        storyHeight = Math.max(3, Math.min(8, storyHeight <= 0 ? 4 : storyHeight));
+        storyHeight = Math.max(3, Math.min(8, storyHeight <= 0 ? 5 : storyHeight));
         facing = (facing != null && facing != Direction.UP && facing != Direction.DOWN) ? facing : Direction.SOUTH;
         furnishingDensity = Math.max(0.0f, Math.min(1.0f, furnishingDensity));
     }
@@ -57,7 +57,7 @@ public record BuildingDefinition(
         long seed
     ) {
         this(id, footprintBounds, wingConfiguration, style, palette, roofType,
-            requestedStories, 4, Direction.SOUTH,
+            requestedStories, 5, Direction.SOUTH,
             addPorchAndGarden, addChimney, furnishInterior, furnishingDensity, seed);
     }
 }
