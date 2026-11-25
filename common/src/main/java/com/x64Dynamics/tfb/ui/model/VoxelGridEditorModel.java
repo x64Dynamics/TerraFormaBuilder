@@ -219,4 +219,19 @@ public final class VoxelGridEditorModel {
             com.x64Dynamics.tfb.geometry.Direction.SOUTH, true, blocks
         );
     }
+
+    public void loadAuthoredAsset(com.x64Dynamics.tfb.architectural.assets.AuthoredAsset asset) {
+        if (asset == null) return;
+        pushUndoSnapshot();
+        cells.clear();
+        for (var rb : asset.blocks()) {
+            if (rb.rx() >= 0 && rb.rx() < width && rb.ry() >= 0 && rb.ry() < height && rb.rz() >= 0 && rb.rz() < depth) {
+                MaterialRole role = MaterialRole.WALL_PRIMARY;
+                try {
+                    if (rb.roleName() != null && !rb.roleName().isBlank()) role = MaterialRole.valueOf(rb.roleName());
+                } catch (IllegalArgumentException ignored) {}
+                setSingle(rb.rx(), rb.ry(), rb.rz(), role);
+            }
+        }
+    }
 }

@@ -89,5 +89,9 @@ public class InteriorAndGridEditorTest {
         grid.fillRect(2, 2, 4, 4);
         var asset = grid.toAuthoredAsset("test_grid", "Test Grid", StylePreset.MEDIEVAL.createPalette());
         assertTrue("AuthoredAsset from grid should have blocks", asset.blocks().size() >= 16);
+
+        VoxelGridEditorModel reloaded = new VoxelGridEditorModel(16, 16, 16);
+        reloaded.loadAuthoredAsset(asset);
+        assertEquals(asset.blocks().size(), reloaded.voxelCount());
     }
 }
