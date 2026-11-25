@@ -64,7 +64,7 @@ public final class IntelligentHomeGenerator {
             float furnishingDensity,
             long seed
         ) {
-            this(bounds, palette, roofType, requestedStories, 4, StylePreset.MEDIEVAL, Direction.SOUTH,
+            this(bounds, palette, roofType, requestedStories, 5, StylePreset.MEDIEVAL, Direction.SOUTH,
                 wingConfig, addPorchAndGarden, addChimney, furnishInterior, furnishingDensity, seed);
         }
     }
@@ -391,9 +391,11 @@ public final class IntelligentHomeGenerator {
             floorPlans.add(new BuildingPlan.FloorPlan(s, floorY, ceilingY, storyRooms, storyConns));
         }
 
-        // 6b. Usable Attic Loft / Upper Roof Room when pitched roof is tall (>= 5 blocks)
+        // 6b. Usable Attic Loft / Upper Roof Room ONLY under tall pitched roofs (GABLE, HIP, CONICAL)
         if (def.wingConfiguration() == WingConfiguration.SINGLE_RECTANGLE
-            && def.roofType() != RoofGenerator.RoofType.FLAT
+            && (def.roofType() == RoofGenerator.RoofType.GABLE
+                || def.roofType() == RoofGenerator.RoofType.HIP
+                || def.roofType() == RoofGenerator.RoofType.CONICAL)
             && roofHeight >= 5 && width >= 9 && depth >= 9) {
             int atticFloorY = wallTopY;
             int atticInnerY = wallTopY + 1;
@@ -585,7 +587,25 @@ public final class IntelligentHomeGenerator {
     }
 
     private static void put(Map<Vec3i, PlacementTarget> map, Vec3i pos, BlockIdentifier block, MaterialRole role) {
-        map.put(pos, new PlacementTarget(pos, block, role));
+        BlockIdentifier varied = applyMaterialVariation(pos, block, role);
+        map.put(pos, new PlacementTarget(pos, varied, role));
+    }
+
+    private static BlockIdentifier applyMaterialVariation(Vec3i pos, BlockIdentifier block, MaterialRole role) {
+        if (block == null || block.isAir()) return block;
+        long h = (pos.x() * 73856093L) ^ (pos.y() * 19349663L) ^ (pos.z() * 83492791L);
+        int bucket = (int) (Math.abs(h) % 10);
+        String p = block.path();
+        if (role == MaterialRole.WALL_PRIMARY && bucket == 0 && p.equals("stone_bricks")) {
+            return BlockIdentifier.of("minecraft:cracked_stone_bricks");
+        } else if (role == MaterialRole.WALL_PRIMARY && bucket == 1 && p.equals("stone_bricks")) {
+            return BlockIdentifier.of("minecraft:mossy_stone_bricks");
+        } else if (role == MaterialRole.FOUNDATION && bucket <= 1 && p.equals("cobblestone")) {
+            return BlockIdentifier.of("minecraft:andesite");
+        } else if (role == MaterialRole.SUB_FOUNDATION && bucket == 0 && p.equals("cobblestone")) {
+            return BlockIdentifier.of("minecraft:mossy_cobblestone");
+        }
+        return block;
     }
 
     private static void putAir(Map<Vec3i, PlacementTarget> map, Vec3i pos) {

@@ -222,14 +222,20 @@ public final class RoofGenerator {
         for (int y = baseY; y < baseY + 2; y++) {
             int curMinX = minX + step, curMaxX = maxX - step;
             int curMinZ = minZ + step, curMaxZ = maxZ - step;
-            for (int x = curMinX; x <= curMaxX; x++) {
-                targets.add(new PlacementTarget(new Vec3i(x, y, curMinZ), primary, MaterialRole.ROOF_SLOPE));
-                targets.add(new PlacementTarget(new Vec3i(x, y, curMaxZ), primary, MaterialRole.ROOF_SLOPE));
+            for (int x = curMinX + 1; x < curMaxX; x++) {
+                targets.add(new PlacementTarget(new Vec3i(x, y, curMinZ), primary.withProperty("facing", "south").withProperty("half", "bottom"), MaterialRole.ROOF_SLOPE));
+                targets.add(new PlacementTarget(new Vec3i(x, y, curMaxZ), primary.withProperty("facing", "north").withProperty("half", "bottom"), MaterialRole.ROOF_SLOPE));
             }
             for (int z = curMinZ + 1; z < curMaxZ; z++) {
-                targets.add(new PlacementTarget(new Vec3i(curMinX, y, z), primary, MaterialRole.ROOF_SLOPE));
-                targets.add(new PlacementTarget(new Vec3i(curMaxX, y, z), primary, MaterialRole.ROOF_SLOPE));
+                targets.add(new PlacementTarget(new Vec3i(curMinX, y, z), primary.withProperty("facing", "east").withProperty("half", "bottom"), MaterialRole.ROOF_SLOPE));
+                targets.add(new PlacementTarget(new Vec3i(curMaxX, y, z), primary.withProperty("facing", "west").withProperty("half", "bottom"), MaterialRole.ROOF_SLOPE));
             }
+            // Solid corner blocks for clean mansard hips without stair gaps
+            BlockIdentifier cornerMat = palette.get(MaterialRole.ROOF_OVERHANG);
+            targets.add(new PlacementTarget(new Vec3i(curMinX, y, curMinZ), cornerMat, MaterialRole.ROOF_OVERHANG));
+            targets.add(new PlacementTarget(new Vec3i(curMaxX, y, curMinZ), cornerMat, MaterialRole.ROOF_OVERHANG));
+            targets.add(new PlacementTarget(new Vec3i(curMinX, y, curMaxZ), cornerMat, MaterialRole.ROOF_OVERHANG));
+            targets.add(new PlacementTarget(new Vec3i(curMaxX, y, curMaxZ), cornerMat, MaterialRole.ROOF_OVERHANG));
             step++;
         }
 

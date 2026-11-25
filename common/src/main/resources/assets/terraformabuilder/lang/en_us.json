@@ -85,6 +85,9 @@
   "tfb.room.armory": "Armory",
   "tfb.room.alchemical_lab": "Alchemical Lab",
   "tfb.room.dining_hall": "Dining Hall",
+  "tfb.room.hallway": "Hallway",
+  "tfb.room.staircase_hall": "Staircase Hall",
+  "tfb.room.attic_loft": "Attic Loft",
 
   "tfb.style.medieval": "Medieval",
   "tfb.style.modern": "Modern",

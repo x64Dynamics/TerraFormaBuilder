@@ -38,20 +38,31 @@ public final class GridRendererModel {
         int maxX = org.x() + gw * cs;
         int maxZ = org.z() + gd * cs;
 
-        // Batched full-span grid lines (major every 8 cells, minor every 1 cell)
+        // Batched full-span grid lines + vertical chunk-slice pillars (major every 4 cells)
+        int sliceTopY = planeY + 10;
         for (int gx = 0; gx <= gw; gx++) {
-            boolean major = (gx % 8 == 0);
+            boolean major = (gx % 4 == 0);
             int color = major ? 0xCC38BDF8 : 0x4464748B;
             float w = major ? 2.0f : 1.0f;
             int wx = org.x() + gx * cs;
             lines.add(new GridLine(new Vec3i(wx, planeY, org.z()), new Vec3i(wx, planeY, maxZ), color, w));
+            if (major) {
+                lines.add(new GridLine(new Vec3i(wx, planeY + 5, org.z()), new Vec3i(wx, planeY + 5, maxZ), 0x4438BDF8, 1.0f));
+                for (int gz = 0; gz <= gd; gz += 4) {
+                    int wz = org.z() + gz * cs;
+                    lines.add(new GridLine(new Vec3i(wx, planeY, wz), new Vec3i(wx, sliceTopY, wz), 0x8838BDF8, 1.5f));
+                }
+            }
         }
         for (int gz = 0; gz <= gd; gz++) {
-            boolean major = (gz % 8 == 0);
+            boolean major = (gz % 4 == 0);
             int color = major ? 0xCC38BDF8 : 0x4464748B;
             float w = major ? 2.0f : 1.0f;
             int wz = org.z() + gz * cs;
             lines.add(new GridLine(new Vec3i(org.x(), planeY, wz), new Vec3i(maxX, planeY, wz), color, w));
+            if (major) {
+                lines.add(new GridLine(new Vec3i(org.x(), planeY + 5, wz), new Vec3i(maxX, planeY + 5, wz), 0x4438BDF8, 1.0f));
+            }
         }
 
         // Only emit highlights for non-AVAILABLE cells or selected cell

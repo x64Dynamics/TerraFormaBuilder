@@ -928,7 +928,7 @@ public class ArchitectWorkspaceModel {
 
             // 3. Multi-Story Interior rooms & furnishings
             if (enableInteriors && activeCategory == BrushCategory.ARCHITECTURAL && width >= 8 && depth >= 8 && height >= 5) {
-                int storyHeight = 4;
+                int storyHeight = 5;
                 int numStories = requestedStories > 0 ? Math.min(4, requestedStories) : Math.max(1, (height - 2) / storyHeight);
                 this.generatedStories = numStories;
                 int roomTotal = 0;
