@@ -70,10 +70,7 @@ public final class TFBClientEvents {
             }
 
             while (TFBKeyMappings.EXECUTE_BUILD.consumeClick()) {
-                mc.player.displayClientMessage(
-                        Component.literal("§a[TFB] Build execution started..."),
-                        true
-                );
+                executeBuild(mc);
             }
 
             while (TFBKeyMappings.TOGGLE_FLIGHT.consumeClick()) {
@@ -171,6 +168,48 @@ public final class TFBClientEvents {
         public static void onPlayerClone(ClientPlayerNetworkEvent.Clone event) {
             TFBClientController.getInstance().setArchitectMode(false);
             ArchitectFlightController.restorePreviousState(Minecraft.getInstance());
+        }
+
+        public static void executeBuild(Minecraft mc) {
+            net.minecraft.world.level.Level level = mc.level;
+            if (level == null || mc.player == null) return;
+            ArchitectWorkspaceModel model = TFBClientController.getInstance().model();
+            java.util.List<com.x64Dynamics.tfb.architectural.PlacementTarget> targets = model.cachedPreviewTargets();
+            if (targets.isEmpty()) {
+                mc.player.displayClientMessage(Component.literal("§c[TFB] Build failed: No preview blocks available!"), false);
+                return;
+            }
+            java.util.List<com.x64Dynamics.tfb.construction.ScheduledBlockPlacement> scheduled =
+                com.x64Dynamics.tfb.construction.DependencyAwareScheduler.scheduleWithDependencies(targets);
+            net.minecraft.server.MinecraftServer server = mc.getSingleplayerServer();
+            if (server != null) {
+                net.minecraft.server.level.ServerLevel serverLevel = server.getLevel(level.dimension());
+                if (serverLevel != null) {
+                    server.execute(() -> {
+                        int placed = 0;
+                        java.util.List<com.x64Dynamics.tfb.editing.WorldConstructionHistory.BlockChange> changes = new java.util.ArrayList<>();
+                        for (com.x64Dynamics.tfb.construction.ScheduledBlockPlacement target : scheduled) {
+                            com.x64Dynamics.tfb.geometry.Vec3i pos = target.pos();
+                            net.minecraft.core.BlockPos bp = new net.minecraft.core.BlockPos(pos.x(), pos.y(), pos.z());
+                            net.minecraft.world.level.block.state.BlockState prevState = serverLevel.getBlockState(bp);
+                            net.minecraft.world.level.block.state.BlockState state = BlockStateParser.parse(target.block());
+                            if (!prevState.equals(state) && serverLevel.setBlock(bp, state, 3)) {
+                                placed++;
+                                changes.add(new com.x64Dynamics.tfb.editing.WorldConstructionHistory.BlockChange(
+                                    pos, BlockStateParser.fromBlockState(prevState), target.block()
+                                ));
+                            }
+                        }
+                        if (!changes.isEmpty()) {
+                            com.x64Dynamics.tfb.editing.WorldConstructionHistory.getInstance().recordTransaction(changes);
+                        }
+                        final int finalPlaced = placed;
+                        mc.execute(() -> mc.player.displayClientMessage(
+                            Component.literal("§a[TFB] Construction complete! Placed " + finalPlaced + " blocks."), false
+                        ));
+                    });
+                }
+            }
         }
     }
 }

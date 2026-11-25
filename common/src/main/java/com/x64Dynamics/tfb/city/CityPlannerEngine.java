@@ -181,9 +181,26 @@ public final class CityPlannerEngine {
             ? WingConfiguration.L_SHAPED
             : WingConfiguration.SINGLE_RECTANGLE;
 
+        // Rotate/orient building so entrance and porch face parcel.streetFacing()
+        com.x64Dynamics.tfb.geometry.Rotation rot = switch (parcel.streetFacing()) {
+            case SOUTH -> com.x64Dynamics.tfb.geometry.Rotation.NONE;
+            case WEST -> com.x64Dynamics.tfb.geometry.Rotation.CLOCKWISE_90;
+            case NORTH -> com.x64Dynamics.tfb.geometry.Rotation.CLOCKWISE_180;
+            case EAST -> com.x64Dynamics.tfb.geometry.Rotation.COUNTERCLOCKWISE_90;
+            default -> com.x64Dynamics.tfb.geometry.Rotation.NONE;
+        };
+
+        BoundingBox3i genBounds = parcel.bounds();
+        if (rot == com.x64Dynamics.tfb.geometry.Rotation.CLOCKWISE_90 || rot == com.x64Dynamics.tfb.geometry.Rotation.COUNTERCLOCKWISE_90) {
+            // Swap X/Z dimensions before rotating 90 degrees so the rotated building fits the parcel bounds
+            genBounds = BoundingBox3i.fromOriginAndSize(
+                parcel.bounds().min(), parcel.bounds().sizeZ(), parcel.bounds().sizeY(), parcel.bounds().sizeX()
+            );
+        }
+
         BuildingDefinition def = new BuildingDefinition(
             parcel.id(),
-            parcel.bounds(),
+            genBounds,
             wing,
             style,
             palette,
@@ -196,6 +213,15 @@ public final class CityPlannerEngine {
             parcel.seed()
         );
         BuildingPlan plan = IntelligentHomeGenerator.generatePlan(def);
+        if (rot != com.x64Dynamics.tfb.geometry.Rotation.NONE) {
+            Vec3i pivot = new Vec3i(
+                (parcel.bounds().min().x() + parcel.bounds().max().x()) / 2,
+                parcel.bounds().min().y(),
+                (parcel.bounds().min().z() + parcel.bounds().max().z()) / 2
+            );
+            List<PlacementTarget> rotated = com.x64Dynamics.tfb.editing.ConstructionTransforms.rotate(plan.targets(), rot, pivot);
+            plan = new BuildingPlan(def, plan.floors(), plan.stairwells(), rotated, parcel.bounds(), plan.validation());
+        }
         parcel.setBuildingPlan(plan);
     }
 

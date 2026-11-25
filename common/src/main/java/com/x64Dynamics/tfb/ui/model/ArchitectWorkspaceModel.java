@@ -110,12 +110,15 @@ public class ArchitectWorkspaceModel {
     private ProgressiveBuildPlan cachedBuildPlan = null;
     private com.x64Dynamics.tfb.architectural.plan.BuildingPlan latestPlan = null;
 
+    public enum BuildScope { ENTIRE_PROJECT, SELECTED_DISTRICT, SELECTED_PARCEL }
+
     // World-Scale City Designer state
     private boolean cityMode = false;
     private com.x64Dynamics.tfb.city.WorldProject activeCityProject = null;
     private com.x64Dynamics.tfb.city.SettlementPattern settlementPattern = com.x64Dynamics.tfb.city.SettlementPattern.MEDIEVAL_TOWN;
     private String selectedDistrictId = null;
     private String selectedParcelId = null;
+    private BuildScope buildScope = BuildScope.ENTIRE_PROJECT;
 
     public ArchitectWorkspaceModel() {
         this.selectionManager = new WorldSelectionManager(boundingBox());
@@ -398,6 +401,12 @@ public class ArchitectWorkspaceModel {
     public void setSelectedDistrictId(String id) { this.selectedDistrictId = id; }
     public String selectedParcelId() { return selectedParcelId; }
     public void setSelectedParcelId(String id) { this.selectedParcelId = id; }
+    public BuildScope buildScope() { return buildScope; }
+    public void setBuildScope(BuildScope scope) { this.buildScope = scope != null ? scope : BuildScope.ENTIRE_PROJECT; generatePreview(); }
+    public void cycleBuildScope() {
+        BuildScope[] vals = BuildScope.values();
+        setBuildScope(vals[(buildScope.ordinal() + 1) % vals.length]);
+    }
 
     public synchronized void createNewCity(String name, com.x64Dynamics.tfb.city.SettlementPattern pattern, int sizeX, int sizeZ) {
         this.width = Math.max(24, sizeX);
@@ -468,7 +477,13 @@ public class ArchitectWorkspaceModel {
             if (activeCityProject.districts().isEmpty()) {
                 com.x64Dynamics.tfb.city.CityPlannerEngine.planCity(activeCityProject);
             }
-            targets.addAll(activeCityProject.resolveAllTargets());
+            if (buildScope == BuildScope.SELECTED_PARCEL && selectedParcelId != null) {
+                targets.addAll(activeCityProject.resolveParcelTargets(selectedParcelId));
+            } else if (buildScope == BuildScope.SELECTED_DISTRICT && selectedDistrictId != null) {
+                targets.addAll(activeCityProject.resolveDistrictTargets(selectedDistrictId));
+            } else {
+                targets.addAll(activeCityProject.resolveAllTargets());
+            }
             this.generatedStories = activeCityProject.districts().size();
             this.generatedRoomCount = activeCityProject.totalParcelCount();
         } else if (activeBrush instanceof ArchitecturalBrushes.HouseBrush) {

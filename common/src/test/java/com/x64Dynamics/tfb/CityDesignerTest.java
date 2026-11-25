@@ -89,4 +89,30 @@ public class CityDesignerTest {
         assertEquals(SettlementPattern.ORGANIC_VILLAGE, loaded.pattern());
         assertEquals(model.activeCityProject().totalParcelCount(), loaded.totalParcelCount());
     }
+
+    @Test
+    public void testWaterfrontDockAndBuildScopeSelection() {
+        BoundingBox3i dockBox = BoundingBox3i.fromOriginAndSize(new Vec3i(0, 64, 0), 10, 4, 8);
+        PublicSpace dock = new PublicSpace("pub_dock", "Harbor Pier", PublicSpace.PublicSpaceType.WATERFRONT_DOCK, dockBox);
+        List<PlacementTarget> dockTargets = PublicSpaceGenerator.generate(dock, StylePreset.MEDIEVAL.createPalette(), 42L);
+        assertTrue(dockTargets.stream().anyMatch(t -> t.block().path().equals("spruce_planks")));
+        assertTrue(dockTargets.stream().anyMatch(t -> t.block().path().equals("barrel")));
+
+        ArchitectWorkspaceModel model = new ArchitectWorkspaceModel();
+        model.createNewCity("ScopeCity", SettlementPattern.PLANNED_GRID, 48, 48);
+        int fullCount = model.totalBlockCount();
+
+        var firstDistrict = model.activeCityProject().districts().get(0);
+        var firstParcel = firstDistrict.parcels().get(0);
+        model.setSelectedDistrictId(firstDistrict.id());
+        model.setSelectedParcelId(firstParcel.id());
+
+        model.setBuildScope(ArchitectWorkspaceModel.BuildScope.SELECTED_PARCEL);
+        int parcelCount = model.totalBlockCount();
+        assertTrue("Selected parcel scope should be smaller than full city", parcelCount > 0 && parcelCount < fullCount);
+
+        model.setBuildScope(ArchitectWorkspaceModel.BuildScope.SELECTED_DISTRICT);
+        int districtCount = model.totalBlockCount();
+        assertTrue("Selected district scope should be >= parcel and <= full city", districtCount >= parcelCount && districtCount <= fullCount);
+    }
 }

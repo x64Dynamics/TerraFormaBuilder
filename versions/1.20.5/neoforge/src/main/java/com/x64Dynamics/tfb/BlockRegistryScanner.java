@@ -4,7 +4,6 @@ import com.x64Dynamics.tfb.material.BlockIdentifier;
 import com.x64Dynamics.tfb.taxonomy.BlockTaxonomyRegistry;
 import com.x64Dynamics.tfb.taxonomy.BlockTrait;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
@@ -13,10 +12,6 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
 
-/**
- * Scans Minecraft's BuiltInRegistries.BLOCK at runtime to classify all vanilla and modded blocks
- * by actual Block subclass, StateDefinition properties, and light emission.
- */
 public final class BlockRegistryScanner {
     private static boolean scanned = false;
 
@@ -28,7 +23,7 @@ public final class BlockRegistryScanner {
 
         BlockTaxonomyRegistry registry = BlockTaxonomyRegistry.getInstance();
         for (Block block : BuiltInRegistries.BLOCK) {
-            ResourceLocation key = BuiltInRegistries.BLOCK.getKey(block);
+            var key = BuiltInRegistries.BLOCK.getKey(block);
             if (key == null || block == Blocks.AIR || block == Blocks.CAVE_AIR || block == Blocks.VOID_AIR) {
                 continue;
             }

@@ -19,8 +19,43 @@ public final class PublicSpaceGenerator {
         return switch (space.type()) {
             case PLAZA, MARKET_SQUARE -> generateMarketPlaza(space.bounds(), space.type() == PublicSpace.PublicSpaceType.MARKET_SQUARE, palette, seed);
             case PARK_GARDEN -> generateParkGarden(space.bounds(), palette, seed);
-            case WATERFRONT_DOCK -> generateMarketPlaza(space.bounds(), false, palette, seed);
+            case WATERFRONT_DOCK -> generateWaterfrontDock(space.bounds(), palette);
         };
+    }
+
+    private static List<PlacementTarget> generateWaterfrontDock(BoundingBox3i box, MaterialPalette palette) {
+        Map<Vec3i, PlacementTarget> map = new LinkedHashMap<>();
+        int minX = box.min().x(), maxX = box.max().x();
+        int minZ = box.min().z(), maxZ = box.max().z();
+        int y = box.min().y();
+
+        BlockIdentifier planks = BlockIdentifier.of("minecraft:spruce_planks");
+        BlockIdentifier slab = BlockIdentifier.of("minecraft:spruce_slab[type=bottom]");
+        BlockIdentifier log = BlockIdentifier.of("minecraft:oak_log[axis=y]");
+        BlockIdentifier fence = BlockIdentifier.of("minecraft:spruce_fence");
+        BlockIdentifier lantern = BlockIdentifier.of("minecraft:lantern");
+        BlockIdentifier barrel = BlockIdentifier.of("minecraft:barrel[facing=up]");
+
+        for (int x = minX; x <= maxX; x++) {
+            for (int z = minZ; z <= maxZ; z++) {
+                boolean isPiling = ((x - minX) % 4 == 0) && ((z - minZ) % 4 == 0);
+                if (isPiling) {
+                    for (int py = y - 3; py <= y + 1; py++) {
+                        put(map, new Vec3i(x, py, z), log, MaterialRole.PILLAR);
+                    }
+                    if (x == minX || x == maxX || z == minZ || z == maxZ) {
+                        put(map, new Vec3i(x, y + 2, z), fence, MaterialRole.FENCE);
+                        put(map, new Vec3i(x, y + 3, z), lantern, MaterialRole.LIGHT_SOURCE);
+                    }
+                } else {
+                    put(map, new Vec3i(x, y, z), ((x + z) % 5 == 0) ? slab : planks, MaterialRole.FLOOR);
+                }
+            }
+        }
+        // Cargo crates on pier
+        put(map, new Vec3i(minX + 1, y + 1, minZ + 1), barrel, MaterialRole.DECORATION);
+        put(map, new Vec3i(minX + 2, y + 1, minZ + 1), barrel, MaterialRole.DECORATION);
+        return new ArrayList<>(map.values());
     }
 
     private static List<PlacementTarget> generateMarketPlaza(

@@ -31,6 +31,14 @@ public final class ConstructionTransforms {
                     block = block.withProperty("facing", rotatedDir.name().toLowerCase(Locale.ROOT));
                 } catch (IllegalArgumentException ignored) { }
             }
+            if (rotation == Rotation.CLOCKWISE_90 || rotation == Rotation.COUNTERCLOCKWISE_90) {
+                String axis = block.property("axis");
+                if ("x".equalsIgnoreCase(axis)) {
+                    block = block.withProperty("axis", "z");
+                } else if ("z".equalsIgnoreCase(axis)) {
+                    block = block.withProperty("axis", "x");
+                }
+            }
 
             result.add(new PlacementTarget(newPos, block, target.role()));
         }
