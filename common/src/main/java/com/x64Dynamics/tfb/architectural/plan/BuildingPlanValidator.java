@@ -7,10 +7,8 @@ import com.x64Dynamics.tfb.material.MaterialRole;
 
 import java.util.*;
 
-/**
- * Validates structural dimensions, story heights, structural support under walls/pillars,
- * door/window openings, room connectivity graph, stairwell headroom, and placement integrity.
- */
+// Validates structural dimensions, story heights, structural support under walls/pillars,
+// door/window openings, room connectivity graph, stairwell headroom, and placement integrity.
 public final class BuildingPlanValidator {
     private BuildingPlanValidator() { }
 

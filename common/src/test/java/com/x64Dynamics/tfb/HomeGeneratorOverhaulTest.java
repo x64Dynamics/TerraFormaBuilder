@@ -1,9 +1,9 @@
 package com.x64Dynamics.tfb;
 
-import com.x64Dynamics.tfb.architectural.IntelligentHomeGenerator;
+import com.x64Dynamics.tfb.architectural.HomeGenerator;
 import com.x64Dynamics.tfb.architectural.PlacementTarget;
 import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
-import com.x64Dynamics.tfb.architectural.layout.WingConfiguration;
+import com.x64Dynamics.tfb.architectural.interior.layouts.WingConfiguration;
 import com.x64Dynamics.tfb.geometry.BoundingBox3i;
 import com.x64Dynamics.tfb.geometry.Direction;
 import com.x64Dynamics.tfb.geometry.Vec3i;
@@ -18,12 +18,12 @@ public class HomeGeneratorOverhaulTest {
     @Test
     public void testRespectsExact5x5SelectionWithoutExpanding() {
         var bounds = BoundingBox3i.fromOriginAndSize(new Vec3i(0, 64, 0), 5, 8, 5);
-        var cfg = new IntelligentHomeGenerator.HomeConfig(
+        var cfg = new HomeGenerator.HomeConfig(
             bounds, StylePreset.MEDIEVAL.createPalette(), RoofGenerator.RoofType.GABLE,
             1, 4, StylePreset.MEDIEVAL, Direction.SOUTH, WingConfiguration.SINGLE_RECTANGLE,
             false, true, true, 1.0f, 101L
         );
-        var res = IntelligentHomeGenerator.generateHome(cfg);
+        var res = HomeGenerator.generateHome(cfg);
         assertEquals(1, res.stories());
         for (PlacementTarget t : res.targets()) {
             if (t.role() == MaterialRole.WALL_PRIMARY || t.role() == MaterialRole.FOUNDATION) {
@@ -37,12 +37,12 @@ public class HomeGeneratorOverhaulTest {
     public void testSizes9x9_15x15_31x31AndConfigurableStoryHeight() {
         for (int size : new int[]{9, 15, 31}) {
             var bounds = BoundingBox3i.fromOriginAndSize(new Vec3i(0, 64, 0), size, 24, size);
-            var cfg = new IntelligentHomeGenerator.HomeConfig(
+            var cfg = new HomeGenerator.HomeConfig(
                 bounds, StylePreset.TRADITIONAL.createPalette(), RoofGenerator.RoofType.HIP,
                 2, 5, StylePreset.TRADITIONAL, Direction.SOUTH, WingConfiguration.SINGLE_RECTANGLE,
                 true, true, true, 1.0f, 202L + size
             );
-            var res = IntelligentHomeGenerator.generateHome(cfg);
+            var res = HomeGenerator.generateHome(cfg);
             assertEquals(2, res.stories());
             assertTrue(res.plan().validation().valid());
             assertEquals("Single chimney should have exactly 1 rooftop campfire",
@@ -53,12 +53,12 @@ public class HomeGeneratorOverhaulTest {
     @Test
     public void testOrientationAwareEntranceAndModernStyleRules() {
         var bounds = BoundingBox3i.fromOriginAndSize(new Vec3i(0, 64, 0), 13, 14, 13);
-        var northModern = new IntelligentHomeGenerator.HomeConfig(
+        var northModern = new HomeGenerator.HomeConfig(
             bounds, StylePreset.MODERN.createPalette(), RoofGenerator.RoofType.FLAT,
             2, 4, StylePreset.MODERN, Direction.NORTH, WingConfiguration.SINGLE_RECTANGLE,
             true, false, true, 1.0f, 303L
         );
-        var res = IntelligentHomeGenerator.generateHome(northModern);
+        var res = HomeGenerator.generateHome(northModern);
         assertTrue("Door should be placed on NORTH facade (z=0)",
             res.targets().stream().anyMatch(t -> t.role() == MaterialRole.DOOR && t.pos().z() == 0));
         assertEquals("Modern flat roof has 0 overhang",
@@ -69,12 +69,12 @@ public class HomeGeneratorOverhaulTest {
     public void testMultiWingCompoundFootprintInteriors() {
         var bounds = BoundingBox3i.fromOriginAndSize(new Vec3i(0, 64, 0), 15, 14, 15);
         for (WingConfiguration wing : new WingConfiguration[]{WingConfiguration.L_SHAPED, WingConfiguration.U_SHAPED}) {
-            var cfg = new IntelligentHomeGenerator.HomeConfig(
+            var cfg = new HomeGenerator.HomeConfig(
                 bounds, StylePreset.FANTASY.createPalette(), RoofGenerator.RoofType.MANSARD,
                 2, 4, StylePreset.FANTASY, Direction.EAST, wing,
                 false, true, true, 1.0f, 404L
             );
-            var res = IntelligentHomeGenerator.generateHome(cfg);
+            var res = HomeGenerator.generateHome(cfg);
             assertTrue("Compound " + wing + " should generate rooms", res.roomCount() >= 2);
             assertTrue(res.targets().stream().anyMatch(t -> t.role() == MaterialRole.DOOR && t.pos().x() == 14));
         }
@@ -82,15 +82,15 @@ public class HomeGeneratorOverhaulTest {
 
     @Test
     public void testWallSegmentationArchedAndBalconyBays() {
-        var seg = com.x64Dynamics.tfb.architectural.facade.WallSegmenter.calculateRhythm(15, 6, false, 4, true, true);
-        assertTrue(seg.bays().stream().anyMatch(b -> b.type() == com.x64Dynamics.tfb.architectural.facade.WallSegmenter.BayType.BALCONY));
-        assertTrue(seg.bays().stream().anyMatch(b -> b.type() == com.x64Dynamics.tfb.architectural.facade.WallSegmenter.BayType.ARCHED_WINDOW));
+        var seg = com.x64Dynamics.tfb.architectural.interior.wall.WallSegmenter.calculateRhythm(15, 6, false, 4, true, true);
+        assertTrue(seg.bays().stream().anyMatch(b -> b.type() == com.x64Dynamics.tfb.architectural.interior.wall.WallSegmenter.BayType.BALCONY));
+        assertTrue(seg.bays().stream().anyMatch(b -> b.type() == com.x64Dynamics.tfb.architectural.interior.wall.WallSegmenter.BayType.ARCHED_WINDOW));
     }
 
     @Test
     public void testContextAwareProceduralVariationPatterns() {
         var bounds = BoundingBox3i.fromOriginAndSize(new Vec3i(0, 64, 0), 9, 12, 9);
-        var res = IntelligentHomeGenerator.generateHome(new IntelligentHomeGenerator.HomeConfig(
+        var res = HomeGenerator.generateHome(new HomeGenerator.HomeConfig(
             bounds, StylePreset.MEDIEVAL.createPalette(), RoofGenerator.RoofType.GABLE,
             2, 4, StylePreset.MEDIEVAL, Direction.SOUTH, WingConfiguration.SINGLE_RECTANGLE,
             false, false, false, 1.0f, 505L
@@ -105,7 +105,7 @@ public class HomeGeneratorOverhaulTest {
     @Test
     public void testTallRoofGeneratesUsableAtticLoftRoom() {
         var bounds = BoundingBox3i.fromOriginAndSize(new Vec3i(0, 64, 0), 13, 18, 13);
-        var res = IntelligentHomeGenerator.generateHome(new IntelligentHomeGenerator.HomeConfig(
+        var res = HomeGenerator.generateHome(new HomeGenerator.HomeConfig(
             bounds, StylePreset.MEDIEVAL.createPalette(), RoofGenerator.RoofType.GABLE,
             1, 4, StylePreset.MEDIEVAL, Direction.SOUTH, WingConfiguration.SINGLE_RECTANGLE,
             true, true, true, 1.0f, 606L

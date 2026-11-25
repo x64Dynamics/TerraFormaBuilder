@@ -18,11 +18,11 @@ import java.util.List;
 import static org.junit.Assert.*;
 
 import com.x64Dynamics.tfb.architectural.assets.AuthoredAsset;
-import com.x64Dynamics.tfb.architectural.interior.InteriorFloorPlanner;
+import com.x64Dynamics.tfb.architectural.interior.floor.InteriorFloorPlanner;
 import com.x64Dynamics.tfb.architectural.interior.InteriorFurnishingGenerator;
 import com.x64Dynamics.tfb.architectural.interior.InteriorRoom;
 import com.x64Dynamics.tfb.architectural.interior.RoomType;
-import com.x64Dynamics.tfb.architectural.layout.ConnectedBuildingComposer;
+import com.x64Dynamics.tfb.architectural.interior.layouts.ConnectedBuildingComposer;
 public class InteriorAndGridEditorTest {
 
     @Test

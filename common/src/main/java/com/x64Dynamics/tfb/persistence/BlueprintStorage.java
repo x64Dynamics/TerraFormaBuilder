@@ -5,9 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
 
-/**
- * Persists and loads ParametricBlueprint JSON files under the mod config directory.
- */
+// Persists and loads ParametricBlueprint JSON files under the mod config directory.
 public final class BlueprintStorage {
     private static volatile Path storageDir = Paths.get("config", "terraformabuilder", "blueprints");
 

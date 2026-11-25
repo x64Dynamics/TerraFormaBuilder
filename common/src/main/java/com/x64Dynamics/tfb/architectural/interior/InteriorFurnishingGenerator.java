@@ -11,11 +11,9 @@ import com.x64Dynamics.tfb.material.MaterialRole;
 import java.util.*;
 
 import com.x64Dynamics.tfb.architectural.PlacementTarget;
-/**
- * Generates realistic human-scale interior layouts and furnishings for every RoomType,
- * using exact interior room bounds (without double-shrinking walls), height-aware
- * ceiling lighting, style-harmonized rugs/beds, and clearance-safe placement.
- */
+// Generates realistic human-scale interior layouts and furnishings for every RoomType,
+// using exact interior room bounds (without double-shrinking walls), height-aware
+// ceiling lighting, style-harmonized rugs/beds, and clearance-safe placement.
 public final class InteriorFurnishingGenerator {
     private InteriorFurnishingGenerator() { }
 

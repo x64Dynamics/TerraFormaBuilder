@@ -2,7 +2,7 @@ package com.x64Dynamics.tfb;
 
 import com.x64Dynamics.tfb.architectural.AutonomousArchitect;
 import com.x64Dynamics.tfb.geometry.Vec3i;
-import com.x64Dynamics.tfb.grid.*;
+import com.x64Dynamics.tfb.architectural.grid.*;
 import com.x64Dynamics.tfb.material.BlockIdentifier;
 import com.x64Dynamics.tfb.material.StylePreset;
 import com.x64Dynamics.tfb.platform.ILevelAccess;
@@ -52,7 +52,7 @@ public class AutonomousArchitectTest {
         StructurePlacementController ctrl = new StructurePlacementController(
             grid, new BuildingRegistry(),
             new PlacementValidator(PlacementValidator.PlacementRules.defaults()),
-            new ComplexConnectionPlanner()
+            new GridConnectionPlanner()
         );
         var rep = AutonomousArchitect.autoPopulateComplex(
             new Vec3i(0, 64, 0), ctrl, flatWorldWithBlock("minecraft:grass_block", 64), null, 77L

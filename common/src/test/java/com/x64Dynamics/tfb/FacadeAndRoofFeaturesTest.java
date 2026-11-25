@@ -12,8 +12,8 @@ import java.util.List;
 
 import static org.junit.Assert.*;
 
-import com.x64Dynamics.tfb.architectural.facade.FacadeOrnamentGenerator;
-import com.x64Dynamics.tfb.architectural.roof.AdvancedRoofFeatures;
+import com.x64Dynamics.tfb.architectural.interior.facades.FacadeOrnamentGenerator;
+import com.x64Dynamics.tfb.architectural.roof.RoofFeatures;
 public final class FacadeAndRoofFeaturesTest {
     private final MaterialPalette palette = StylePreset.MEDIEVAL.createPalette();
 
@@ -34,7 +34,7 @@ public final class FacadeAndRoofFeaturesTest {
     @Test
     public void testChimneyGeneration() {
         Vec3i roofPt = new Vec3i(3, 10, 3);
-        List<PlacementTarget> chimney = AdvancedRoofFeatures.generateChimney(roofPt, 4, palette);
+        List<PlacementTarget> chimney = RoofFeatures.generateChimney(roofPt, 4, palette);
         assertFalse(chimney.isEmpty());
         // Verify campfire top is placed
         assertTrue(chimney.stream().anyMatch(t -> t.block().path().equals("campfire")));

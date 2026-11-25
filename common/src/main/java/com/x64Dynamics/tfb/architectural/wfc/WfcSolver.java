@@ -4,11 +4,9 @@ import com.x64Dynamics.tfb.geometry.Direction;
 
 import java.util.*;
 
-/**
- * 3D Wave Function Collapse solver (inspired by MGAIA-Minecraft and GDMC2024)
- * with directional socket adjacency, 90-degree Y-rotations, locked cells,
- * weighted entropy collapse, and contradiction retry.
- */
+// 3D Wave Function Collapse solver (inspired by MGAIA-Minecraft and GDMC2024)
+// with directional socket adjacency, 90-degree Y-rotations, locked cells,
+// weighted entropy collapse, and contradiction retry.
 public final class WfcSolver {
     public record ModuleRule(
         String id,

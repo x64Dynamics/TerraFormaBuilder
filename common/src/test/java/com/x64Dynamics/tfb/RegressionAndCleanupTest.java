@@ -1,17 +1,17 @@
 package com.x64Dynamics.tfb;
 
 import com.x64Dynamics.tfb.architectural.PlacementTarget;
-import com.x64Dynamics.tfb.architectural.facade.OpeningGenerator;
-import com.x64Dynamics.tfb.architectural.facade.WallSegmenter;
-import com.x64Dynamics.tfb.architectural.interior.InteriorFloorPlanner;
+import com.x64Dynamics.tfb.architectural.interior.facades.OpeningGenerator;
+import com.x64Dynamics.tfb.architectural.interior.wall.WallSegmenter;
+import com.x64Dynamics.tfb.architectural.interior.floor.InteriorFloorPlanner;
 import com.x64Dynamics.tfb.architectural.interior.InteriorFurnishingGenerator;
 import com.x64Dynamics.tfb.architectural.interior.InteriorRoom;
 import com.x64Dynamics.tfb.architectural.interior.RoomType;
-import com.x64Dynamics.tfb.architectural.layout.StaircaseGenerator;
-import com.x64Dynamics.tfb.architectural.roof.AdvancedRoofFeatures;
+import com.x64Dynamics.tfb.architectural.interior.layouts.StaircaseGenerator;
+import com.x64Dynamics.tfb.architectural.roof.RoofFeatures;
 import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
 import com.x64Dynamics.tfb.geometry.*;
-import com.x64Dynamics.tfb.grid.*;
+import com.x64Dynamics.tfb.architectural.grid.*;
 import com.x64Dynamics.tfb.material.*;
 import com.x64Dynamics.tfb.network.C2SConstructionPacket;
 import com.x64Dynamics.tfb.network.ServerBuildPermissionValidator;
@@ -71,7 +71,7 @@ public class RegressionAndCleanupTest {
         );
         assertEquals(1, cone.size());
 
-        var chimney = AdvancedRoofFeatures.generateChimney(new Vec3i(0, 70, 0), 3, palette);
+        var chimney = RoofFeatures.generateChimney(new Vec3i(0, 70, 0), 3, palette);
         assertTrue(chimney.stream().anyMatch(t -> t.block().path().equals("sandstone")));
         assertFalse(chimney.stream().anyMatch(t -> t.block().path().equals("bricks")));
     }
@@ -133,7 +133,7 @@ public class RegressionAndCleanupTest {
         StructurePlacementController ctrl = new StructurePlacementController(
             grid, new BuildingRegistry(),
             new PlacementValidator(PlacementValidator.PlacementRules.defaults()),
-            new ComplexConnectionPlanner()
+            new GridConnectionPlanner()
         );
         GridBuilding edge2 = new GridBuilding(
             "edge2", 0, 5, 64, 8, 5, 1, 4,
@@ -211,10 +211,10 @@ public class RegressionAndCleanupTest {
         StructurePlacementController ctrl = new StructurePlacementController(
             grid, new BuildingRegistry(),
             new PlacementValidator(PlacementValidator.PlacementRules.defaults()),
-            new ComplexConnectionPlanner()
+            new GridConnectionPlanner()
         );
         int[] captured = new int[4];
-        var canvas = new com.x64Dynamics.tfb.ui.widget.UIGridComplexCanvas(
+        var canvas = new com.x64Dynamics.tfb.ui.widget.UIGridCanvas(
             new com.x64Dynamics.tfb.ui.widget.UIBounds(0, 0, 128, 128),
             ctrl,
             null,

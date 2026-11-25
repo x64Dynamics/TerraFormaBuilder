@@ -12,11 +12,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Editable architectural volume within an {@link ArchitecturalProject}.
- * Preserves stable ID, spatial bounds, style, roof form, lock state,
- * and cached resolved placements for incremental dirty-region regeneration.
- */
+// Editable architectural volume within an {@link ArchitecturalProject}.
+// Preserves stable ID, spatial bounds, style, roof form, lock state,
+// and cached resolved placements for incremental dirty-region regeneration.
 public final class EditableBuildingSection {
     public enum SectionKind {
         MAIN_WING,

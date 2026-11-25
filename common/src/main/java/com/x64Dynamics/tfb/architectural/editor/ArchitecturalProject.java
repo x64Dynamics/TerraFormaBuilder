@@ -11,10 +11,8 @@ import com.x64Dynamics.tfb.terrain.HeightmapGrid;
 
 import java.util.*;
 
-/**
- * Persistent, hierarchical architectural project holding editable {@link EditableBuildingSection}s,
- * spatial dependency tracking, incremental dirty-region regeneration, and undo/redo snapshots.
- */
+// Persistent, hierarchical architectural project holding editable {@link EditableBuildingSection}s,
+// spatial dependency tracking, incremental dirty-region regeneration, and undo/redo snapshots.
 public final class ArchitecturalProject {
     private final String id;
     private String name;

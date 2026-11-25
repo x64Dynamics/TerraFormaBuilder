@@ -51,9 +51,7 @@ public final class SchematicExporter {
         return dto.toPayload();
     }
 
-    /**
-     * Exports a compressed Sponge-compatible GZIP schematic stream (Version 2 layout).
-     */
+    // Exports a compressed Sponge-compatible GZIP schematic stream (Version 2 layout).
     public static void saveCompressedSchematic(java.nio.file.Path outFile, BoundingBox3i bounds, List<PlacementTarget> targets) throws java.io.IOException {
         if (outFile.getParent() != null) {
             java.nio.file.Files.createDirectories(outFile.getParent());

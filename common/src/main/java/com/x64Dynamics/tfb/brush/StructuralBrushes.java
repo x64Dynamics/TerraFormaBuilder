@@ -6,10 +6,10 @@ import com.x64Dynamics.tfb.material.*;
 
 import java.util.*;
 
-import com.x64Dynamics.tfb.architectural.facade.PillarGenerator;
-import com.x64Dynamics.tfb.architectural.facade.WallGenerator;
-import com.x64Dynamics.tfb.architectural.layout.FloorGenerator;
-import com.x64Dynamics.tfb.architectural.layout.StaircaseGenerator;
+import com.x64Dynamics.tfb.architectural.interior.facades.PillarGenerator;
+import com.x64Dynamics.tfb.architectural.interior.wall.WallGenerator;
+import com.x64Dynamics.tfb.architectural.interior.floor.FloorGenerator;
+import com.x64Dynamics.tfb.architectural.interior.layouts.StaircaseGenerator;
 import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
 public final class StructuralBrushes {
     private StructuralBrushes() { }

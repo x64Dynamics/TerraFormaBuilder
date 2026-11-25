@@ -9,9 +9,7 @@ import com.x64Dynamics.tfb.material.MaterialRole;
 
 import java.util.*;
 
-/**
- * Generates plazas, market squares, parks, gardens, fountains, stalls, benches, and street lamps.
- */
+// Generates plazas, market squares, parks, gardens, fountains, stalls, benches, and street lamps.
 public final class PublicSpaceGenerator {
     private PublicSpaceGenerator() { }
 

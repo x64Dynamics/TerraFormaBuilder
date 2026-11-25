@@ -8,10 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Server-side permission, world-bounds, anti-spam, and survival resource validator
- * for incoming C2S construction requests.
- */
+// Server-side permission, world-bounds, anti-spam, and survival resource validator
+// for incoming C2S construction requests.
 public final class ServerBuildPermissionValidator {
     public record ValidationResult(boolean allowed, String reason, Map<BlockIdentifier, Integer> requiredResources) {
         public static ValidationResult ok(Map<BlockIdentifier, Integer> resources) {

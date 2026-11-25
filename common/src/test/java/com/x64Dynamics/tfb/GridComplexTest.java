@@ -4,7 +4,7 @@ import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
 import com.x64Dynamics.tfb.geometry.BoundingBox3i;
 import com.x64Dynamics.tfb.geometry.Direction;
 import com.x64Dynamics.tfb.geometry.Vec3i;
-import com.x64Dynamics.tfb.grid.*;
+import com.x64Dynamics.tfb.architectural.grid.*;
 import com.x64Dynamics.tfb.material.StylePreset;
 import com.x64Dynamics.tfb.ui.camera.ArchitectCameraController;
 import org.junit.Test;
@@ -33,7 +33,7 @@ public class GridComplexTest {
         GridManager grid = GridManager.defaultProjectGrid(new Vec3i(0, 64, 0));
         BuildingRegistry registry = new BuildingRegistry();
         PlacementValidator ruleEngine = new PlacementValidator(PlacementValidator.PlacementRules.defaults());
-        ComplexConnectionPlanner connEngine = new ComplexConnectionPlanner();
+        GridConnectionPlanner connEngine = new GridConnectionPlanner();
         StructurePlacementController ctrl = new StructurePlacementController(grid, registry, ruleEngine, connEngine);
 
         GridBuilding b1 = new GridBuilding(
@@ -66,7 +66,7 @@ public class GridComplexTest {
         GridManager grid = GridManager.defaultProjectGrid(new Vec3i(0, 64, 0));
         BuildingRegistry registry = new BuildingRegistry();
         PlacementValidator ruleEngine = new PlacementValidator(PlacementValidator.PlacementRules.defaults());
-        ComplexConnectionPlanner connEngine = new ComplexConnectionPlanner();
+        GridConnectionPlanner connEngine = new GridConnectionPlanner();
         StructurePlacementController ctrl = new StructurePlacementController(grid, registry, ruleEngine, connEngine);
 
         // Side-by-side touching residential buildings -> DOORWAY
@@ -104,9 +104,9 @@ public class GridComplexTest {
 
         var complex = ctrl.generateComplex();
         assertTrue("Complex should generate >= 500 blocks", complex.targets().size() >= 500);
-        assertTrue(complex.connections().stream().anyMatch(c -> c.type() == ComplexConnectionPlanner.ConnectionType.DOORWAY));
-        assertTrue(complex.connections().stream().anyMatch(c -> c.type() == ComplexConnectionPlanner.ConnectionType.ELEVATED_WALKWAY));
-        assertTrue(complex.connections().stream().anyMatch(c -> c.type() == ComplexConnectionPlanner.ConnectionType.VERTICAL_STACK));
+        assertTrue(complex.connections().stream().anyMatch(c -> c.type() == GridConnectionPlanner.ConnectionType.DOORWAY));
+        assertTrue(complex.connections().stream().anyMatch(c -> c.type() == GridConnectionPlanner.ConnectionType.ELEVATED_WALKWAY));
+        assertTrue(complex.connections().stream().anyMatch(c -> c.type() == GridConnectionPlanner.ConnectionType.VERTICAL_STACK));
 
         // Batched grid renderer output
         var batch = GridRendererModel.buildBatch(grid, registry, new GridManager.GridCoord(2, 2), "main", 64);
@@ -131,7 +131,7 @@ public class GridComplexTest {
         GridProjectManager.setStorageDir(tmp);
         GridManager grid = GridManager.defaultProjectGrid(Vec3i.ZERO);
         BuildingRegistry reg = new BuildingRegistry();
-        StructurePlacementController ctrl = new StructurePlacementController(grid, reg, new PlacementValidator(PlacementValidator.PlacementRules.defaults()), new ComplexConnectionPlanner());
+        StructurePlacementController ctrl = new StructurePlacementController(grid, reg, new PlacementValidator(PlacementValidator.PlacementRules.defaults()), new GridConnectionPlanner());
         ctrl.placeBuilding(new GridBuilding(
             "hall", 1, 1, 64, 9, 9, 1, 4,
             GridBuilding.FootprintShape.L_SHAPED, Direction.EAST,
@@ -153,8 +153,8 @@ public class GridComplexTest {
         var res = loaded.generateComplex();
         assertTrue(res.targets().size() > 200);
 
-        for (GridComplexPresets.PresetKind kind : GridComplexPresets.PresetKind.values()) {
-            GridComplexPresets.populate(kind, loaded, 64, StylePreset.MEDIEVAL, 99L);
+        for (GridPresets.PresetKind kind : GridPresets.PresetKind.values()) {
+            GridPresets.populate(kind, loaded, 64, StylePreset.MEDIEVAL, 99L);
             var presetRes = loaded.generateComplex();
             assertTrue("Preset " + kind + " should generate >= 300 blocks", presetRes.targets().size() >= 300);
             assertFalse("Preset " + kind + " should form connections", presetRes.connections().isEmpty());

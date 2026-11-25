@@ -11,12 +11,12 @@ import java.util.*;
 
 import static org.junit.Assert.*;
 
-import com.x64Dynamics.tfb.architectural.facade.WallSegmenter;
-import com.x64Dynamics.tfb.architectural.interior.InteriorFloorPlanner;
+import com.x64Dynamics.tfb.architectural.interior.wall.WallSegmenter;
+import com.x64Dynamics.tfb.architectural.interior.floor.InteriorFloorPlanner;
 import com.x64Dynamics.tfb.architectural.interior.InteriorFurnishingGenerator;
 import com.x64Dynamics.tfb.architectural.interior.InteriorRoom;
-import com.x64Dynamics.tfb.architectural.layout.BuildingSection;
-import com.x64Dynamics.tfb.architectural.layout.ConnectedBuildingComposer;
+import com.x64Dynamics.tfb.architectural.interior.layouts.BuildingSection;
+import com.x64Dynamics.tfb.architectural.interior.layouts.ConnectedBuildingComposer;
 import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
 public final class ProceduralArchitectureAndInfrastructureTest {
     private final MaterialPalette palette = StylePreset.MEDIEVAL.createPalette();

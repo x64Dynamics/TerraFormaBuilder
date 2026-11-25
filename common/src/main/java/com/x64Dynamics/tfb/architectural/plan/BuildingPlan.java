@@ -8,9 +8,7 @@ import com.x64Dynamics.tfb.geometry.Vec3i;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Complete inspectable and validatable architectural plan produced before world construction.
- */
+// Complete inspectable and validatable architectural plan produced before world construction.
 public record BuildingPlan(
     BuildingDefinition definition,
     List<FloorPlan> floors,

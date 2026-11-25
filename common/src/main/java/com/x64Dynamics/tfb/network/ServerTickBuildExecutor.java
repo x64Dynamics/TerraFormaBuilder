@@ -10,10 +10,8 @@ import com.x64Dynamics.tfb.platform.IPlayerAccess;
 
 import java.util.*;
 
-/**
- * Progressive tick-budgeted server block placement engine with anti-cheat pacing,
- * survival resource consumption, and progress sync.
- */
+// Progressive tick-budgeted server block placement engine with anti-cheat pacing,
+// survival resource consumption, and progress sync.
 public final class ServerTickBuildExecutor {
     public static final class ActiveJob {
         private final UUID sessionId;

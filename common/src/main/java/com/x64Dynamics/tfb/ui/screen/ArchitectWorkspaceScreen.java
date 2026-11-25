@@ -1,7 +1,7 @@
 package com.x64Dynamics.tfb.ui.screen;
 
 import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
-import com.x64Dynamics.tfb.architectural.layout.WingConfiguration;
+import com.x64Dynamics.tfb.architectural.interior.layouts.WingConfiguration;
 import com.x64Dynamics.tfb.architectural.plan.BuildingPlan;
 import com.x64Dynamics.tfb.brush.ArchitecturalBrushes;
 import com.x64Dynamics.tfb.brush.BrushCategory;
@@ -29,10 +29,8 @@ import java.util.List;
 import java.util.Locale;
 
 import com.x64Dynamics.tfb.TerraFormaBuilder;
-/**
- * TerraFormaBuilder Studio UI featuring a Home Dashboard, live Building Hierarchy,
- * contextual Design/Materials/Library/Projects/Settings editors, and full localization.
- */
+// TerraFormaBuilder Studio UI featuring a Home Dashboard, live Building Hierarchy,
+// contextual Design/Materials/Library/Projects/Settings editors, and full localization.
 public class ArchitectWorkspaceScreen {
     private final ArchitectWorkspaceModel model;
     private final List<UIWidget> widgets = new ArrayList<>();
@@ -64,8 +62,8 @@ public class ArchitectWorkspaceScreen {
     private UITextField materialSearchField;
     private UITextField aiPromptField;
     private MaterialRole selectedMaterialRole = MaterialRole.WALL_PRIMARY;
-    private com.x64Dynamics.tfb.grid.GridBuilding.BuildingFunction selectedGridFunction = com.x64Dynamics.tfb.grid.GridBuilding.BuildingFunction.RESIDENTIAL;
-    private com.x64Dynamics.tfb.grid.GridBuilding.FootprintShape selectedGridShape = com.x64Dynamics.tfb.grid.GridBuilding.FootprintShape.RECTANGLE;
+    private com.x64Dynamics.tfb.architectural.grid.GridBuilding.BuildingFunction selectedGridFunction = com.x64Dynamics.tfb.architectural.grid.GridBuilding.BuildingFunction.RESIDENTIAL;
+    private com.x64Dynamics.tfb.architectural.grid.GridBuilding.FootprintShape selectedGridShape = com.x64Dynamics.tfb.architectural.grid.GridBuilding.FootprintShape.RECTANGLE;
 
     // Callbacks
     private Runnable closeCallback;
@@ -665,7 +663,7 @@ public class ArchitectWorkspaceScreen {
 
                 int canvasY = contentY + 23;
                 int canvasSize = Math.min(116, Math.max(84, contentWidth / 3));
-                tabWidgets.add(new UIGridComplexCanvas(new UIBounds(contentX, canvasY, canvasSize, canvasSize), gp, (gx, gz) -> {
+                tabWidgets.add(new UIGridCanvas(new UIBounds(contentX, canvasY, canvasSize, canvasSize), gp, (gx, gz) -> {
                     setStatus("Cell (" + gx + "," + gz + ") | " + gp.lastValidationMessage());
                     rebuildTabWidgets();
                 }, (minGx, minGz, selW, selD) -> {
@@ -681,9 +679,9 @@ public class ArchitectWorkspaceScreen {
                 int pitch = 21;
 
                 tabWidgets.add(new UIButton(new UIBounds(sideX, canvasY, halfW, btnH), "+ " + selectedGridFunction.name().substring(0, 4), b -> {
-                    var sc = gp.selectedCell() != null ? gp.selectedCell() : new com.x64Dynamics.tfb.grid.GridManager.GridCoord(2, 2);
+                    var sc = gp.selectedCell() != null ? gp.selectedCell() : new com.x64Dynamics.tfb.architectural.grid.GridManager.GridCoord(2, 2);
                     String id = "b_" + (gp.registry().allBuildings().size() + 1);
-                    var bld = new com.x64Dynamics.tfb.grid.GridBuilding(
+                    var bld = new com.x64Dynamics.tfb.architectural.grid.GridBuilding(
                         id, sc.gx(), sc.gz(), model.origin().y(), model.width(), model.depth(),
                         Math.max(1, model.requestedStories()), 5,
                         selectedGridShape,
@@ -700,7 +698,7 @@ public class ArchitectWorkspaceScreen {
                     rebuildTabWidgets();
                 }));
                 tabWidgets.add(new UIButton(new UIBounds(sideX + halfW + 4, canvasY, halfW, btnH), "Shape: " + selectedGridShape.name().substring(0, 4), b -> {
-                    var shapes = com.x64Dynamics.tfb.grid.GridBuilding.FootprintShape.values();
+                    var shapes = com.x64Dynamics.tfb.architectural.grid.GridBuilding.FootprintShape.values();
                     selectedGridShape = shapes[(selectedGridShape.ordinal() + 1) % (shapes.length - 1)];
                     rebuildTabWidgets();
                 }));
@@ -714,7 +712,7 @@ public class ArchitectWorkspaceScreen {
                     }
                 }));
                 tabWidgets.add(new UIButton(new UIBounds(sideX + halfW + 4, canvasY + pitch, halfW, btnH), "Fn: " + selectedGridFunction.name().substring(0, 4), b -> {
-                    var fns = com.x64Dynamics.tfb.grid.GridBuilding.BuildingFunction.values();
+                    var fns = com.x64Dynamics.tfb.architectural.grid.GridBuilding.BuildingFunction.values();
                     selectedGridFunction = fns[(selectedGridFunction.ordinal() + 1) % fns.length];
                     rebuildTabWidgets();
                 }));
@@ -734,7 +732,7 @@ public class ArchitectWorkspaceScreen {
                 tabWidgets.add(new UIButton(new UIBounds(sideX, canvasY + pitch * 3, halfW, btnH), "Save .tfbgrid", b -> {
                     try {
                         String name = blueprintNameField != null ? blueprintNameField.text() : "complex";
-                        com.x64Dynamics.tfb.grid.GridProjectManager.save(name, gp.grid(), gp.registry());
+                        com.x64Dynamics.tfb.architectural.grid.GridProjectManager.save(name, gp.grid(), gp.registry());
                         setStatus("Saved grid project: " + name);
                     } catch (Exception ex) {
                         setStatus("Grid save failed: " + ex.getMessage());
@@ -775,8 +773,8 @@ public class ArchitectWorkspaceScreen {
 
                 int thirdW = (sideW - 8) / 3;
                 tabWidgets.add(new UIButton(new UIBounds(sideX, canvasY + pitch * 5, thirdW, 16), "Estate", b -> {
-                    com.x64Dynamics.tfb.grid.GridComplexPresets.populate(
-                        com.x64Dynamics.tfb.grid.GridComplexPresets.PresetKind.MANOR_ESTATE,
+                    com.x64Dynamics.tfb.architectural.grid.GridPresets.populate(
+                        com.x64Dynamics.tfb.architectural.grid.GridPresets.PresetKind.MANOR_ESTATE,
                         gp, model.origin().y(), model.stylePreset(), model.proceduralSeed()
                     );
                     int n = model.syncGridComplexToPreview();
@@ -784,8 +782,8 @@ public class ArchitectWorkspaceScreen {
                     rebuildTabWidgets();
                 }));
                 tabWidgets.add(new UIButton(new UIBounds(sideX + thirdW + 4, canvasY + pitch * 5, thirdW, 16), "Village", b -> {
-                    com.x64Dynamics.tfb.grid.GridComplexPresets.populate(
-                        com.x64Dynamics.tfb.grid.GridComplexPresets.PresetKind.VILLAGE_SQUARE,
+                    com.x64Dynamics.tfb.architectural.grid.GridPresets.populate(
+                        com.x64Dynamics.tfb.architectural.grid.GridPresets.PresetKind.VILLAGE_SQUARE,
                         gp, model.origin().y(), model.stylePreset(), model.proceduralSeed()
                     );
                     int n = model.syncGridComplexToPreview();

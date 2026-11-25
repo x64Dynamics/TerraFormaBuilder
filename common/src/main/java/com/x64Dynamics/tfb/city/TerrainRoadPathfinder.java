@@ -9,11 +9,9 @@ import com.x64Dynamics.tfb.terrain.HeightmapGrid;
 
 import java.util.*;
 
-/**
- * Terrain-aware A* road pathfinder (adapted from RoadArchitect's PathFinder concepts),
- * minimizing steep slopes, tagging bridge spans across depressions/water, and generating
- * paved road surfaces, curbs, bridge piers, and roadside lanterns.
- */
+// Terrain-aware A* road pathfinder (adapted from RoadArchitect's PathFinder concepts),
+// minimizing steep slopes, tagging bridge spans across depressions/water, and generating
+// paved road surfaces, curbs, bridge piers, and roadside lanterns.
 public final class TerrainRoadPathfinder {
     public enum SpanType { GROUND, BRIDGE, RETAINING }
 

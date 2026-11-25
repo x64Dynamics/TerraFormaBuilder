@@ -1,6 +1,6 @@
 package com.x64Dynamics.tfb.architectural.editor;
 
-import com.x64Dynamics.tfb.architectural.roof.AdvancedRoofFeatures;
+import com.x64Dynamics.tfb.architectural.roof.RoofFeatures;
 import com.x64Dynamics.tfb.architectural.PlacementTarget;
 import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
 import com.x64Dynamics.tfb.geometry.Axis;
@@ -16,11 +16,9 @@ import com.x64Dynamics.tfb.terrain.TerrainAdapter;
 
 import java.util.*;
 
-/**
- * Generates VoxelDreamer-inspired architectural geometry and adaptive details
- * for an individual {@link EditableBuildingSection}, responding to adjacent sections
- * (walkable rooftop terraces, connecting doors) and live terrain.
- */
+// Generates VoxelDreamer-inspired architectural geometry and adaptive details
+// for an individual {@link EditableBuildingSection}, responding to adjacent sections
+// (walkable rooftop terraces, connecting doors) and live terrain.
 public final class SectionComposer {
     private SectionComposer() {}
 
@@ -194,12 +192,12 @@ public final class SectionComposer {
             }
             if (width >= 11 && section.roofType() == RoofGenerator.RoofType.GABLE) {
                 Vec3i dormerPos = new Vec3i(doorX, wallTopY + 2, maxZ - 1);
-                for (PlacementTarget dt : AdvancedRoofFeatures.generateDormer(dormerPos, Direction.SOUTH, 3, 2, palette)) {
+                for (PlacementTarget dt : RoofFeatures.generateDormer(dormerPos, Direction.SOUTH, 3, 2, palette)) {
                     put(map, dt.pos(), dt.block(), dt.role());
                 }
             }
             if (section.kind() == EditableBuildingSection.SectionKind.MAIN_WING) {
-                for (PlacementTarget ct : AdvancedRoofFeatures.generateChimney(new Vec3i(maxX - 2, wallTopY, minZ + 2), 4, palette)) {
+                for (PlacementTarget ct : RoofFeatures.generateChimney(new Vec3i(maxX - 2, wallTopY, minZ + 2), 4, palette)) {
                     put(map, ct.pos(), ct.block(), ct.role());
                 }
             }

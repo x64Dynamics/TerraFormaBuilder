@@ -6,11 +6,9 @@ import com.x64Dynamics.tfb.material.MaterialRole;
 
 import java.util.*;
 
-/**
- * Editable sparse voxel volume (inspired by vengi's RawVolume/SparseVolume)
- * supporting O(1) voxel access, boolean operations, connected-component
- * detection, surface extraction, and geometric transforms.
- */
+// Editable sparse voxel volume (inspired by vengi's RawVolume/SparseVolume)
+// supporting O(1) voxel access, boolean operations, connected-component
+// detection, surface extraction, and geometric transforms.
 public final class VoxelVolume {
     private final Map<Vec3i, BlockIdentifier> voxels = new LinkedHashMap<>();
 
@@ -79,10 +77,8 @@ public final class VoxelVolume {
         return out;
     }
 
-    /**
-     * Finds 6-connected components in the volume (useful for structural integrity
-     * and floating-fragment detection).
-     */
+    // Finds 6-connected components in the volume (useful for structural integrity
+    // and floating-fragment detection).
     public List<Set<Vec3i>> connectedComponents() {
         List<Set<Vec3i>> components = new ArrayList<>();
         Set<Vec3i> visited = new HashSet<>();
@@ -109,9 +105,7 @@ public final class VoxelVolume {
         return components;
     }
 
-    /**
-     * Computes 6-neighbor face visibility bitmask (matching ObjToSchematic's EFaceVisibility).
-     */
+    // Computes 6-neighbor face visibility bitmask (matching ObjToSchematic's EFaceVisibility).
     public int visibleFacesMask(Vec3i pos) {
         int mask = 0;
         if (!voxels.containsKey(pos.add(0, 1, 0))) mask |= 1 << 0;  // UP

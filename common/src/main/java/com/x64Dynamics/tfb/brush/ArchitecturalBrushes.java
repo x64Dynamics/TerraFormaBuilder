@@ -7,13 +7,13 @@ import com.x64Dynamics.tfb.terrain.TerrainAdapter;
 
 import java.util.*;
 
-import com.x64Dynamics.tfb.architectural.facade.OpeningGenerator;
-import com.x64Dynamics.tfb.architectural.facade.PillarGenerator;
-import com.x64Dynamics.tfb.architectural.facade.WallGenerator;
-import com.x64Dynamics.tfb.architectural.facade.WallSegmenter;
-import com.x64Dynamics.tfb.architectural.layout.FloorGenerator;
-import com.x64Dynamics.tfb.architectural.layout.TowerGenerator;
-import com.x64Dynamics.tfb.architectural.layout.WingConfiguration;
+import com.x64Dynamics.tfb.architectural.interior.facades.OpeningGenerator;
+import com.x64Dynamics.tfb.architectural.interior.facades.PillarGenerator;
+import com.x64Dynamics.tfb.architectural.interior.wall.WallGenerator;
+import com.x64Dynamics.tfb.architectural.interior.wall.WallSegmenter;
+import com.x64Dynamics.tfb.architectural.interior.floor.FloorGenerator;
+import com.x64Dynamics.tfb.architectural.interior.layouts.TowerGenerator;
+import com.x64Dynamics.tfb.architectural.interior.layouts.WingConfiguration;
 import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
 public final class ArchitecturalBrushes {
     private ArchitecturalBrushes() { }
@@ -54,7 +54,7 @@ public final class ArchitecturalBrushes {
             float density = context.getProperty("density", 1.0f);
             long seed = context.getProperty("seed", 42L);
 
-            IntelligentHomeGenerator.HomeConfig config = new IntelligentHomeGenerator.HomeConfig(
+            HomeGenerator.HomeConfig config = new HomeGenerator.HomeConfig(
                 bounds,
                 palette,
                 RoofGenerator.RoofType.GABLE,
@@ -66,7 +66,7 @@ public final class ArchitecturalBrushes {
                 density,
                 seed
             );
-            List<PlacementTarget> targets = new ArrayList<>(IntelligentHomeGenerator.generateHome(config).targets());
+            List<PlacementTarget> targets = new ArrayList<>(HomeGenerator.generateHome(config).targets());
             if (context.heightmap() != null) {
                 targets.addAll(TerrainAdapter.adapt(bounds, context.heightmap(), context.foundationStrategy(), palette).foundationPlacements());
             }

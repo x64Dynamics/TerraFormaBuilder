@@ -7,9 +7,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Public plaza, market square, park, or waterfront dock within a WorldProject.
- */
+// Public plaza, market square, park, or waterfront dock within a WorldProject.
 public final class PublicSpace {
     public enum PublicSpaceType {
         PLAZA,

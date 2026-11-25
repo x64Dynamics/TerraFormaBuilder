@@ -11,9 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Pure Java client-to-server construction packet with binary codec for cross-loader networking.
- */
+// Pure Java client-to-server construction packet with binary codec for cross-loader networking.
 public record C2SConstructionPacket(
     UUID sessionId,
     UUID playerId,

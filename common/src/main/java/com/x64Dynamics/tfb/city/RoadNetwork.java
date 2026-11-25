@@ -7,9 +7,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Graph-based urban street and path network connecting districts, parcels, and public spaces.
- */
+// Graph-based urban street and path network connecting districts, parcels, and public spaces.
 public final class RoadNetwork {
     public enum RoadTier {
         ARTERIAL(5),

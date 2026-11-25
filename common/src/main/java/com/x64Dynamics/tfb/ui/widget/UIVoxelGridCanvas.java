@@ -4,10 +4,8 @@ import com.x64Dynamics.tfb.material.MaterialRole;
 import com.x64Dynamics.tfb.ui.model.VoxelGridEditorModel;
 import com.x64Dynamics.tfb.ui.rendering.IGuiGraphicsContext;
 
-/**
- * Interactive 2D top-down slice canvas for the VoxelDreamer-style grid editor,
- * featuring onion-skinning of the layer below, symmetry axes, and drag painting.
- */
+// Interactive 2D top-down slice canvas for the VoxelDreamer-style grid editor,
+// featuring onion-skinning of the layer below, symmetry axes, and drag painting.
 public class UIVoxelGridCanvas extends UIWidget {
     private final VoxelGridEditorModel grid;
     private final Runnable onModified;

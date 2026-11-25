@@ -12,12 +12,10 @@ import com.x64Dynamics.tfb.material.StylePreset;
 
 import java.util.*;
 
-import com.x64Dynamics.tfb.architectural.layout.WingConfiguration;
+import com.x64Dynamics.tfb.architectural.interior.layouts.WingConfiguration;
 import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
-/**
- * Procedural urban planner that builds road networks, zones districts, subdivides blocks
- * into street-facing parcels, creates public spaces, and generates diverse buildings.
- */
+// Procedural urban planner that builds road networks, zones districts, subdivides blocks
+// into street-facing parcels, creates public spaces, and generates diverse buildings.
 public final class CityPlanner {
     private CityPlanner() { }
 
@@ -265,7 +263,7 @@ public final class CityPlanner {
             0.85f,
             parcel.seed()
         );
-        BuildingPlan plan = IntelligentHomeGenerator.generatePlan(def);
+        BuildingPlan plan = HomeGenerator.generatePlan(def);
         if (rot != com.x64Dynamics.tfb.geometry.Rotation.NONE) {
             Vec3i pivot = new Vec3i(
                 (parcel.bounds().min().x() + parcel.bounds().max().x()) / 2,

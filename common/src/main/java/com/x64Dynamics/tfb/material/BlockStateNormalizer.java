@@ -6,11 +6,9 @@ import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 
-/**
- * Pure Java BlockState property normalizer and placement-order/attachment helper
- * ensuring directional, stateful, and multi-part blocks (doors, beds, stairs, slabs,
- * chests, furnaces, trapdoors, logs) orient and place cleanly across all MC versions.
- */
+// Pure Java BlockState property normalizer and placement-order/attachment helper
+// ensuring directional, stateful, and multi-part blocks (doors, beds, stairs, slabs,
+// chests, furnaces, trapdoors, logs) orient and place cleanly across all MC versions.
 public final class BlockStateNormalizer {
     private BlockStateNormalizer() { }
 

@@ -9,11 +9,9 @@ import com.x64Dynamics.tfb.material.MaterialRole;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Context-aware architectural pattern variation engine:
- * applies ground-contact plinth courses, alternating corner quoins, and upper-story
- * material zoning rather than arbitrary per-block random noise.
- */
+// Context-aware architectural pattern variation engine:
+// applies ground-contact plinth courses, alternating corner quoins, and upper-story
+// material zoning rather than arbitrary per-block random noise.
 public final class ProceduralVariator {
     private ProceduralVariator() {}
 

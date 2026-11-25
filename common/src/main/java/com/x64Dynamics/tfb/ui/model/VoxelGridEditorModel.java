@@ -9,11 +9,9 @@ import com.x64Dynamics.tfb.material.MaterialRole;
 
 import java.util.*;
 
-/**
- * Interactive layer-by-layer 3D voxel grid editor model (inspired by VoxelDreamer)
- * supporting slice navigation, paint/erase/flood-fill/extrude/eyedropper tools,
- * X/Z symmetry mirroring, undo/redo, and live 3D preview export.
- */
+// Interactive layer-by-layer 3D voxel grid editor model (inspired by VoxelDreamer)
+// supporting slice navigation, paint/erase/flood-fill/extrude/eyedropper tools,
+// X/Z symmetry mirroring, undo/redo, and live 3D preview export.
 public final class VoxelGridEditorModel {
     public enum GridTool {
         PAINT("Paint"),

@@ -1,13 +1,13 @@
 package com.x64Dynamics.tfb.architectural;
 
-import com.x64Dynamics.tfb.architectural.layout.TowerGenerator;
-import com.x64Dynamics.tfb.architectural.layout.WingConfiguration;
+import com.x64Dynamics.tfb.architectural.interior.layouts.TowerGenerator;
+import com.x64Dynamics.tfb.architectural.interior.layouts.WingConfiguration;
 import com.x64Dynamics.tfb.architectural.plan.BuildingPlan;
 import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
 import com.x64Dynamics.tfb.geometry.BoundingBox3i;
 import com.x64Dynamics.tfb.geometry.Direction;
 import com.x64Dynamics.tfb.geometry.Vec3i;
-import com.x64Dynamics.tfb.grid.ModularGridSession;
+import com.x64Dynamics.tfb.architectural.grid.ModularGridSession;
 import com.x64Dynamics.tfb.material.BlockIdentifier;
 import com.x64Dynamics.tfb.material.MaterialPalette;
 import com.x64Dynamics.tfb.material.StylePreset;
@@ -16,11 +16,9 @@ import com.x64Dynamics.tfb.terrain.FoundationStrategy;
 
 import java.util.*;
 
-/**
- * Local context-aware AI architectural builder.
- * Scans surrounding terrain, water, slope, and nearby man-made structures via ILevelAccess,
- * interprets natural-language architectural prompts locally, and generates complete detailed builds.
- */
+// Local context-aware AI architectural builder.
+// Scans surrounding terrain, water, slope, and nearby man-made structures via ILevelAccess,
+// interprets natural-language architectural prompts locally, and generates complete detailed builds.
 public final class LocalAIBuilder {
     public enum Archetype {
         COTTAGE,
@@ -293,12 +291,12 @@ public final class LocalAIBuilder {
         }
 
         BoundingBox3i box = new BoundingBox3i(org, org.add(intent.width() - 1, intent.stories() * intent.storyHeight() + 8, intent.depth() - 1));
-        var cfg = new IntelligentHomeGenerator.HomeConfig(
+        var cfg = new HomeGenerator.HomeConfig(
             box, palette, intent.roofType(), intent.stories(), intent.storyHeight(),
             intent.style(), ctx.bestApproachFacing(), intent.wings(),
             intent.addPorch(), intent.addChimney(), true, 0.90f, seed
         );
-        var res = IntelligentHomeGenerator.generateHome(cfg);
+        var res = HomeGenerator.generateHome(cfg);
         String summary = String.format("AI %s %dF %s (%d blocks, %s, facing %s)",
             intent.style().name(), res.stories(), intent.archetype().name(),
             res.targets().size(), ctx.recommendedFoundation().name(), ctx.bestApproachFacing().name());

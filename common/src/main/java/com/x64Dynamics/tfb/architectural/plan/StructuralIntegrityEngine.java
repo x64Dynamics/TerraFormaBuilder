@@ -10,12 +10,10 @@ import com.x64Dynamics.tfb.platform.ILevelAccess;
 
 import java.util.*;
 
-/**
- * Deterministic structural-integrity solver and enforcer.
- * Evaluates load paths, column continuity, floor/ceiling spans, cantilevered roof overhangs,
- * door threshold support, and terrain grounding, automatically reinforcing any unsupported
- * geometry using the active MaterialPalette so builds look human-engineered and never float.
- */
+// Deterministic structural-integrity solver and enforcer.
+// Evaluates load paths, column continuity, floor/ceiling spans, cantilevered roof overhangs,
+// door threshold support, and terrain grounding, automatically reinforcing any unsupported
+// geometry using the active MaterialPalette so builds look human-engineered and never float.
 public final class StructuralIntegrityEngine {
     public record IntegrityReport(
         int groundedPilings,

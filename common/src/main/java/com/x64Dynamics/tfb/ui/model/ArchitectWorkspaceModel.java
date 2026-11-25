@@ -1,17 +1,17 @@
 package com.x64Dynamics.tfb.ui.model;
 
-import com.x64Dynamics.tfb.architectural.roof.AdvancedRoofFeatures;
-import com.x64Dynamics.tfb.architectural.facade.FacadeOrnamentGenerator;
-import com.x64Dynamics.tfb.architectural.layout.FloorGenerator;
-import com.x64Dynamics.tfb.architectural.interior.InteriorFloorPlanner;
+import com.x64Dynamics.tfb.architectural.roof.RoofFeatures;
+import com.x64Dynamics.tfb.architectural.interior.facades.FacadeOrnamentGenerator;
+import com.x64Dynamics.tfb.architectural.interior.floor.FloorGenerator;
+import com.x64Dynamics.tfb.architectural.interior.floor.InteriorFloorPlanner;
 import com.x64Dynamics.tfb.architectural.interior.InteriorFurnishingGenerator;
 import com.x64Dynamics.tfb.architectural.interior.InteriorRoom;
-import com.x64Dynamics.tfb.architectural.facade.LayeredFacadeComposer;
-import com.x64Dynamics.tfb.architectural.layout.ParametricFootprint;
+import com.x64Dynamics.tfb.architectural.interior.facades.LayeredFacadeComposer;
+import com.x64Dynamics.tfb.architectural.interior.layouts.ParametricFootprint;
 import com.x64Dynamics.tfb.architectural.PlacementTarget;
 import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
-import com.x64Dynamics.tfb.architectural.layout.WingConfiguration;
-import com.x64Dynamics.tfb.architectural.layout.WingLayoutGenerator;
+import com.x64Dynamics.tfb.architectural.interior.layouts.WingConfiguration;
+import com.x64Dynamics.tfb.architectural.interior.layouts.WingLayoutGenerator;
 import com.x64Dynamics.tfb.architectural.style.ArchitecturalStyleRuleSet;
 import com.x64Dynamics.tfb.architectural.style.ProceduralVariator;
 import com.x64Dynamics.tfb.architectural.style.StyleRuleSetRegistry;
@@ -219,11 +219,11 @@ public class ArchitectWorkspaceModel {
     private final VoxelGridEditorModel gridEditor = new VoxelGridEditorModel(16, 16, 16);
     public VoxelGridEditorModel gridEditor() { return gridEditor; }
 
-    private final com.x64Dynamics.tfb.grid.ModularGridSession modularGrid =
-        new com.x64Dynamics.tfb.grid.ModularGridSession(new Vec3i(0, 64, 0), 5, 5);
+    private final com.x64Dynamics.tfb.architectural.grid.ModularGridSession modularGrid =
+        new com.x64Dynamics.tfb.architectural.grid.ModularGridSession(new Vec3i(0, 64, 0), 5, 5);
     private boolean modularChunkGridMode = true;
     private boolean inWorldGridMode = false;
-    public com.x64Dynamics.tfb.grid.ModularGridSession modularGrid() { return modularGrid; }
+    public com.x64Dynamics.tfb.architectural.grid.ModularGridSession modularGrid() { return modularGrid; }
     public boolean isModularChunkGridMode() { return modularChunkGridMode; }
     public void setModularChunkGridMode(boolean enabled) { this.modularChunkGridMode = enabled; }
     public boolean isInWorldGridMode() { return inWorldGridMode; }
@@ -247,13 +247,13 @@ public class ArchitectWorkspaceModel {
         int idx = 0;
         for (var mcCell : modularGrid.modules().values()) {
             var c = mcCell.coord();
-            var bld = new com.x64Dynamics.tfb.grid.GridBuilding(
+            var bld = new com.x64Dynamics.tfb.architectural.grid.GridBuilding(
                 "mod_" + (++idx), c.gx(), c.gz(), origin.y() + c.gy() * modularGrid.cellHeight(),
                 modularGrid.cellSize(), modularGrid.cellSize(), 1, modularGrid.cellHeight(),
-                com.x64Dynamics.tfb.grid.GridBuilding.FootprintShape.SQUARE,
+                com.x64Dynamics.tfb.architectural.grid.GridBuilding.FootprintShape.SQUARE,
                 com.x64Dynamics.tfb.geometry.Direction.SOUTH,
                 mcCell.style(), mcCell.palette(), mcCell.roofType(),
-                com.x64Dynamics.tfb.grid.GridBuilding.BuildingFunction.RESIDENTIAL, false, proceduralSeed + idx
+                com.x64Dynamics.tfb.architectural.grid.GridBuilding.BuildingFunction.RESIDENTIAL, false, proceduralSeed + idx
             );
             gridPlacement.registry().register(bld);
             if (c.equals(modularGrid.selectedCell())) {
@@ -287,17 +287,17 @@ public class ArchitectWorkspaceModel {
         return res;
     }
 
-    private final com.x64Dynamics.tfb.grid.StructurePlacementController gridPlacement =
-        new com.x64Dynamics.tfb.grid.StructurePlacementController(
-            com.x64Dynamics.tfb.grid.GridManager.defaultProjectGrid(new Vec3i(0, 64, 0)),
-            new com.x64Dynamics.tfb.grid.BuildingRegistry(),
-            new com.x64Dynamics.tfb.grid.PlacementValidator(com.x64Dynamics.tfb.grid.PlacementValidator.PlacementRules.defaults()),
-            new com.x64Dynamics.tfb.grid.ComplexConnectionPlanner()
+    private final com.x64Dynamics.tfb.architectural.grid.StructurePlacementController gridPlacement =
+        new com.x64Dynamics.tfb.architectural.grid.StructurePlacementController(
+            com.x64Dynamics.tfb.architectural.grid.GridManager.defaultProjectGrid(new Vec3i(0, 64, 0)),
+            new com.x64Dynamics.tfb.architectural.grid.BuildingRegistry(),
+            new com.x64Dynamics.tfb.architectural.grid.PlacementValidator(com.x64Dynamics.tfb.architectural.grid.PlacementValidator.PlacementRules.defaults()),
+            new com.x64Dynamics.tfb.architectural.grid.GridConnectionPlanner()
         );
     private final com.x64Dynamics.tfb.ui.camera.ArchitectCameraController cameraController =
         new com.x64Dynamics.tfb.ui.camera.ArchitectCameraController();
 
-    public com.x64Dynamics.tfb.grid.StructurePlacementController gridPlacement() { return gridPlacement; }
+    public com.x64Dynamics.tfb.architectural.grid.StructurePlacementController gridPlacement() { return gridPlacement; }
     public com.x64Dynamics.tfb.ui.camera.ArchitectCameraController cameraController() { return cameraController; }
 
     public synchronized int syncGridComplexToPreview() {
@@ -356,7 +356,7 @@ public class ArchitectWorkspaceModel {
     public synchronized int generateConnectedEstate() {
         this.cityMode = false;
         this.shapeEditorMode = false;
-        List<PlacementTarget> estate = com.x64Dynamics.tfb.architectural.layout.ConnectedBuildingComposer.generateConnectedEstate(origin, activePalette());
+        List<PlacementTarget> estate = com.x64Dynamics.tfb.architectural.interior.layouts.ConnectedBuildingComposer.generateConnectedEstate(origin, activePalette());
         this.cachedPreviewTargets = estate;
         this.cachedBuildPlan = new ProgressiveBuildPlan(estate);
         this.previewBuffer.updateFromTargets(estate, liveLevelAccess);
@@ -906,7 +906,7 @@ public class ArchitectWorkspaceModel {
                     proceduralSeed
                 );
             com.x64Dynamics.tfb.architectural.plan.BuildingPlan plan =
-                com.x64Dynamics.tfb.architectural.IntelligentHomeGenerator.generatePlan(def, liveHeightmap, foundationStrategy);
+                com.x64Dynamics.tfb.architectural.HomeGenerator.generatePlan(def, liveHeightmap, foundationStrategy);
             this.latestPlan = plan;
             targets.addAll(plan.targets());
             this.generatedStories = plan.floors().size();
@@ -942,11 +942,11 @@ public class ArchitectWorkspaceModel {
                 }
                 if (addDormers && height >= 7) {
                     Vec3i dormerPos = new Vec3i(box.min().x() + width / 2, box.max().y() - 2, box.max().z());
-                    targets.addAll(AdvancedRoofFeatures.generateDormer(dormerPos, Direction.SOUTH, 3, 3, activePalette));
+                    targets.addAll(RoofFeatures.generateDormer(dormerPos, Direction.SOUTH, 3, 3, activePalette));
                 }
                 if (addChimney) {
                     Vec3i chimneyPos = new Vec3i(box.max().x() - 2, box.max().y() - 1, box.max().z() - 2);
-                    targets.addAll(AdvancedRoofFeatures.generateChimney(chimneyPos, 4, activePalette));
+                    targets.addAll(RoofFeatures.generateChimney(chimneyPos, 4, activePalette));
                 }
                 if (addCornice) {
                     targets.addAll(LayeredFacadeComposer.generateCorniceTrim(box, activePalette));

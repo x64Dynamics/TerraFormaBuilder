@@ -7,10 +7,8 @@ import com.x64Dynamics.tfb.material.StylePreset;
 
 import java.util.*;
 
-/**
- * Persistent world-scale architectural design project containing districts,
- * parcels, building plans, street networks, and public spaces.
- */
+// Persistent world-scale architectural design project containing districts,
+// parcels, building plans, street networks, and public spaces.
 public final class WorldProject {
     private final String id;
     private String name;
@@ -92,9 +90,7 @@ public final class WorldProject {
         return Optional.empty();
     }
 
-    /**
-     * Resolves deduplicated placements across the entire city (roads -> public spaces -> parcel buildings).
-     */
+    // Resolves deduplicated placements across the entire city (roads -> public spaces -> parcel buildings).
     public List<PlacementTarget> resolveAllTargets() {
         Map<Vec3i, PlacementTarget> map = new LinkedHashMap<>();
         for (PlacementTarget rt : roadNetwork.resolvedTargets()) {

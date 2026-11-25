@@ -7,9 +7,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * A thematic neighborhood or zone within a WorldProject.
- */
+// A thematic neighborhood or zone within a WorldProject.
 public final class CityDistrict {
     public enum DistrictRole {
         CIVIC_CENTER,

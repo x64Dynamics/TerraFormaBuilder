@@ -8,10 +8,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
-/**
- * Persistent registry of authored architectural assets usable by the city planner
- * and building composer.
- */
+// Persistent registry of authored architectural assets usable by the city planner
+// and building composer.
 public final class AuthoredAssetRegistry {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final AuthoredAssetRegistry INSTANCE = new AuthoredAssetRegistry();

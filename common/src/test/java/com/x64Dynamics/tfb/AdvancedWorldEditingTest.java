@@ -1,12 +1,12 @@
 package com.x64Dynamics.tfb;
 
-import com.x64Dynamics.tfb.architectural.facade.LayeredFacadeComposer;
-import com.x64Dynamics.tfb.architectural.layout.ParametricFootprint;
+import com.x64Dynamics.tfb.architectural.interior.facades.LayeredFacadeComposer;
+import com.x64Dynamics.tfb.architectural.interior.layouts.ParametricFootprint;
 import com.x64Dynamics.tfb.architectural.PlacementTarget;
 import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
 import com.x64Dynamics.tfb.architectural.interior.RoomType;
-import com.x64Dynamics.tfb.architectural.layout.WingConfiguration;
-import com.x64Dynamics.tfb.architectural.layout.WingLayoutGenerator;
+import com.x64Dynamics.tfb.architectural.interior.layouts.WingConfiguration;
+import com.x64Dynamics.tfb.architectural.interior.layouts.WingLayoutGenerator;
 import com.x64Dynamics.tfb.architectural.style.ArchitecturalStyleRuleSet;
 import com.x64Dynamics.tfb.architectural.style.ProceduralVariator;
 import com.x64Dynamics.tfb.architectural.style.StyleRuleSetRegistry;

@@ -1,9 +1,9 @@
 package com.x64Dynamics.tfb;
 
-import com.x64Dynamics.tfb.architectural.IntelligentHomeGenerator;
+import com.x64Dynamics.tfb.architectural.HomeGenerator;
 import com.x64Dynamics.tfb.architectural.PlacementTarget;
 import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
-import com.x64Dynamics.tfb.architectural.layout.WingConfiguration;
+import com.x64Dynamics.tfb.architectural.interior.layouts.WingConfiguration;
 import com.x64Dynamics.tfb.construction.DependencyAwareScheduler;
 import com.x64Dynamics.tfb.construction.ScheduledBlockPlacement;
 import com.x64Dynamics.tfb.geometry.BoundingBox3i;
@@ -29,7 +29,7 @@ public class IntelligentHomeGeneratorTest {
         assertTrue(palette.get(MaterialRole.STAIR).path().endsWith("_stairs"));
         assertTrue(palette.get(MaterialRole.SLAB).path().endsWith("_slab"));
 
-        IntelligentHomeGenerator.HomeConfig config = new IntelligentHomeGenerator.HomeConfig(
+        HomeGenerator.HomeConfig config = new HomeGenerator.HomeConfig(
             bounds,
             palette,
             RoofGenerator.RoofType.GABLE,
@@ -42,7 +42,7 @@ public class IntelligentHomeGeneratorTest {
             42L
         );
 
-        IntelligentHomeGenerator.HomeGenerationResult result = IntelligentHomeGenerator.generateHome(config);
+        HomeGenerator.HomeGenerationResult result = HomeGenerator.generateHome(config);
         assertEquals(2, result.stories());
         assertTrue("Multi-story 15x15 home should have at least 4 rooms", result.roomCount() >= 4);
 
@@ -116,8 +116,8 @@ public class IntelligentHomeGeneratorTest {
             palette, RoofGenerator.RoofType.GABLE, 2, true, true, true, 1.0f, 9999L
         );
 
-        var plan1 = IntelligentHomeGenerator.generatePlan(def1);
-        var plan2 = IntelligentHomeGenerator.generatePlan(def2);
+        var plan1 = HomeGenerator.generatePlan(def1);
+        var plan2 = HomeGenerator.generatePlan(def2);
 
         assertTrue("Plan 1 should be valid", plan1.validation().valid());
         assertEquals("All rooms in Plan 1 should be reachable",
@@ -131,7 +131,7 @@ public class IntelligentHomeGeneratorTest {
             "lwing", bounds, WingConfiguration.L_SHAPED, StylePreset.TRADITIONAL,
             StylePreset.TRADITIONAL.createPalette(), RoofGenerator.RoofType.GABLE, 2, true, true, true, 1.0f, 42L
         );
-        var lPlan = IntelligentHomeGenerator.generatePlan(lDef);
+        var lPlan = HomeGenerator.generatePlan(lDef);
         assertTrue("Multi-wing L-shaped plan should be valid", lPlan.validation().valid());
         assertFalse(lPlan.targets().isEmpty());
 
@@ -148,11 +148,11 @@ public class IntelligentHomeGeneratorTest {
     @Test
     public void testMultiStoryFacadeShuttersBalconyAndDormer() {
         BoundingBox3i bounds = BoundingBox3i.fromOriginAndSize(new Vec3i(0, 64, 0), 15, 16, 15);
-        IntelligentHomeGenerator.HomeConfig config = new IntelligentHomeGenerator.HomeConfig(
+        HomeGenerator.HomeConfig config = new HomeGenerator.HomeConfig(
             bounds, StylePreset.MEDIEVAL.createPalette(), RoofGenerator.RoofType.GABLE,
             2, WingConfiguration.SINGLE_RECTANGLE, true, true, true, 1.0f, 101L
         );
-        IntelligentHomeGenerator.HomeGenerationResult result = IntelligentHomeGenerator.generateHome(config);
+        HomeGenerator.HomeGenerationResult result = HomeGenerator.generateHome(config);
         boolean hasTrapdoorShutter = result.targets().stream()
             .anyMatch(t -> t.block().path().endsWith("_trapdoor"));
         boolean hasBalconyFence = result.targets().stream()

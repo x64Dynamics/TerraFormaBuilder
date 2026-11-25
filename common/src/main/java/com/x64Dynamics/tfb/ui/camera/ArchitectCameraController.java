@@ -4,11 +4,9 @@ import com.x64Dynamics.tfb.geometry.BoundingBox3i;
 import com.x64Dynamics.tfb.geometry.Direction;
 import com.x64Dynamics.tfb.geometry.Vec3d;
 
-/**
- * Pure-Java architectural planning camera controller supporting Isometric (default),
- * Top-Down, Front, Side, Perspective, and Free orbit views with smooth interpolation,
- * zoom, pan, focus targeting, and explicit separation from building orientation.
- */
+// Pure-Java architectural planning camera controller supporting Isometric (default),
+// Top-Down, Front, Side, Perspective, and Free orbit views with smooth interpolation,
+// zoom, pan, focus targeting, and explicit separation from building orientation.
 public final class ArchitectCameraController {
     public enum CameraViewMode {
         ISOMETRIC(45.0f, 35.264f),
@@ -94,9 +92,7 @@ public final class ArchitectCameraController {
         this.targetZoomDistance = Math.max(8.0, Math.min(160.0, span * 1.8));
     }
 
-    /**
-     * Advances smooth camera interpolation toward target yaw, pitch, zoom, and focus.
-     */
+    // Advances smooth camera interpolation toward target yaw, pitch, zoom, and focus.
     public void tick(float deltaSeconds) {
         if (!active) return;
         double alpha = Math.min(1.0, Math.max(0.05, deltaSeconds * 10.0));
@@ -120,10 +116,8 @@ public final class ArchitectCameraController {
         return new Vec3d(focusTarget.x() + dx, focusTarget.y() + dy, focusTarget.z() + dz);
     }
 
-    /**
-     * Returns the cardinal direction the camera is looking toward, kept distinct
-     * from any selected building's own facing orientation.
-     */
+    // Returns the cardinal direction the camera is looking toward, kept distinct
+    // from any selected building's own facing orientation.
     public Direction viewingCardinal() {
         float norm = ((yaw % 360.0f) + 360.0f) % 360.0f;
         if (norm >= 315 || norm < 45) return Direction.SOUTH;

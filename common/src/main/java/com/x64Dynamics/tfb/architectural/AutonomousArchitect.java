@@ -6,8 +6,8 @@ import com.x64Dynamics.tfb.architectural.style.StyleRuleSetRegistry;
 import com.x64Dynamics.tfb.geometry.BoundingBox3i;
 import com.x64Dynamics.tfb.geometry.Direction;
 import com.x64Dynamics.tfb.geometry.Vec3i;
-import com.x64Dynamics.tfb.grid.GridComplexPresets;
-import com.x64Dynamics.tfb.grid.StructurePlacementController;
+import com.x64Dynamics.tfb.architectural.grid.GridPresets;
+import com.x64Dynamics.tfb.architectural.grid.StructurePlacementController;
 import com.x64Dynamics.tfb.material.BlockIdentifier;
 import com.x64Dynamics.tfb.material.MaterialPalette;
 import com.x64Dynamics.tfb.material.MaterialRole;
@@ -18,14 +18,12 @@ import com.x64Dynamics.tfb.terrain.HeightmapGrid;
 
 import java.util.Locale;
 
-import com.x64Dynamics.tfb.architectural.layout.WingConfiguration;
+import com.x64Dynamics.tfb.architectural.interior.layouts.WingConfiguration;
 import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
-/**
- * Zero-input autonomous architectural director.
- * Inspects the surrounding world blocks, terrain heightmap, and optional biome hint
- * to automatically select architectural style, harmonized material palette, roof type,
- * story count/height, wing layout, entrance orientation, foundation strategy, and interiors.
- */
+// Zero-input autonomous architectural director.
+// Inspects the surrounding world blocks, terrain heightmap, and optional biome hint
+// to automatically select architectural style, harmonized material palette, roof type,
+// story count/height, wing layout, entrance orientation, foundation strategy, and interiors.
 public final class AutonomousArchitect {
     public enum DetectedBiomeTheme {
         SNOWY_ALPINE,
@@ -159,7 +157,7 @@ public final class AutonomousArchitect {
             seed
         );
 
-        BuildingPlan plan = IntelligentHomeGenerator.generatePlan(def, heightmap, foundation);
+        BuildingPlan plan = HomeGenerator.generatePlan(def, heightmap, foundation);
         return new AutoDesignReport(theme, style, facing, roof, wings, foundation, plan);
     }
 
@@ -171,13 +169,13 @@ public final class AutonomousArchitect {
         long seed
     ) {
         AutoDesignReport report = autoDesign(origin, null, level, biomeHint, seed);
-        GridComplexPresets.PresetKind kind = switch (report.biomeTheme()) {
-            case DESERT_ARID, COASTAL_WATERFRONT -> GridComplexPresets.PresetKind.COMMERCIAL_ROW;
-            case TEMPERATE_FOREST, CHERRY_EAST_ASIAN -> GridComplexPresets.PresetKind.VILLAGE_SQUARE;
-            case SNOWY_ALPINE, STONY_HIGHLAND -> GridComplexPresets.PresetKind.MANOR_ESTATE;
+        GridPresets.PresetKind kind = switch (report.biomeTheme()) {
+            case DESERT_ARID, COASTAL_WATERFRONT -> GridPresets.PresetKind.COMMERCIAL_ROW;
+            case TEMPERATE_FOREST, CHERRY_EAST_ASIAN -> GridPresets.PresetKind.VILLAGE_SQUARE;
+            case SNOWY_ALPINE, STONY_HIGHLAND -> GridPresets.PresetKind.MANOR_ESTATE;
         };
         controller.grid().setOrigin(origin);
-        GridComplexPresets.populate(kind, controller, origin.y(), report.chosenStyle(), seed);
+        GridPresets.populate(kind, controller, origin.y(), report.chosenStyle(), seed);
         return report;
     }
 

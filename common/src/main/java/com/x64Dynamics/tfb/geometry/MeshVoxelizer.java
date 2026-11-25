@@ -5,10 +5,8 @@ import com.x64Dynamics.tfb.material.BlockIdentifier;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Triangle surface & ray-parity solid mesh voxelizer (combining vengi and ObjToSchematic techniques),
- * scaling meshes into target voxel heights and assigning Minecraft blocks via {@link BlockColorMatcher}.
- */
+// Triangle surface & ray-parity solid mesh voxelizer (combining vengi and ObjToSchematic techniques),
+// scaling meshes into target voxel heights and assigning Minecraft blocks via {@link BlockColorMatcher}.
 public final class MeshVoxelizer {
     private MeshVoxelizer() {}
 

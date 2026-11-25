@@ -1,17 +1,15 @@
 package com.x64Dynamics.tfb.ui.widget;
 
 import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
-import com.x64Dynamics.tfb.grid.ModularGridSession;
+import com.x64Dynamics.tfb.architectural.grid.ModularGridSession;
 import com.x64Dynamics.tfb.material.MaterialPalette;
 import com.x64Dynamics.tfb.material.StylePreset;
 import com.x64Dynamics.tfb.ui.rendering.IGuiGraphicsContext;
 
 import java.util.function.Supplier;
 
-/**
- * Interactive 2D top-down canvas for the Dreamer-style 5x5x5 modular chunk grid.
- * Supports click-to-place/stack, hold-and-drag connected placement, and right-click removal.
- */
+// Interactive 2D top-down canvas for the Dreamer-style 5x5x5 modular chunk grid.
+// Supports click-to-place/stack, hold-and-drag connected placement, and right-click removal.
 public class UIModularGridCanvas extends UIWidget {
     private static final int GRID_SPAN = 8;
 

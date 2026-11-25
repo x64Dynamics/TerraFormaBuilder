@@ -13,9 +13,9 @@ import java.util.List;
 
 import static org.junit.Assert.*;
 
-import com.x64Dynamics.tfb.architectural.facade.FacadeOrnamentGenerator;
-import com.x64Dynamics.tfb.architectural.layout.StaircaseGenerator;
-import com.x64Dynamics.tfb.architectural.layout.TowerGenerator;
+import com.x64Dynamics.tfb.architectural.interior.facades.FacadeOrnamentGenerator;
+import com.x64Dynamics.tfb.architectural.interior.layouts.StaircaseGenerator;
+import com.x64Dynamics.tfb.architectural.interior.layouts.TowerGenerator;
 public class Phase2ArchitectureTest {
 
     @Test

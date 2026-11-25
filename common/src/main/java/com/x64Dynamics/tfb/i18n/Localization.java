@@ -10,9 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import com.x64Dynamics.tfb.platform.Platform;
-/**
- * Platform-agnostic localization loader backed by assets/terraformabuilder/lang/en_us.json.
- */
+// Platform-agnostic localization loader backed by assets/terraformabuilder/lang/en_us.json.
 public final class Localization {
     private static final Map<String, String> TRANSLATIONS = new HashMap<>();
     private static volatile boolean loaded = false;

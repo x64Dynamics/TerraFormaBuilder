@@ -4,10 +4,8 @@ import com.x64Dynamics.tfb.material.BlockIdentifier;
 
 import java.util.*;
 
-/**
- * Face-visibility-aware color-to-block matcher with 3D 4x4x4 ordered Bayer dithering
- * (reimplemented in Java from ObjToSchematic's Ditherer and AtlasPalette concepts).
- */
+// Face-visibility-aware color-to-block matcher with 3D 4x4x4 ordered Bayer dithering
+// (reimplemented in Java from ObjToSchematic's Ditherer and AtlasPalette concepts).
 public final class BlockColorMatcher {
     private static final int[] BAYER_4X4X4 = {
         0, 16, 2, 18, 48, 32, 50, 34,

@@ -38,10 +38,8 @@ public final class SplinePath {
     public List<Vec3d> controlPoints() { return controlPoints; }
     public boolean isClosedLoop() { return closedLoop; }
 
-    /**
-     * Samples points with uniform step count along the spline.
-     * Computes exact tangent and perpendicular horizontal normal vectors for cross-sections.
-     */
+    // Samples points with uniform step count along the spline.
+    // Computes exact tangent and perpendicular horizontal normal vectors for cross-sections.
     public List<PathSample> sample(int samplesPerSegment) {
         List<PathSample> samples = new ArrayList<>();
         if (controlPoints.size() < 2) return samples;

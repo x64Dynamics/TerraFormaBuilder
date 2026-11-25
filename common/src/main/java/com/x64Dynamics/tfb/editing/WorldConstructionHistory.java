@@ -5,9 +5,7 @@ import com.x64Dynamics.tfb.material.BlockIdentifier;
 
 import java.util.*;
 
-/**
- * Tracks actual world block modifications for construction Undo / Redo.
- */
+// Tracks actual world block modifications for construction Undo / Redo.
 public final class WorldConstructionHistory {
     public record BlockChange(Vec3i pos, BlockIdentifier oldBlock, BlockIdentifier newBlock) { }
 

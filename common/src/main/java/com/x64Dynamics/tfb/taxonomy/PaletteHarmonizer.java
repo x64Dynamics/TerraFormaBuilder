@@ -8,9 +8,7 @@ import com.x64Dynamics.tfb.material.MaterialRole;
 public final class PaletteHarmonizer {
     private PaletteHarmonizer() {}
 
-    /**
-     * Converts 8-bit RGB [0..255] to HSV: hue in [0..360), saturation in [0..1], value in [0..1].
-     */
+    // Converts 8-bit RGB [0..255] to HSV: hue in [0..360), saturation in [0..1], value in [0..1].
     public static float[] rgbToHsv(int r, int g, int b) {
         float rf = Math.max(0f, Math.min(1f, r / 255f));
         float gf = Math.max(0f, Math.min(1f, g / 255f));
@@ -35,10 +33,8 @@ public final class PaletteHarmonizer {
         return new float[]{h, s, max};
     }
 
-    /**
-     * Computes visual harmony [0.0..1.0] between two RGB colors using HSV hue-angle
-     * relationships (complementary, triadic, analogous) and value contrast.
-     */
+    // Computes visual harmony [0.0..1.0] between two RGB colors using HSV hue-angle
+    // relationships (complementary, triadic, analogous) and value contrast.
     public static float hsvHarmonyScore(int r1, int g1, int b1, int r2, int g2, int b2) {
         float[] hsv1 = rgbToHsv(r1, g1, b1);
         float[] hsv2 = rgbToHsv(r2, g2, b2);

@@ -49,10 +49,8 @@ public final class RoadInfrastructurePlanner {
 
     private RoadInfrastructurePlanner() { }
 
-    /**
-     * Generates a complete road ribbon along a SplinePath with road surface, curbs,
-     * sidewalks, markings, streetlights, and bridge/tunnel features.
-     */
+    // Generates a complete road ribbon along a SplinePath with road surface, curbs,
+    // sidewalks, markings, streetlights, and bridge/tunnel features.
     public static List<PlacementTarget> generateSplineRoad(
         SplinePath path,
         RoadProfile profile,
@@ -129,9 +127,7 @@ public final class RoadInfrastructurePlanner {
         return targets;
     }
 
-    /**
-     * Generates a road intersection (T-Junction, 4-Way Cross, Roundabout, or Y-Branch).
-     */
+    // Generates a road intersection (T-Junction, 4-Way Cross, Roundabout, or Y-Branch).
     public static List<PlacementTarget> generateIntersection(
         Vec3i center,
         IntersectionType type,

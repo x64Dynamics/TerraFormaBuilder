@@ -4,9 +4,7 @@ import com.x64Dynamics.tfb.architectural.plan.BuildingPlan;
 import com.x64Dynamics.tfb.geometry.BoundingBox3i;
 import com.x64Dynamics.tfb.geometry.Direction;
 
-/**
- * A buildable lot within a CityDistrict, oriented toward an adjacent street.
- */
+// A buildable lot within a CityDistrict, oriented toward an adjacent street.
 public final class CityParcel {
     public enum ParcelPurpose {
         COTTAGE,

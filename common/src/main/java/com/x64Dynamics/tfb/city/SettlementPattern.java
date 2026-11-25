@@ -1,8 +1,6 @@
 package com.x64Dynamics.tfb.city;
 
-/**
- * Macro urban layout patterns supported by the procedural city planner.
- */
+// Macro urban layout patterns supported by the procedural city planner.
 public enum SettlementPattern {
     ORGANIC_VILLAGE("Organic Village"),
     MEDIEVAL_TOWN("Medieval Town"),

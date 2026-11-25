@@ -12,10 +12,8 @@ import com.x64Dynamics.tfb.platform.ILevelAccess;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Reusable architectural structure asset captured directly from a Minecraft world
- * or studio design (inspired by minecraft-citygen's marker-based asset system).
- */
+// Reusable architectural structure asset captured directly from a Minecraft world
+// or studio design (inspired by minecraft-citygen's marker-based asset system).
 public record AuthoredAsset(
     String id,
     String name,

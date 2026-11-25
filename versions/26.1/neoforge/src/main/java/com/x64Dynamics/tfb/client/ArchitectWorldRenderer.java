@@ -73,7 +73,7 @@ public final class ArchitectWorldRenderer {
                     sel ? 0xFFFACC15 : 0xFF34D399, 2.0f);
             }
         if (controller.model().isInWorldGridMode() || !gp.registry().allBuildings().isEmpty()) {
-            var gridBatch = com.x64Dynamics.tfb.grid.GridRendererModel.buildBatch(
+            var gridBatch = com.x64Dynamics.tfb.architectural.grid.GridRendererModel.buildBatch(
                 gp.grid(), gp.registry(), gp.selectedCell(), gp.selectedBuildingId(), controller.model().origin().y()
             );
             for (var gl : gridBatch.lines()) {

@@ -15,10 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Persists editable {@link ArchitecturalProject} hierarchies (sections, bounds,
- * lock states, styles, roof forms) to JSON so users can reopen and continue editing.
- */
+// Persists editable {@link ArchitecturalProject} hierarchies (sections, bounds,
+// lock states, styles, roof forms) to JSON so users can reopen and continue editing.
 public final class ArchitecturalProjectStorage {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static Path storageDir = Path.of("config", "terraformabuilder", "architectural_projects");

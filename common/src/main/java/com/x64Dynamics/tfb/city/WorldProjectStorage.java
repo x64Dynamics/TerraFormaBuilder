@@ -11,10 +11,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
 
-/**
- * Persists and loads WorldProject definitions (districts, parcels, locks, seeds, pattern, style)
- * to config/terraformabuilder/projects/*.json and regenerates their plans deterministically on load.
- */
+// Persists and loads WorldProject definitions (districts, parcels, locks, seeds, pattern, style)
+// to config/terraformabuilder/projects/*.json and regenerates their plans deterministically on load.
 public final class WorldProjectStorage {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static volatile Path projectsDir = Paths.get("config", "terraformabuilder", "projects");

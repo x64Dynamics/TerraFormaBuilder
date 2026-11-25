@@ -1,7 +1,7 @@
 package com.x64Dynamics.tfb.architectural.plan;
 
 import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
-import com.x64Dynamics.tfb.architectural.layout.WingConfiguration;
+import com.x64Dynamics.tfb.architectural.interior.layouts.WingConfiguration;
 import com.x64Dynamics.tfb.geometry.BoundingBox3i;
 import com.x64Dynamics.tfb.geometry.Direction;
 import com.x64Dynamics.tfb.material.MaterialPalette;
@@ -9,9 +9,7 @@ import com.x64Dynamics.tfb.material.StylePreset;
 
 import java.util.Objects;
 
-/**
- * Deterministic architectural specification for a procedural building.
- */
+// Deterministic architectural specification for a procedural building.
 public record BuildingDefinition(
     String id,
     BoundingBox3i footprintBounds,

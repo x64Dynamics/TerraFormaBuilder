@@ -5,9 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
-/**
- * Pure-Java Wavefront OBJ (+ MTL material colors) and ASCII STL mesh importer.
- */
+// Pure-Java Wavefront OBJ (+ MTL material colors) and ASCII STL mesh importer.
 public final class ObjMeshImporter {
     public record MaterialColor(int r, int g, int b, boolean translucent, boolean emissive) {
         public static final MaterialColor DEFAULT = new MaterialColor(160, 160, 160, false, false);

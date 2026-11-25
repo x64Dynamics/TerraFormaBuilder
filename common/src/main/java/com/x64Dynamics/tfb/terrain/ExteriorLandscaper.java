@@ -12,10 +12,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-/**
- * Generates terrain-hugging walkways, stepped approaches, foundation weathering,
- * and organic foliage/lantern accents around procedural buildings.
- */
+// Generates terrain-hugging walkways, stepped approaches, foundation weathering,
+// and organic foliage/lantern accents around procedural buildings.
 public final class ExteriorLandscaper {
     private ExteriorLandscaper() {}
 

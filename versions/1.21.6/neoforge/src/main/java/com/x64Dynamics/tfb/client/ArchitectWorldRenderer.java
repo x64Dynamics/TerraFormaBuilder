@@ -63,7 +63,7 @@ public final class ArchitectWorldRenderer {
                 ShapeRenderer.renderLineBox(poseStack, lineConsumer, gb.min().x() - camPos.x, gb.min().y() - camPos.y, gb.min().z() - camPos.z, gb.max().x() + 1.0 - camPos.x, gb.max().y() + 1.0 - camPos.y, gb.max().z() + 1.0 - camPos.z, sel ? 0.98f : 0.2f, sel ? 0.8f : 0.85f, sel ? 0.08f : 0.45f, 1.0f);
             }
         if (controller.model().isInWorldGridMode() || !gp.registry().allBuildings().isEmpty()) {
-            var gridBatch = com.x64Dynamics.tfb.grid.GridRendererModel.buildBatch(
+            var gridBatch = com.x64Dynamics.tfb.architectural.grid.GridRendererModel.buildBatch(
                 gp.grid(), gp.registry(), gp.selectedCell(), gp.selectedBuildingId(), controller.model().origin().y()
             );
             for (var gl : gridBatch.lines()) {
