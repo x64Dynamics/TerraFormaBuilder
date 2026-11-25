@@ -1,11 +1,11 @@
 package com.x64Dynamics.tfb;
 
 import com.x64Dynamics.tfb.architectural.PlacementTarget;
-import com.x64Dynamics.tfb.editing.WorldConstructionHistory;
+import com.x64Dynamics.tfb.construction.editing.WorldConstructionHistory;
 import com.x64Dynamics.tfb.geometry.Vec3i;
 import com.x64Dynamics.tfb.material.BlockIdentifier;
 import com.x64Dynamics.tfb.material.MaterialRole;
-import com.x64Dynamics.tfb.network.*;
+import com.x64Dynamics.tfb.platform.network.*;
 import com.x64Dynamics.tfb.platform.ILevelAccess;
 import com.x64Dynamics.tfb.platform.IPlayerAccess;
 import org.junit.Test;

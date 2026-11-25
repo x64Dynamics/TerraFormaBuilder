@@ -10,11 +10,11 @@ import com.x64Dynamics.tfb.architectural.interior.layouts.WingLayoutGenerator;
 import com.x64Dynamics.tfb.architectural.style.ArchitecturalStyleRuleSet;
 import com.x64Dynamics.tfb.architectural.style.ProceduralVariator;
 import com.x64Dynamics.tfb.architectural.style.StyleRuleSetRegistry;
-import com.x64Dynamics.tfb.editing.ArchitecturalComponentType;
-import com.x64Dynamics.tfb.editing.ClipboardManager;
-import com.x64Dynamics.tfb.editing.SelectableComponent;
-import com.x64Dynamics.tfb.editing.SubstructureRegenerator;
-import com.x64Dynamics.tfb.editing.WorldSelectionManager;
+import com.x64Dynamics.tfb.construction.editing.ArchitecturalComponentType;
+import com.x64Dynamics.tfb.construction.editing.ClipboardManager;
+import com.x64Dynamics.tfb.construction.editing.SelectableComponent;
+import com.x64Dynamics.tfb.construction.editing.SubstructureRegenerator;
+import com.x64Dynamics.tfb.construction.editing.SelectionManager;
 import com.x64Dynamics.tfb.geometry.Axis;
 import com.x64Dynamics.tfb.geometry.BoundingBox3i;
 import com.x64Dynamics.tfb.geometry.Direction;
@@ -24,16 +24,16 @@ import com.x64Dynamics.tfb.material.BlockIdentifier;
 import com.x64Dynamics.tfb.material.MaterialPalette;
 import com.x64Dynamics.tfb.material.MaterialRole;
 import com.x64Dynamics.tfb.material.StylePreset;
-import com.x64Dynamics.tfb.preview.PreviewFilterMode;
-import com.x64Dynamics.tfb.preview.PreviewVoxel;
-import com.x64Dynamics.tfb.preview.WorldPreviewBuffer;
-import com.x64Dynamics.tfb.taxonomy.BlockTaxonomyEntry;
-import com.x64Dynamics.tfb.taxonomy.BlockTrait;
-import com.x64Dynamics.tfb.taxonomy.ColorTone;
-import com.x64Dynamics.tfb.taxonomy.MaterialSubstance;
-import com.x64Dynamics.tfb.taxonomy.PaletteHarmonizer;
-import com.x64Dynamics.tfb.taxonomy.SearchableTaxonomyBrowser;
-import com.x64Dynamics.tfb.terrain.LandscapeAdapter;
+import com.x64Dynamics.tfb.construction.preview.PreviewFilterMode;
+import com.x64Dynamics.tfb.construction.preview.PreviewVoxel;
+import com.x64Dynamics.tfb.construction.preview.WorldPreviewBuffer;
+import com.x64Dynamics.tfb.material.taxonomy.BlockTaxonomyEntry;
+import com.x64Dynamics.tfb.material.taxonomy.BlockTrait;
+import com.x64Dynamics.tfb.material.taxonomy.ColorTone;
+import com.x64Dynamics.tfb.material.taxonomy.MaterialSubstance;
+import com.x64Dynamics.tfb.material.taxonomy.PaletteHarmonizer;
+import com.x64Dynamics.tfb.material.taxonomy.SearchableTaxonomyBrowser;
+import com.x64Dynamics.tfb.architectural.terrain.LandscapeAdapter;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -47,11 +47,11 @@ public class AdvancedWorldEditingTest {
     @Test
     public void testWorldSelectionManager() {
         BoundingBox3i box = new BoundingBox3i(new Vec3i(0, 64, 0), new Vec3i(15, 73, 15));
-        WorldSelectionManager manager = new WorldSelectionManager(box);
+        SelectionManager manager = new SelectionManager(box);
 
-        assertEquals(WorldSelectionManager.SelectionMode.ENTIRE_BUILDING, manager.mode());
-        manager.setMode(WorldSelectionManager.SelectionMode.COMPONENT_LEVEL);
-        assertEquals(WorldSelectionManager.SelectionMode.COMPONENT_LEVEL, manager.mode());
+        assertEquals(SelectionManager.SelectionMode.ENTIRE_BUILDING, manager.mode());
+        manager.setMode(SelectionManager.SelectionMode.COMPONENT_LEVEL);
+        assertEquals(SelectionManager.SelectionMode.COMPONENT_LEVEL, manager.mode());
 
         // Grid snapping
         manager.setGridSnap(4);

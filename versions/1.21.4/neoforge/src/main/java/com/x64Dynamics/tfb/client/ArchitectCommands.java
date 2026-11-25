@@ -3,11 +3,11 @@ package com.x64Dynamics.tfb.client;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.x64Dynamics.tfb.architectural.PlacementTarget;
-import com.x64Dynamics.tfb.brush.BrushRegistry;
-import com.x64Dynamics.tfb.brush.IConstructionBrush;
-import com.x64Dynamics.tfb.construction.DependencyAwareScheduler;
+import com.x64Dynamics.tfb.architectural.brush.BrushRegistry;
+import com.x64Dynamics.tfb.architectural.brush.IConstructionBrush;
+import com.x64Dynamics.tfb.construction.BuildScheduler;
 import com.x64Dynamics.tfb.construction.ScheduledBlockPlacement;
-import com.x64Dynamics.tfb.editing.WorldConstructionHistory;
+import com.x64Dynamics.tfb.construction.editing.WorldConstructionHistory;
 import com.x64Dynamics.tfb.geometry.Vec3i;
 import com.x64Dynamics.tfb.material.StylePreset;
 import com.x64Dynamics.tfb.ui.controller.ClientController;
@@ -109,7 +109,7 @@ public final class ArchitectCommands {
                         if (server != null && !targets.isEmpty()) {
                             ServerLevel sl = server.getLevel(mc.level.dimension());
                             if (sl != null) {
-                                List<ScheduledBlockPlacement> scheduled = DependencyAwareScheduler.scheduleWithDependencies(targets);
+                                List<ScheduledBlockPlacement> scheduled = BuildScheduler.scheduleWithDependencies(targets);
                                 server.execute(() -> {
                                     List<WorldConstructionHistory.BlockChange> changes = new ArrayList<>();
                                     for (ScheduledBlockPlacement t : scheduled) {

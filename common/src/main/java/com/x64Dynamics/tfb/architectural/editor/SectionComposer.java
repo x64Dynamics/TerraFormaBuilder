@@ -10,9 +10,9 @@ import com.x64Dynamics.tfb.geometry.Vec3i;
 import com.x64Dynamics.tfb.material.BlockIdentifier;
 import com.x64Dynamics.tfb.material.MaterialPalette;
 import com.x64Dynamics.tfb.material.MaterialRole;
-import com.x64Dynamics.tfb.terrain.FoundationStrategy;
-import com.x64Dynamics.tfb.terrain.HeightmapGrid;
-import com.x64Dynamics.tfb.terrain.TerrainAdapter;
+import com.x64Dynamics.tfb.architectural.terrain.FoundationStrategy;
+import com.x64Dynamics.tfb.architectural.terrain.HeightmapGrid;
+import com.x64Dynamics.tfb.architectural.terrain.TerrainAdapter;
 
 import java.util.*;
 

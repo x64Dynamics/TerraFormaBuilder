@@ -1,7 +1,7 @@
 package com.x64Dynamics.tfb;
 
-import com.x64Dynamics.tfb.config.ModConfig;
-import com.x64Dynamics.tfb.gameplay.RewardPolicy;
+import com.x64Dynamics.tfb.platform.config.ModConfig;
+import com.x64Dynamics.tfb.construction.gameplay.RewardPolicy;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;

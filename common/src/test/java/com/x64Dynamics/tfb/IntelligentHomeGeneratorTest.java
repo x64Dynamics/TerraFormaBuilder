@@ -4,14 +4,14 @@ import com.x64Dynamics.tfb.architectural.HomeGenerator;
 import com.x64Dynamics.tfb.architectural.PlacementTarget;
 import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
 import com.x64Dynamics.tfb.architectural.interior.layouts.WingConfiguration;
-import com.x64Dynamics.tfb.construction.DependencyAwareScheduler;
+import com.x64Dynamics.tfb.construction.BuildScheduler;
 import com.x64Dynamics.tfb.construction.ScheduledBlockPlacement;
 import com.x64Dynamics.tfb.geometry.BoundingBox3i;
 import com.x64Dynamics.tfb.geometry.Vec3i;
 import com.x64Dynamics.tfb.material.*;
-import com.x64Dynamics.tfb.taxonomy.BlockTaxonomyEntry;
-import com.x64Dynamics.tfb.taxonomy.BlockTaxonomyRegistry;
-import com.x64Dynamics.tfb.taxonomy.BlockTrait;
+import com.x64Dynamics.tfb.material.taxonomy.BlockTaxonomyEntry;
+import com.x64Dynamics.tfb.material.taxonomy.BlockTaxonomyRegistry;
+import com.x64Dynamics.tfb.material.taxonomy.BlockTrait;
 import org.junit.Test;
 
 import java.util.*;
@@ -74,7 +74,7 @@ public class IntelligentHomeGeneratorTest {
         }
 
         // Verify dependency scheduler orders lower door before upper door
-        List<ScheduledBlockPlacement> scheduled = DependencyAwareScheduler.scheduleWithDependencies(result.targets());
+        List<ScheduledBlockPlacement> scheduled = BuildScheduler.scheduleWithDependencies(result.targets());
         assertEquals(result.targets().size(), scheduled.size());
     }
 
@@ -137,12 +137,12 @@ public class IntelligentHomeGeneratorTest {
 
         // Blueprint disk persistence round-trip
         java.nio.file.Path tempDir = java.nio.file.Files.createTempDirectory("tfb_bp_test");
-        com.x64Dynamics.tfb.persistence.BlueprintStorage.setStorageDir(tempDir);
+        com.x64Dynamics.tfb.platform.persistence.BlueprintStorage.setStorageDir(tempDir);
         var model = new com.x64Dynamics.tfb.ui.model.ArchitectWorkspaceModel();
         var bp = model.toBlueprint("Test Nordic Manor", "KyroXova");
-        com.x64Dynamics.tfb.persistence.BlueprintStorage.save(bp);
-        assertTrue(com.x64Dynamics.tfb.persistence.BlueprintStorage.listSavedNames().contains("Test_Nordic_Manor"));
-        assertTrue(com.x64Dynamics.tfb.persistence.BlueprintStorage.load("Test_Nordic_Manor").isPresent());
+        com.x64Dynamics.tfb.platform.persistence.BlueprintStorage.save(bp);
+        assertTrue(com.x64Dynamics.tfb.platform.persistence.BlueprintStorage.listSavedNames().contains("Test_Nordic_Manor"));
+        assertTrue(com.x64Dynamics.tfb.platform.persistence.BlueprintStorage.load("Test_Nordic_Manor").isPresent());
     }
 
     @Test
@@ -176,7 +176,7 @@ public class IntelligentHomeGeneratorTest {
         var model = new com.x64Dynamics.tfb.ui.model.ArchitectWorkspaceModel();
         model.setLiveLevelAccess(slopedLevel);
         model.setStylePreset(StylePreset.NORDIC);
-        model.setFoundationStrategy(com.x64Dynamics.tfb.terrain.FoundationStrategy.PILLARS_STILTS);
+        model.setFoundationStrategy(com.x64Dynamics.tfb.architectural.terrain.FoundationStrategy.PILLARS_STILTS);
         model.setShapeEditorMode(true);
         assertFalse(model.cachedPreviewTargets().isEmpty());
 

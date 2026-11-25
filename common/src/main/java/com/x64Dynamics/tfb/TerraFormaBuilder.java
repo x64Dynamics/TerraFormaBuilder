@@ -1,7 +1,7 @@
 package com.x64Dynamics.tfb;
 
-import com.x64Dynamics.tfb.config.ModConfig;
-import com.x64Dynamics.tfb.persistence.BlueprintManager;
+import com.x64Dynamics.tfb.platform.config.ModConfig;
+import com.x64Dynamics.tfb.platform.persistence.BlueprintManager;
 import com.x64Dynamics.tfb.platform.IPlatformBridge;
 import com.x64Dynamics.tfb.platform.Platform;
 import com.x64Dynamics.tfb.platform.PlatformBridgeRegistry;

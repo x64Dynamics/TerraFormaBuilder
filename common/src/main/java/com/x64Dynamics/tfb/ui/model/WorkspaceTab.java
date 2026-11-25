@@ -1,6 +1,6 @@
 package com.x64Dynamics.tfb.ui.model;
 
-import com.x64Dynamics.tfb.i18n.Localization;
+import com.x64Dynamics.tfb.platform.i18n.Localization;
 
 public enum WorkspaceTab {
     HOME("tfb.nav.home", "tfb.nav.home.desc"),

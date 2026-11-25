@@ -3,7 +3,7 @@ package com.x64Dynamics.tfb;
 import com.x64Dynamics.tfb.architectural.PlacementTarget;
 import com.x64Dynamics.tfb.construction.ChunkCoordinate;
 import com.x64Dynamics.tfb.construction.ConstructionCheckpoint;
-import com.x64Dynamics.tfb.construction.DependencyAwareScheduler;
+import com.x64Dynamics.tfb.construction.BuildScheduler;
 import com.x64Dynamics.tfb.construction.ScheduledBlockPlacement;
 import com.x64Dynamics.tfb.geometry.Vec3i;
 import com.x64Dynamics.tfb.material.BlockIdentifier;
@@ -24,7 +24,7 @@ public final class DependencySchedulerTest {
         PlacementTarget upperDoor = new PlacementTarget(new Vec3i(0, 2, 0), BlockIdentifier.of("minecraft:oak_door[half=upper]"), MaterialRole.DOOR);
 
         // Feed in reverse order (upper door -> lower door -> floor)
-        List<ScheduledBlockPlacement> scheduled = DependencyAwareScheduler.scheduleWithDependencies(
+        List<ScheduledBlockPlacement> scheduled = BuildScheduler.scheduleWithDependencies(
             List.of(upperDoor, lowerDoor, floor)
         );
 
@@ -48,7 +48,7 @@ public final class DependencySchedulerTest {
         ScheduledBlockPlacement p2 = new ScheduledBlockPlacement(new Vec3i(10, 64, 10), BlockIdentifier.of("minecraft:stone"), null, 64);
         ScheduledBlockPlacement p3 = new ScheduledBlockPlacement(new Vec3i(32, 64, 5), BlockIdentifier.of("minecraft:stone"), null, 64);
 
-        Map<ChunkCoordinate, List<ScheduledBlockPlacement>> chunks = DependencyAwareScheduler.groupByChunk(List.of(p1, p2, p3));
+        Map<ChunkCoordinate, List<ScheduledBlockPlacement>> chunks = BuildScheduler.groupByChunk(List.of(p1, p2, p3));
         assertEquals(2, chunks.size());
         assertEquals(2, chunks.get(new ChunkCoordinate(0, 0)).size());
         assertEquals(1, chunks.get(new ChunkCoordinate(2, 0)).size());

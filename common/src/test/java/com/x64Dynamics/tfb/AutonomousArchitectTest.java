@@ -1,6 +1,6 @@
 package com.x64Dynamics.tfb;
 
-import com.x64Dynamics.tfb.architectural.AutonomousArchitect;
+import com.x64Dynamics.tfb.architectural.AutoArchitect;
 import com.x64Dynamics.tfb.geometry.Vec3i;
 import com.x64Dynamics.tfb.architectural.grid.*;
 import com.x64Dynamics.tfb.material.BlockIdentifier;
@@ -25,24 +25,24 @@ public class AutonomousArchitectTest {
 
     @Test
     public void testZeroInputAutoDetectsBiomesAndDesignsCompleteHomes() {
-        var snowReport = AutonomousArchitect.autoDesign(
+        var snowReport = AutoArchitect.autoDesign(
             new Vec3i(0, 64, 0), null, flatWorldWithBlock("minecraft:snow_block", 64), null, 42L
         );
-        assertEquals(AutonomousArchitect.DetectedBiomeTheme.SNOWY_ALPINE, snowReport.biomeTheme());
+        assertEquals(AutoArchitect.DetectedBiomeTheme.SNOWY_ALPINE, snowReport.biomeTheme());
         assertEquals(StylePreset.NORDIC, snowReport.chosenStyle());
         assertTrue(snowReport.plan().validation().valid());
         assertTrue(snowReport.plan().totalRoomCount() >= 2);
 
-        var desertReport = AutonomousArchitect.autoDesign(
+        var desertReport = AutoArchitect.autoDesign(
             new Vec3i(0, 64, 0), null, flatWorldWithBlock("minecraft:sand", 64), null, 42L
         );
-        assertEquals(AutonomousArchitect.DetectedBiomeTheme.DESERT_ARID, desertReport.biomeTheme());
+        assertEquals(AutoArchitect.DetectedBiomeTheme.DESERT_ARID, desertReport.biomeTheme());
         assertTrue(desertReport.plan().targets().stream().anyMatch(t -> t.block().path().contains("sandstone")));
 
-        var cherryReport = AutonomousArchitect.autoDesign(
+        var cherryReport = AutoArchitect.autoDesign(
             new Vec3i(0, 64, 0), null, flatWorldWithBlock("minecraft:grass_block", 64), "minecraft:cherry_grove", 42L
         );
-        assertEquals(AutonomousArchitect.DetectedBiomeTheme.CHERRY_EAST_ASIAN, cherryReport.biomeTheme());
+        assertEquals(AutoArchitect.DetectedBiomeTheme.CHERRY_EAST_ASIAN, cherryReport.biomeTheme());
         assertEquals(StylePreset.JAPANESE, cherryReport.chosenStyle());
     }
 
@@ -54,7 +54,7 @@ public class AutonomousArchitectTest {
             new PlacementValidator(PlacementValidator.PlacementRules.defaults()),
             new GridConnectionPlanner()
         );
-        var rep = AutonomousArchitect.autoPopulateComplex(
+        var rep = AutoArchitect.autoPopulateComplex(
             new Vec3i(0, 64, 0), ctrl, flatWorldWithBlock("minecraft:grass_block", 64), null, 77L
         );
         assertFalse(ctrl.registry().allBuildings().isEmpty());
@@ -68,11 +68,11 @@ public class AutonomousArchitectTest {
         model.setOrigin(new Vec3i(0, 64, 0));
         model.setLiveLevelAccess(flatWorldWithBlock("minecraft:snow_block", 64));
         var homeReport = model.runAutoModeDesign();
-        assertEquals(AutonomousArchitect.DetectedBiomeTheme.SNOWY_ALPINE, homeReport.biomeTheme());
+        assertEquals(AutoArchitect.DetectedBiomeTheme.SNOWY_ALPINE, homeReport.biomeTheme());
         assertFalse(model.cachedPreviewTargets().isEmpty());
 
         var complexReport = model.runAutoModeComplex();
-        assertEquals(AutonomousArchitect.DetectedBiomeTheme.SNOWY_ALPINE, complexReport.biomeTheme());
+        assertEquals(AutoArchitect.DetectedBiomeTheme.SNOWY_ALPINE, complexReport.biomeTheme());
         assertFalse(model.gridPlacement().registry().allBuildings().isEmpty());
         assertFalse(model.cachedPreviewTargets().isEmpty());
     }

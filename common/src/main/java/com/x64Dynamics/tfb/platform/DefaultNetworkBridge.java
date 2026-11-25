@@ -3,7 +3,7 @@ package com.x64Dynamics.tfb.platform;
 import com.x64Dynamics.tfb.geometry.Vec3d;
 import com.x64Dynamics.tfb.geometry.Vec3i;
 import com.x64Dynamics.tfb.material.BlockIdentifier;
-import com.x64Dynamics.tfb.persistence.ParametricBlueprint;
+import com.x64Dynamics.tfb.platform.persistence.ParametricBlueprint;
 
 import java.util.UUID;
 import java.util.logging.Logger;

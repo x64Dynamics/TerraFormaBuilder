@@ -63,7 +63,7 @@ public final class MaterialFamilyResolver {
             return irregulars.get(path);
         }
 
-        com.x64Dynamics.tfb.taxonomy.BlockTaxonomyRegistry reg = com.x64Dynamics.tfb.taxonomy.BlockTaxonomyRegistry.getInstance();
+        com.x64Dynamics.tfb.material.taxonomy.BlockTaxonomyRegistry reg = com.x64Dynamics.tfb.material.taxonomy.BlockTaxonomyRegistry.getInstance();
 
         // Clean wood prefixes like oak_planks -> oak
         if (path.endsWith("_planks")) {

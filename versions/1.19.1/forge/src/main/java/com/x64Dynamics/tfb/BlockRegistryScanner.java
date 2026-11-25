@@ -1,8 +1,8 @@
 package com.x64Dynamics.tfb;
 
 import com.x64Dynamics.tfb.material.BlockIdentifier;
-import com.x64Dynamics.tfb.taxonomy.BlockTaxonomyRegistry;
-import com.x64Dynamics.tfb.taxonomy.BlockTrait;
+import com.x64Dynamics.tfb.material.taxonomy.BlockTaxonomyRegistry;
+import com.x64Dynamics.tfb.material.taxonomy.BlockTrait;
 import net.minecraft.core.Registry;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;

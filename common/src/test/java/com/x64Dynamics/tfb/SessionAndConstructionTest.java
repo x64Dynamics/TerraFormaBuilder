@@ -9,9 +9,9 @@ import com.x64Dynamics.tfb.geometry.BoundingBox3i;
 import com.x64Dynamics.tfb.geometry.Vec3i;
 import com.x64Dynamics.tfb.material.BlockIdentifier;
 import com.x64Dynamics.tfb.material.MaterialRole;
-import com.x64Dynamics.tfb.session.ArchitectSession;
-import com.x64Dynamics.tfb.session.SessionManager;
-import com.x64Dynamics.tfb.session.SessionMode;
+import com.x64Dynamics.tfb.construction.session.ArchitectSession;
+import com.x64Dynamics.tfb.construction.session.SessionManager;
+import com.x64Dynamics.tfb.construction.session.SessionMode;
 import org.junit.Test;
 
 import java.util.List;

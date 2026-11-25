@@ -1,7 +1,7 @@
 package com.x64Dynamics.tfb;
 
 import com.x64Dynamics.tfb.architectural.PlacementTarget;
-import com.x64Dynamics.tfb.city.*;
+import com.x64Dynamics.tfb.architectural.city.*;
 import com.x64Dynamics.tfb.geometry.BoundingBox3i;
 import com.x64Dynamics.tfb.geometry.Vec3i;
 import com.x64Dynamics.tfb.material.StylePreset;
@@ -120,7 +120,7 @@ public class CityDesignerTest {
     @Test
     public void testTerrainGradedCityPlanningWithHeightmap() {
         BoundingBox3i bounds = BoundingBox3i.fromOriginAndSize(new Vec3i(0, 64, 0), 48, 24, 48);
-        com.x64Dynamics.tfb.terrain.HeightmapGrid grid = new com.x64Dynamics.tfb.terrain.HeightmapGrid(bounds);
+        com.x64Dynamics.tfb.architectural.terrain.HeightmapGrid grid = new com.x64Dynamics.tfb.architectural.terrain.HeightmapGrid(bounds);
         for (int z = 0; z < 48; z++) {
             for (int x = 0; x < 48; x++) {
                 grid.setElevation(x, z, 64 + (x / 12));

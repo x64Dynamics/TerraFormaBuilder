@@ -2,8 +2,8 @@ package com.x64Dynamics.tfb.client;
 
 import com.x64Dynamics.tfb.geometry.BoundingBox3i;
 import com.x64Dynamics.tfb.geometry.Vec3i;
-import com.x64Dynamics.tfb.preview.PreviewVoxel;
-import com.x64Dynamics.tfb.preview.WorldPreviewBuffer;
+import com.x64Dynamics.tfb.construction.preview.PreviewVoxel;
+import com.x64Dynamics.tfb.construction.preview.WorldPreviewBuffer;
 import com.x64Dynamics.tfb.ui.controller.ClientController;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;

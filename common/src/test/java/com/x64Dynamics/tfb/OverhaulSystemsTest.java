@@ -4,14 +4,14 @@ import com.x64Dynamics.tfb.architectural.PlacementTarget;
 import com.x64Dynamics.tfb.architectural.assets.AuthoredAsset;
 import com.x64Dynamics.tfb.architectural.assets.AuthoredAssetRegistry;
 import com.x64Dynamics.tfb.architectural.wfc.WfcSolver;
-import com.x64Dynamics.tfb.city.TerrainRoadPathfinder;
+import com.x64Dynamics.tfb.architectural.city.TerrainRoadPathfinder;
 import com.x64Dynamics.tfb.geometry.*;
 import com.x64Dynamics.tfb.material.BlockIdentifier;
 import com.x64Dynamics.tfb.material.MaterialRole;
 import com.x64Dynamics.tfb.material.StylePreset;
-import com.x64Dynamics.tfb.persistence.SchematicExporter;
+import com.x64Dynamics.tfb.platform.persistence.SchematicExporter;
 import com.x64Dynamics.tfb.platform.ILevelAccess;
-import com.x64Dynamics.tfb.terrain.HeightmapGrid;
+import com.x64Dynamics.tfb.architectural.terrain.HeightmapGrid;
 import org.junit.Test;
 
 import java.nio.file.Files;

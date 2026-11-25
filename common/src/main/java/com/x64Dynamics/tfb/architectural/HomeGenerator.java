@@ -105,13 +105,13 @@ public final class HomeGenerator {
     }
 
     public static BuildingPlan generatePlan(BuildingDefinition def) {
-        return generatePlan(def, null, com.x64Dynamics.tfb.terrain.FoundationStrategy.STEPPED_TERRACE);
+        return generatePlan(def, null, com.x64Dynamics.tfb.architectural.terrain.FoundationStrategy.STEPPED_TERRACE);
     }
 
     public static BuildingPlan generatePlan(
             BuildingDefinition def,
-            com.x64Dynamics.tfb.terrain.HeightmapGrid heightmap,
-            com.x64Dynamics.tfb.terrain.FoundationStrategy foundationStrategy) {
+            com.x64Dynamics.tfb.architectural.terrain.HeightmapGrid heightmap,
+            com.x64Dynamics.tfb.architectural.terrain.FoundationStrategy foundationStrategy) {
         BoundingBox3i bounds = def.footprintBounds();
         MaterialPalette palette = def.palette();
         ArchitecturalStyleRuleSet rules = StyleRuleSetRegistry.forPreset(def.style());
@@ -471,7 +471,7 @@ public final class HomeGenerator {
                 lantern.withProperty("hanging", "true"), MaterialRole.LIGHT_SOURCE);
 
             if (facing == Direction.SOUTH) {
-                for (PlacementTarget lt : com.x64Dynamics.tfb.terrain.ExteriorLandscaper.generateTerrainApproachAndYard(
+                for (PlacementTarget lt : com.x64Dynamics.tfb.architectural.terrain.ExteriorLandscaper.generateTerrainApproachAndYard(
                         bounds, frontDoorPos.x(), maxZ, heightmap, palette, def.style(), def.seed())) {
                     put(map, lt.pos(), lt.block(), lt.role());
                 }
@@ -530,9 +530,9 @@ public final class HomeGenerator {
 
         // 10. Live Terrain Adaptation
         if (heightmap != null) {
-            com.x64Dynamics.tfb.terrain.FoundationStrategy effectiveStrategy =
-                foundationStrategy != null ? foundationStrategy : com.x64Dynamics.tfb.terrain.FoundationStrategy.STEPPED_TERRACE;
-            var terrainResult = com.x64Dynamics.tfb.terrain.TerrainAdapter.adapt(bounds, heightmap, effectiveStrategy, palette);
+            com.x64Dynamics.tfb.architectural.terrain.FoundationStrategy effectiveStrategy =
+                foundationStrategy != null ? foundationStrategy : com.x64Dynamics.tfb.architectural.terrain.FoundationStrategy.STEPPED_TERRACE;
+            var terrainResult = com.x64Dynamics.tfb.architectural.terrain.TerrainAdapter.adapt(bounds, heightmap, effectiveStrategy, palette);
             for (PlacementTarget ft : terrainResult.foundationPlacements()) {
                 map.putIfAbsent(ft.pos(), ft);
             }

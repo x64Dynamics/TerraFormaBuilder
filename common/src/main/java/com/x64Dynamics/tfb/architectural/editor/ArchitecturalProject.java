@@ -6,8 +6,8 @@ import com.x64Dynamics.tfb.geometry.BoundingBox3i;
 import com.x64Dynamics.tfb.geometry.Direction;
 import com.x64Dynamics.tfb.geometry.Vec3i;
 import com.x64Dynamics.tfb.material.StylePreset;
-import com.x64Dynamics.tfb.terrain.FoundationStrategy;
-import com.x64Dynamics.tfb.terrain.HeightmapGrid;
+import com.x64Dynamics.tfb.architectural.terrain.FoundationStrategy;
+import com.x64Dynamics.tfb.architectural.terrain.HeightmapGrid;
 
 import java.util.*;
 

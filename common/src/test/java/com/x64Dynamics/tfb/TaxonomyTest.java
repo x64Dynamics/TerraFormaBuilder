@@ -1,7 +1,7 @@
 package com.x64Dynamics.tfb;
 
 import com.x64Dynamics.tfb.material.BlockIdentifier;
-import com.x64Dynamics.tfb.taxonomy.*;
+import com.x64Dynamics.tfb.material.taxonomy.*;
 import org.junit.Test;
 
 import java.util.Optional;

@@ -1,6 +1,6 @@
 package com.x64Dynamics.tfb.material;
 
-import com.x64Dynamics.tfb.taxonomy.*;
+import com.x64Dynamics.tfb.material.taxonomy.*;
 
 import java.util.*;
 

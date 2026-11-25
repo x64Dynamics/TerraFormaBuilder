@@ -24,8 +24,8 @@ public final class Entrypoint {
 
         IPlatformBridge bridge = new DefaultPlatformBridge("neoforge", configDir, new DefaultNetworkBridge(), new DefaultLevelAccess());
         TerraFormaBuilder.initializeWithBridge(bridge);
-        com.x64Dynamics.tfb.persistence.BlueprintStorage.setStorageDir(configDir.resolve("terraformabuilder").resolve("blueprints"));
-        com.x64Dynamics.tfb.city.WorldProjectStorage.setProjectsDir(configDir.resolve("terraformabuilder").resolve("projects"));
+        com.x64Dynamics.tfb.platform.persistence.BlueprintStorage.setStorageDir(configDir.resolve("terraformabuilder").resolve("blueprints"));
+        com.x64Dynamics.tfb.architectural.city.WorldProjectStorage.setProjectsDir(configDir.resolve("terraformabuilder").resolve("projects"));
         BlockRegistryScanner.scanIfNeeded();
 
         if (FMLEnvironment.getDist() == Dist.CLIENT) {

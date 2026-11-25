@@ -229,14 +229,14 @@ public final class ArchitectClientEvents {
                 return;
             }
             java.util.List<com.x64Dynamics.tfb.construction.ScheduledBlockPlacement> scheduled =
-                com.x64Dynamics.tfb.construction.DependencyAwareScheduler.scheduleWithDependencies(targets);
+                com.x64Dynamics.tfb.construction.BuildScheduler.scheduleWithDependencies(targets);
             net.minecraft.server.MinecraftServer server = mc.getSingleplayerServer();
             if (server != null) {
                 net.minecraft.server.level.ServerLevel serverLevel = server.getLevel(level.dimension());
                 if (serverLevel != null) {
                     server.execute(() -> {
                         int placed = 0;
-                        java.util.List<com.x64Dynamics.tfb.editing.WorldConstructionHistory.BlockChange> changes = new java.util.ArrayList<>();
+                        java.util.List<com.x64Dynamics.tfb.construction.editing.WorldConstructionHistory.BlockChange> changes = new java.util.ArrayList<>();
                         for (com.x64Dynamics.tfb.construction.ScheduledBlockPlacement target : scheduled) {
                             com.x64Dynamics.tfb.geometry.Vec3i pos = target.pos();
                             net.minecraft.core.BlockPos bp = new net.minecraft.core.BlockPos(pos.x(), pos.y(), pos.z());
@@ -244,13 +244,13 @@ public final class ArchitectClientEvents {
                             net.minecraft.world.level.block.state.BlockState state = BlockStateParser.parse(target.block());
                             if (!prevState.equals(state) && serverLevel.setBlock(bp, state, 3)) {
                                 placed++;
-                                changes.add(new com.x64Dynamics.tfb.editing.WorldConstructionHistory.BlockChange(
+                                changes.add(new com.x64Dynamics.tfb.construction.editing.WorldConstructionHistory.BlockChange(
                                     pos, BlockStateParser.fromBlockState(prevState), target.block()
                                 ));
                             }
                         }
                         if (!changes.isEmpty()) {
-                            com.x64Dynamics.tfb.editing.WorldConstructionHistory.getInstance().recordTransaction(changes);
+                            com.x64Dynamics.tfb.construction.editing.WorldConstructionHistory.getInstance().recordTransaction(changes);
                         }
                         final int finalPlaced = placed;
                         mc.execute(() -> mc.player.displayClientMessage(

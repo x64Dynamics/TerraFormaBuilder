@@ -13,16 +13,16 @@ import com.x64Dynamics.tfb.architectural.roof.RoofGenerator;
 import com.x64Dynamics.tfb.geometry.*;
 import com.x64Dynamics.tfb.architectural.grid.*;
 import com.x64Dynamics.tfb.material.*;
-import com.x64Dynamics.tfb.network.C2SConstructionPacket;
-import com.x64Dynamics.tfb.network.ServerBuildPermissionValidator;
-import com.x64Dynamics.tfb.network.ServerTickBuildExecutor;
-import com.x64Dynamics.tfb.persistence.SchematicExporter;
+import com.x64Dynamics.tfb.platform.network.C2SConstructionPacket;
+import com.x64Dynamics.tfb.platform.network.ServerBuildPermissionValidator;
+import com.x64Dynamics.tfb.platform.network.ServerTickBuildExecutor;
+import com.x64Dynamics.tfb.platform.persistence.SchematicExporter;
 import com.x64Dynamics.tfb.platform.ILevelAccess;
 import com.x64Dynamics.tfb.platform.IPlayerAccess;
-import com.x64Dynamics.tfb.settlement.ProceduralSettlementGenerator;
-import com.x64Dynamics.tfb.terrain.ExteriorLandscaper;
-import com.x64Dynamics.tfb.terrain.FoundationStrategy;
-import com.x64Dynamics.tfb.terrain.TerrainAdapter;
+import com.x64Dynamics.tfb.architectural.settlement.SettlementGenerator;
+import com.x64Dynamics.tfb.architectural.terrain.ExteriorLandscaper;
+import com.x64Dynamics.tfb.architectural.terrain.FoundationStrategy;
+import com.x64Dynamics.tfb.architectural.terrain.TerrainAdapter;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -120,7 +120,7 @@ public class RegressionAndCleanupTest {
     @Test
     public void testSettlementNorthAndWestPlotsClearCentralPlaza() {
         MaterialPalette palette = StylePreset.RUSTIC.createPalette();
-        var plan = ProceduralSettlementGenerator.generateSettlement(new Vec3i(0, 64, 0), 32, 8, palette);
+        var plan = SettlementGenerator.generateSettlement(new Vec3i(0, 64, 0), 32, 8, palette);
         BoundingBox3i plaza = BoundingBox3i.fromCorners(new Vec3i(-3, 60, -3), new Vec3i(3, 80, 3));
         for (var plot : plan.buildingPlots()) {
             assertFalse("Plot " + plot.bounds() + " overlapped plaza", plot.bounds().intersects(plaza));

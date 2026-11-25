@@ -247,10 +247,10 @@ public final class ArchitectClientEvents {
                 net.minecraft.server.level.ServerLevel serverLevel = server.getLevel(level.dimension());
                 if (serverLevel != null) {
                     List<com.x64Dynamics.tfb.construction.ScheduledBlockPlacement> scheduled =
-                        com.x64Dynamics.tfb.construction.DependencyAwareScheduler.scheduleWithDependencies(targets);
+                        com.x64Dynamics.tfb.construction.BuildScheduler.scheduleWithDependencies(targets);
                     server.execute(() -> {
                         int placed = 0;
-                        java.util.List<com.x64Dynamics.tfb.editing.WorldConstructionHistory.BlockChange> changes = new java.util.ArrayList<>();
+                        java.util.List<com.x64Dynamics.tfb.construction.editing.WorldConstructionHistory.BlockChange> changes = new java.util.ArrayList<>();
                         for (com.x64Dynamics.tfb.construction.ScheduledBlockPlacement target : scheduled) {
                             Vec3i pos = target.pos();
                             BlockPos bp = new BlockPos(pos.x(), pos.y(), pos.z());
@@ -258,13 +258,13 @@ public final class ArchitectClientEvents {
                             BlockState state = BlockStateParser.parse(target.block());
                             if (!prevState.equals(state) && serverLevel.setBlock(bp, state, 3)) {
                                 placed++;
-                                changes.add(new com.x64Dynamics.tfb.editing.WorldConstructionHistory.BlockChange(
+                                changes.add(new com.x64Dynamics.tfb.construction.editing.WorldConstructionHistory.BlockChange(
                                     pos, BlockStateParser.fromBlockState(prevState), target.block()
                                 ));
                             }
                         }
                         if (!changes.isEmpty()) {
-                            com.x64Dynamics.tfb.editing.WorldConstructionHistory.getInstance().recordTransaction(changes);
+                            com.x64Dynamics.tfb.construction.editing.WorldConstructionHistory.getInstance().recordTransaction(changes);
                         }
                         final int finalPlaced = placed;
                         serverLevel.playSound(null, mc.player.getX(), mc.player.getY(), mc.player.getZ(),

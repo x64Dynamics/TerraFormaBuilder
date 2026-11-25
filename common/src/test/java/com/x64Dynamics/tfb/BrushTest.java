@@ -1,7 +1,7 @@
 package com.x64Dynamics.tfb;
 
 import com.x64Dynamics.tfb.architectural.PlacementTarget;
-import com.x64Dynamics.tfb.brush.*;
+import com.x64Dynamics.tfb.architectural.brush.*;
 import com.x64Dynamics.tfb.geometry.BoundingBox3i;
 import com.x64Dynamics.tfb.geometry.Vec3i;
 import com.x64Dynamics.tfb.material.MaterialPalette;

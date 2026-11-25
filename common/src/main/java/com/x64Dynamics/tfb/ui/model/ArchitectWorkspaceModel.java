@@ -15,16 +15,16 @@ import com.x64Dynamics.tfb.architectural.interior.layouts.WingLayoutGenerator;
 import com.x64Dynamics.tfb.architectural.style.ArchitecturalStyleRuleSet;
 import com.x64Dynamics.tfb.architectural.style.ProceduralVariator;
 import com.x64Dynamics.tfb.architectural.style.StyleRuleSetRegistry;
-import com.x64Dynamics.tfb.brush.ArchitecturalBrushes;
-import com.x64Dynamics.tfb.brush.BrushCategory;
-import com.x64Dynamics.tfb.brush.BrushContext;
-import com.x64Dynamics.tfb.brush.BrushRegistry;
-import com.x64Dynamics.tfb.brush.IConstructionBrush;
+import com.x64Dynamics.tfb.architectural.brush.ArchitecturalBrushes;
+import com.x64Dynamics.tfb.architectural.brush.BrushCategory;
+import com.x64Dynamics.tfb.architectural.brush.BrushContext;
+import com.x64Dynamics.tfb.architectural.brush.BrushRegistry;
+import com.x64Dynamics.tfb.architectural.brush.IConstructionBrush;
 import com.x64Dynamics.tfb.construction.ProgressiveBuildPlan;
-import com.x64Dynamics.tfb.editing.ConstructionTransforms;
-import com.x64Dynamics.tfb.editing.DesignHistorySnapshot;
-import com.x64Dynamics.tfb.editing.DesignHistoryStack;
-import com.x64Dynamics.tfb.editing.WorldSelectionManager;
+import com.x64Dynamics.tfb.construction.editing.ConstructionTransforms;
+import com.x64Dynamics.tfb.construction.editing.DesignHistorySnapshot;
+import com.x64Dynamics.tfb.construction.editing.DesignHistoryStack;
+import com.x64Dynamics.tfb.construction.editing.SelectionManager;
 import com.x64Dynamics.tfb.geometry.Axis;
 import com.x64Dynamics.tfb.geometry.BoundingBox3i;
 import com.x64Dynamics.tfb.geometry.Direction;
@@ -33,13 +33,13 @@ import com.x64Dynamics.tfb.geometry.Vec3i;
 import com.x64Dynamics.tfb.material.MaterialPalette;
 import com.x64Dynamics.tfb.material.MaterialRole;
 import com.x64Dynamics.tfb.material.StylePreset;
-import com.x64Dynamics.tfb.persistence.BlueprintMetadata;
-import com.x64Dynamics.tfb.persistence.ParametricBlueprint;
-import com.x64Dynamics.tfb.preview.PreviewFilterMode;
-import com.x64Dynamics.tfb.preview.WorldPreviewBuffer;
-import com.x64Dynamics.tfb.taxonomy.PaletteHarmonizer;
-import com.x64Dynamics.tfb.terrain.FoundationStrategy;
-import com.x64Dynamics.tfb.terrain.LandscapeAdapter;
+import com.x64Dynamics.tfb.platform.persistence.BlueprintMetadata;
+import com.x64Dynamics.tfb.platform.persistence.ParametricBlueprint;
+import com.x64Dynamics.tfb.construction.preview.PreviewFilterMode;
+import com.x64Dynamics.tfb.construction.preview.WorldPreviewBuffer;
+import com.x64Dynamics.tfb.material.taxonomy.PaletteHarmonizer;
+import com.x64Dynamics.tfb.architectural.terrain.FoundationStrategy;
+import com.x64Dynamics.tfb.architectural.terrain.LandscapeAdapter;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -60,7 +60,7 @@ public class ArchitectWorkspaceModel {
     private int depth = 15;
     private Rotation rotation = Rotation.NONE;
     private Axis mirrorAxis = null;
-    private final WorldSelectionManager selectionManager;
+    private final SelectionManager selectionManager;
 
     // Brush & Category
     private BrushCategory activeCategory = BrushCategory.ARCHITECTURAL;
@@ -123,14 +123,14 @@ public class ArchitectWorkspaceModel {
 
     // World-Scale City Designer state
     private boolean cityMode = false;
-    private com.x64Dynamics.tfb.city.WorldProject activeCityProject = null;
-    private com.x64Dynamics.tfb.city.SettlementPattern settlementPattern = com.x64Dynamics.tfb.city.SettlementPattern.MEDIEVAL_TOWN;
+    private com.x64Dynamics.tfb.architectural.city.WorldProject activeCityProject = null;
+    private com.x64Dynamics.tfb.architectural.city.SettlementPattern settlementPattern = com.x64Dynamics.tfb.architectural.city.SettlementPattern.MEDIEVAL_TOWN;
     private String selectedDistrictId = null;
     private String selectedParcelId = null;
     private BuildScope buildScope = BuildScope.ENTIRE_PROJECT;
 
     public ArchitectWorkspaceModel() {
-        this.selectionManager = new WorldSelectionManager(boundingBox());
+        this.selectionManager = new SelectionManager(boundingBox());
         this.selectionManager.setChangeListener(mgr -> {
             if (mgr.primaryBox() != null) {
                 this.origin = mgr.primaryBox().min();
@@ -179,7 +179,7 @@ public class ArchitectWorkspaceModel {
         return new BoundingBox3i(origin, new Vec3i(origin.x() + width - 1, origin.y() + height - 1, origin.z() + depth - 1));
     }
 
-    public WorldSelectionManager selectionManager() { return selectionManager; }
+    public SelectionManager selectionManager() { return selectionManager; }
     public WorldPreviewBuffer previewBuffer() { return previewBuffer; }
 
     public void setLiveLevelAccess(com.x64Dynamics.tfb.platform.ILevelAccess level) {
@@ -267,10 +267,10 @@ public class ArchitectWorkspaceModel {
         return targets.size();
     }
 
-    public synchronized com.x64Dynamics.tfb.architectural.LocalAIBuilder.AIBuildResult runAIDesign(String prompt) {
+    public synchronized com.x64Dynamics.tfb.architectural.PromptBuilder.AIBuildResult runAIDesign(String prompt) {
         this.cityMode = false;
         this.shapeEditorMode = false;
-        var res = com.x64Dynamics.tfb.architectural.LocalAIBuilder.designAndBuild(
+        var res = com.x64Dynamics.tfb.architectural.PromptBuilder.designAndBuild(
             origin, prompt, liveLevelAccess, proceduralSeed
         );
         this.stylePreset = res.intent().style();
@@ -308,10 +308,10 @@ public class ArchitectWorkspaceModel {
         return result.targets().size();
     }
 
-    public synchronized com.x64Dynamics.tfb.architectural.AutonomousArchitect.AutoDesignReport runAutoModeDesign() {
+    public synchronized com.x64Dynamics.tfb.architectural.AutoArchitect.AutoDesignReport runAutoModeDesign() {
         this.cityMode = false;
         this.shapeEditorMode = false;
-        var report = com.x64Dynamics.tfb.architectural.AutonomousArchitect.autoDesign(
+        var report = com.x64Dynamics.tfb.architectural.AutoArchitect.autoDesign(
             origin, boundingBox(), liveLevelAccess, null, proceduralSeed
         );
         this.stylePreset = report.chosenStyle();
@@ -324,10 +324,10 @@ public class ArchitectWorkspaceModel {
         return report;
     }
 
-    public synchronized com.x64Dynamics.tfb.architectural.AutonomousArchitect.AutoDesignReport runAutoModeComplex() {
+    public synchronized com.x64Dynamics.tfb.architectural.AutoArchitect.AutoDesignReport runAutoModeComplex() {
         this.cityMode = false;
         this.shapeEditorMode = false;
-        var report = com.x64Dynamics.tfb.architectural.AutonomousArchitect.autoPopulateComplex(
+        var report = com.x64Dynamics.tfb.architectural.AutoArchitect.autoPopulateComplex(
             origin, gridPlacement, liveLevelAccess, null, proceduralSeed
         );
         this.stylePreset = report.chosenStyle();
@@ -380,8 +380,8 @@ public class ArchitectWorkspaceModel {
         String safe = ((name != null && !name.isBlank()) ? name.trim() : "tfb_export").replaceAll("[^a-zA-Z0-9_-]", "_");
         java.nio.file.Path dir = java.nio.file.Path.of("config", "terraformabuilder", "schematics");
         java.nio.file.Path gz = dir.resolve(safe + ".schem.gz");
-        com.x64Dynamics.tfb.persistence.SchematicExporter.saveCompressedSchematic(gz, boundingBox(), cachedPreviewTargets);
-        com.x64Dynamics.tfb.persistence.SchematicExporter.saveJson(dir.resolve(safe + ".json"), boundingBox(), cachedPreviewTargets);
+        com.x64Dynamics.tfb.platform.persistence.SchematicExporter.saveCompressedSchematic(gz, boundingBox(), cachedPreviewTargets);
+        com.x64Dynamics.tfb.platform.persistence.SchematicExporter.saveJson(dir.resolve(safe + ".json"), boundingBox(), cachedPreviewTargets);
         return gz;
     }
 
@@ -522,8 +522,8 @@ public class ArchitectWorkspaceModel {
         return msg;
     }
 
-    public com.x64Dynamics.tfb.terrain.HeightmapGrid sampleLiveHeightmap(BoundingBox3i box) {
-        return com.x64Dynamics.tfb.terrain.HeightmapGrid.samplePadded(box, 8, liveLevelAccess);
+    public com.x64Dynamics.tfb.architectural.terrain.HeightmapGrid sampleLiveHeightmap(BoundingBox3i box) {
+        return com.x64Dynamics.tfb.architectural.terrain.HeightmapGrid.samplePadded(box, 8, liveLevelAccess);
     }
 
     public void setPos1(Vec3i pos) {
@@ -770,14 +770,14 @@ public class ArchitectWorkspaceModel {
 
     public boolean isCityMode() { return cityMode; }
     public void setCityMode(boolean cityMode) { this.cityMode = cityMode; generatePreview(); }
-    public com.x64Dynamics.tfb.city.WorldProject activeCityProject() { return activeCityProject; }
-    public com.x64Dynamics.tfb.city.SettlementPattern settlementPattern() { return settlementPattern; }
-    public void setSettlementPattern(com.x64Dynamics.tfb.city.SettlementPattern pattern) {
+    public com.x64Dynamics.tfb.architectural.city.WorldProject activeCityProject() { return activeCityProject; }
+    public com.x64Dynamics.tfb.architectural.city.SettlementPattern settlementPattern() { return settlementPattern; }
+    public void setSettlementPattern(com.x64Dynamics.tfb.architectural.city.SettlementPattern pattern) {
         if (pattern != null) {
             this.settlementPattern = pattern;
             if (cityMode && activeCityProject != null) {
                 activeCityProject.setPattern(pattern);
-                com.x64Dynamics.tfb.city.CityPlanner.planCity(activeCityProject);
+                com.x64Dynamics.tfb.architectural.city.CityPlanner.planCity(activeCityProject);
                 generatePreview();
             }
         }
@@ -793,13 +793,13 @@ public class ArchitectWorkspaceModel {
         setBuildScope(vals[(buildScope.ordinal() + 1) % vals.length]);
     }
 
-    public synchronized void createNewCity(String name, com.x64Dynamics.tfb.city.SettlementPattern pattern, int sizeX, int sizeZ) {
+    public synchronized void createNewCity(String name, com.x64Dynamics.tfb.architectural.city.SettlementPattern pattern, int sizeX, int sizeZ) {
         this.width = Math.max(24, sizeX);
         this.depth = Math.max(24, sizeZ);
         this.height = Math.max(16, this.height);
-        this.settlementPattern = pattern != null ? pattern : com.x64Dynamics.tfb.city.SettlementPattern.MEDIEVAL_TOWN;
+        this.settlementPattern = pattern != null ? pattern : com.x64Dynamics.tfb.architectural.city.SettlementPattern.MEDIEVAL_TOWN;
         this.cityMode = true;
-        this.activeCityProject = new com.x64Dynamics.tfb.city.WorldProject(
+        this.activeCityProject = new com.x64Dynamics.tfb.architectural.city.WorldProject(
             "city-" + Long.toHexString(proceduralSeed),
             name,
             "KyroXova",
@@ -808,14 +808,14 @@ public class ArchitectWorkspaceModel {
             this.stylePreset,
             this.proceduralSeed
         );
-        com.x64Dynamics.tfb.city.CityPlanner.planCity(this.activeCityProject, sampleLiveHeightmap(boundingBox()));
+        com.x64Dynamics.tfb.architectural.city.CityPlanner.planCity(this.activeCityProject, sampleLiveHeightmap(boundingBox()));
         generatePreview();
     }
 
     public synchronized boolean regenerateSelectedParcel() {
         if (!cityMode || activeCityProject == null || selectedParcelId == null) return false;
         long nextSeed = (proceduralSeed * 6364136223846793005L + System.nanoTime()) & 0x7FFFFFFFL;
-        boolean ok = com.x64Dynamics.tfb.city.CityPlanner.regenerateParcel(activeCityProject, selectedParcelId, nextSeed);
+        boolean ok = com.x64Dynamics.tfb.architectural.city.CityPlanner.regenerateParcel(activeCityProject, selectedParcelId, nextSeed);
         if (ok) generatePreview();
         return ok;
     }
@@ -830,7 +830,7 @@ public class ArchitectWorkspaceModel {
         return false;
     }
 
-    public synchronized void loadWorldProject(com.x64Dynamics.tfb.city.WorldProject project) {
+    public synchronized void loadWorldProject(com.x64Dynamics.tfb.architectural.city.WorldProject project) {
         if (project == null) return;
         this.activeCityProject = project;
         this.cityMode = true;
@@ -842,7 +842,7 @@ public class ArchitectWorkspaceModel {
         this.height = project.bounds().sizeY();
         this.depth = project.bounds().sizeZ();
         this.proceduralSeed = project.seed();
-        com.x64Dynamics.tfb.city.CityPlanner.planCity(project);
+        com.x64Dynamics.tfb.architectural.city.CityPlanner.planCity(project);
         generatePreview();
     }
 
@@ -854,13 +854,13 @@ public class ArchitectWorkspaceModel {
     public synchronized void generatePreview() {
         List<PlacementTarget> targets = new ArrayList<>();
         BoundingBox3i box = boundingBox();
-        com.x64Dynamics.tfb.terrain.HeightmapGrid liveHeightmap = sampleLiveHeightmap(box);
+        com.x64Dynamics.tfb.architectural.terrain.HeightmapGrid liveHeightmap = sampleLiveHeightmap(box);
 
         if (shapeEditorMode) {
             BoundingBox3i sampleBox = activeArchProject.sections().isEmpty()
                 ? box
                 : activeArchProject.sections().get(0).bounds();
-            com.x64Dynamics.tfb.terrain.HeightmapGrid secHeight = sampleLiveHeightmap(sampleBox);
+            com.x64Dynamics.tfb.architectural.terrain.HeightmapGrid secHeight = sampleLiveHeightmap(sampleBox);
             activeArchProject.regenerateDirtySections(secHeight, foundationStrategy);
             targets.addAll(activeArchProject.resolveAllTargets());
             this.generatedStories = activeArchProject.sections().stream().mapToInt(com.x64Dynamics.tfb.architectural.editor.EditableBuildingSection::stories).max().orElse(1);
@@ -870,7 +870,7 @@ public class ArchitectWorkspaceModel {
             activeCityProject.setPrimaryStyle(stylePreset);
             activeCityProject.setSeed(proceduralSeed);
             if (activeCityProject.districts().isEmpty()) {
-                com.x64Dynamics.tfb.city.CityPlanner.planCity(activeCityProject, liveHeightmap);
+                com.x64Dynamics.tfb.architectural.city.CityPlanner.planCity(activeCityProject, liveHeightmap);
             }
             if (buildScope == BuildScope.SELECTED_PARCEL && selectedParcelId != null) {
                 targets.addAll(activeCityProject.resolveParcelTargets(selectedParcelId));

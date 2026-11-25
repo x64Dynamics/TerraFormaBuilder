@@ -329,7 +329,7 @@ public final class ArchitectClientEvents {
             }
 
             List<com.x64Dynamics.tfb.construction.ScheduledBlockPlacement> scheduled =
-                com.x64Dynamics.tfb.construction.DependencyAwareScheduler.scheduleWithDependencies(targets);
+                com.x64Dynamics.tfb.construction.BuildScheduler.scheduleWithDependencies(targets);
 
             net.minecraft.server.MinecraftServer server = mc.getSingleplayerServer();
             if (server != null) {
@@ -338,7 +338,7 @@ public final class ArchitectClientEvents {
                     server.execute(() -> {
                         int placed = 0;
                         int confirmed = 0;
-                        List<com.x64Dynamics.tfb.editing.WorldConstructionHistory.BlockChange> changes = new java.util.ArrayList<>();
+                        List<com.x64Dynamics.tfb.construction.editing.WorldConstructionHistory.BlockChange> changes = new java.util.ArrayList<>();
                         for (com.x64Dynamics.tfb.construction.ScheduledBlockPlacement target : scheduled) {
                             Vec3i pos = target.pos();
                             BlockPos bp = new BlockPos(pos.x(), pos.y(), pos.z());
@@ -347,7 +347,7 @@ public final class ArchitectClientEvents {
                             if (!prevState.equals(state) && serverLevel.setBlock(bp, state, 3)) {
                                 placed++;
                                 confirmed++;
-                                changes.add(new com.x64Dynamics.tfb.editing.WorldConstructionHistory.BlockChange(
+                                changes.add(new com.x64Dynamics.tfb.construction.editing.WorldConstructionHistory.BlockChange(
                                     pos, BlockStateParser.fromBlockState(prevState), target.block()
                                 ));
                             } else if (serverLevel.getBlockState(bp).equals(state)) {
@@ -355,7 +355,7 @@ public final class ArchitectClientEvents {
                             }
                         }
                         if (!changes.isEmpty()) {
-                            com.x64Dynamics.tfb.editing.WorldConstructionHistory.getInstance().recordTransaction(changes);
+                            com.x64Dynamics.tfb.construction.editing.WorldConstructionHistory.getInstance().recordTransaction(changes);
                         }
                         final int finalPlaced = placed;
                         final int finalConfirmed = confirmed;
@@ -393,14 +393,14 @@ public final class ArchitectClientEvents {
         }
 
         public static boolean executeWorldUndo(Minecraft mc) {
-            var history = com.x64Dynamics.tfb.editing.WorldConstructionHistory.getInstance();
+            var history = com.x64Dynamics.tfb.construction.editing.WorldConstructionHistory.getInstance();
             if (!history.canUndo() || mc.level == null || mc.player == null) return false;
             net.minecraft.server.MinecraftServer server = mc.getSingleplayerServer();
             if (server == null) return false;
             net.minecraft.server.level.ServerLevel serverLevel = server.getLevel(mc.level.dimension());
             if (serverLevel == null) return false;
 
-            List<com.x64Dynamics.tfb.editing.WorldConstructionHistory.BlockChange> tx = history.popUndo();
+            List<com.x64Dynamics.tfb.construction.editing.WorldConstructionHistory.BlockChange> tx = history.popUndo();
             server.execute(() -> {
                 for (int i = tx.size() - 1; i >= 0; i--) {
                     var ch = tx.get(i);
@@ -416,14 +416,14 @@ public final class ArchitectClientEvents {
         }
 
         public static boolean executeWorldRedo(Minecraft mc) {
-            var history = com.x64Dynamics.tfb.editing.WorldConstructionHistory.getInstance();
+            var history = com.x64Dynamics.tfb.construction.editing.WorldConstructionHistory.getInstance();
             if (!history.canRedo() || mc.level == null || mc.player == null) return false;
             net.minecraft.server.MinecraftServer server = mc.getSingleplayerServer();
             if (server == null) return false;
             net.minecraft.server.level.ServerLevel serverLevel = server.getLevel(mc.level.dimension());
             if (serverLevel == null) return false;
 
-            List<com.x64Dynamics.tfb.editing.WorldConstructionHistory.BlockChange> tx = history.popRedo();
+            List<com.x64Dynamics.tfb.construction.editing.WorldConstructionHistory.BlockChange> tx = history.popRedo();
             server.execute(() -> {
                 for (var ch : tx) {
                     BlockPos bp = new BlockPos(ch.pos().x(), ch.pos().y(), ch.pos().z());
