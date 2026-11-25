@@ -219,6 +219,27 @@ public class ArchitectWorkspaceModel {
     private final VoxelGridEditorModel gridEditor = new VoxelGridEditorModel(16, 16, 16);
     public VoxelGridEditorModel gridEditor() { return gridEditor; }
 
+    private final com.x64Dynamics.tfb.grid.StructurePlacementController gridPlacement =
+        new com.x64Dynamics.tfb.grid.StructurePlacementController(
+            com.x64Dynamics.tfb.grid.GridManager.defaultProjectGrid(new Vec3i(0, 64, 0)),
+            new com.x64Dynamics.tfb.grid.BuildingRegistry(),
+            new com.x64Dynamics.tfb.grid.PlacementRuleEngine(com.x64Dynamics.tfb.grid.PlacementRuleEngine.PlacementRules.defaults()),
+            new com.x64Dynamics.tfb.grid.ConnectionEngine()
+        );
+    private final com.x64Dynamics.tfb.ui.camera.ArchitectCameraController cameraController =
+        new com.x64Dynamics.tfb.ui.camera.ArchitectCameraController();
+
+    public com.x64Dynamics.tfb.grid.StructurePlacementController gridPlacement() { return gridPlacement; }
+    public com.x64Dynamics.tfb.ui.camera.ArchitectCameraController cameraController() { return cameraController; }
+
+    public synchronized int syncGridComplexToPreview() {
+        var result = gridPlacement.generateComplex();
+        this.cachedPreviewTargets = result.targets();
+        this.cachedBuildPlan = new ProgressiveBuildPlan(result.targets());
+        this.previewBuffer.updateFromTargets(result.targets(), liveLevelAccess);
+        return result.targets().size();
+    }
+
     public synchronized int syncGridEditorToPreview() {
         List<PlacementTarget> targets = gridEditor.toPlacementTargets(origin, activePalette());
         this.cachedPreviewTargets = targets;
