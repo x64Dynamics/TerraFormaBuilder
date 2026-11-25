@@ -795,8 +795,8 @@ public class ArchitectWorkspaceScreen {
                     tabWidgets.add(new UIButton(new UIBounds(contentX, contentY + 28, contentWidth - 6, rowHeight), TFBLocalization.tr("tfb.home.no_saved"), b -> {}));
                 }
 
-                int pBtnW = contentWidth / 3 - 4;
-                tabWidgets.add(new UIButton(new UIBounds(contentX, contentY + 86, pBtnW, rowHeight), "Capture World Asset", b -> {
+                int pBtnW = contentWidth / 4 - 4;
+                tabWidgets.add(new UIButton(new UIBounds(contentX, contentY + 86, pBtnW, rowHeight), "Capture Asset", b -> {
                     try {
                         var asset = model.captureSelectionAsAsset(blueprintNameField.text());
                         setStatus("Captured asset '" + asset.id() + "' (" + asset.blocks().size() + " blocks)");
@@ -804,7 +804,7 @@ public class ArchitectWorkspaceScreen {
                         setStatus("Asset capture failed: " + ex.getMessage());
                     }
                 }));
-                tabWidgets.add(new UIButton(new UIBounds(contentX + pBtnW + 4, contentY + 86, pBtnW, rowHeight), "Export .schem.gz", b -> {
+                tabWidgets.add(new UIButton(new UIBounds(contentX + pBtnW + 4, contentY + 86, pBtnW, rowHeight), "Export .schem", b -> {
                     try {
                         var path = model.exportCurrentSchematic(blueprintNameField.text());
                         setStatus("Exported schematic: " + path.getFileName());
@@ -817,6 +817,11 @@ public class ArchitectWorkspaceScreen {
                     refreshHierarchy();
                     setStatus("Generated WFC compound (" + model.activeArchProject().sections().size() + " sections)");
                     tabBar.setActiveTab(WorkspaceTab.ARCHITECTURE);
+                }));
+                tabWidgets.add(new UIButton(new UIBounds(contentX + (pBtnW + 4) * 3, contentY + 86, pBtnW, rowHeight), "Estate", b -> {
+                    int n = model.generateConnectedEstate();
+                    refreshHierarchy();
+                    setStatus("Generated connected estate (" + n + " blocks)");
                 }));
             }
 
