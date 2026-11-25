@@ -69,6 +69,13 @@ public final class IntelligentHomeGenerator {
     }
 
     public static BuildingPlan generatePlan(BuildingDefinition def) {
+        return generatePlan(def, null, com.x64Dynamics.tfb.terrain.FoundationStrategy.STEPPED_TERRACE);
+    }
+
+    public static BuildingPlan generatePlan(
+            BuildingDefinition def,
+            com.x64Dynamics.tfb.terrain.HeightmapGrid heightmap,
+            com.x64Dynamics.tfb.terrain.FoundationStrategy foundationStrategy) {
         BoundingBox3i bounds = def.footprintBounds();
         MaterialPalette palette = def.palette();
         Map<Vec3i, PlacementTarget> map = new LinkedHashMap<>();
@@ -317,12 +324,9 @@ public final class IntelligentHomeGenerator {
             }
             put(map, new Vec3i(doorX, minY + 3, maxZ + 1), lantern.withProperty("hanging", "true"), MaterialRole.LIGHT_SOURCE);
 
-            BlockIdentifier dirtPath = BlockIdentifier.of("minecraft:dirt_path");
-            BlockIdentifier cobble = BlockIdentifier.of("minecraft:cobblestone");
-            for (int pz = maxZ + 3; pz <= maxZ + 7; pz++) {
-                put(map, new Vec3i(doorX - 1, minY, pz), (pz % 2 == 0) ? dirtPath : cobble, MaterialRole.FLOOR);
-                put(map, new Vec3i(doorX, minY, pz), dirtPath, MaterialRole.FLOOR);
-                put(map, new Vec3i(doorX + 1, minY, pz), (pz % 2 == 1) ? dirtPath : cobble, MaterialRole.FLOOR);
+            for (PlacementTarget lt : com.x64Dynamics.tfb.terrain.ExteriorLandscapingEngine.generateTerrainApproachAndYard(
+                    bounds, doorX, maxZ, heightmap, palette, def.style(), def.seed())) {
+                put(map, lt.pos(), lt.block(), lt.role());
             }
 
             for (int wx : new int[]{minX + 2, maxX - 2}) {
@@ -353,6 +357,22 @@ public final class IntelligentHomeGenerator {
                 for (PlacementTarget dt : AdvancedRoofFeatures.generateDormer(dormerPos, Direction.SOUTH, 3, 3, palette)) {
                     put(map, dt.pos(), dt.block(), dt.role());
                 }
+            }
+        }
+
+        // 8. Live Terrain Adaptation (foundations, stilts, retaining walls, cut-and-fill)
+        if (heightmap != null) {
+            com.x64Dynamics.tfb.terrain.FoundationStrategy effectiveStrategy =
+                foundationStrategy != null ? foundationStrategy : com.x64Dynamics.tfb.terrain.FoundationStrategy.STEPPED_TERRACE;
+            var terrainResult = com.x64Dynamics.tfb.terrain.TerrainAdapter.adapt(bounds, heightmap, effectiveStrategy, palette);
+            for (PlacementTarget ft : terrainResult.foundationPlacements()) {
+                map.putIfAbsent(ft.pos(), ft);
+            }
+            for (PlacementTarget fill : terrainResult.fillPlacements()) {
+                map.putIfAbsent(fill.pos(), fill);
+            }
+            for (Vec3i ex : terrainResult.excavations()) {
+                map.putIfAbsent(ex, new PlacementTarget(ex, BlockIdentifier.AIR, MaterialRole.AIR));
             }
         }
 

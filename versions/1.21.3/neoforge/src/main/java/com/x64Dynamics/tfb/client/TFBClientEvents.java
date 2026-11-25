@@ -41,10 +41,19 @@ public final class TFBClientEvents {
 
     @EventBusSubscriber(modid = "terraformabuilder", value = Dist.CLIENT)
     public static class ForgeEvents {
+        private static NeoForgeLevelAccess liveLevelAccess;
         @SubscribeEvent
         public static void onClientTick(ClientTickEvent.Post event) {
             Minecraft mc = Minecraft.getInstance();
             if (mc.player == null) return;
+            if (mc.level != null) {
+                if (liveLevelAccess == null) {
+                    liveLevelAccess = new NeoForgeLevelAccess(mc.level);
+                    TFBClientController.getInstance().model().setLiveLevelAccess(liveLevelAccess);
+                } else {
+                    liveLevelAccess.setLevel(mc.level);
+                }
+            }
 
             ArchitectFlightController.tick(mc);
 

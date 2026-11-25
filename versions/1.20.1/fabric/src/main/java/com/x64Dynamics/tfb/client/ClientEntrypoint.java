@@ -26,8 +26,15 @@ public final class ClientEntrypoint implements ClientModInitializer {
         LOGGER.info("[terraformabuilder] Initialized TerraFormaBuilder client on Fabric 1.20.1.");
     }
 
+    private static FabricLevelAccess liveLevelAccess;
     public static void onClientTick(Minecraft mc) {
         if (mc.player == null || mc.level == null) return;
+        if (liveLevelAccess == null) {
+            liveLevelAccess = new FabricLevelAccess(mc.level);
+            TFBClientController.getInstance().model().setLiveLevelAccess(liveLevelAccess);
+        } else {
+            liveLevelAccess.setLevel(mc.level);
+        }
 
         if (!keysRegistered && mc.options != null) {
             TFBKeyMappings.registerAll(mc);

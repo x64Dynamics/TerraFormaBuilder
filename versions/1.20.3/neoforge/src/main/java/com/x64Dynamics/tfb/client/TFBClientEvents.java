@@ -37,12 +37,21 @@ public final class TFBClientEvents {
     }
 
     public static class ForgeBusEvents {
+        private static NeoForgeLevelAccess liveLevelAccess;
         @SubscribeEvent
         public static void onClientTick(TickEvent.ClientTickEvent event) {
             if (event.phase != TickEvent.Phase.END) return;
 
             Minecraft mc = Minecraft.getInstance();
             if (mc.player == null) return;
+            if (mc.level != null) {
+                if (liveLevelAccess == null) {
+                    liveLevelAccess = new NeoForgeLevelAccess(mc.level);
+                    TFBClientController.getInstance().model().setLiveLevelAccess(liveLevelAccess);
+                } else {
+                    liveLevelAccess.setLevel(mc.level);
+                }
+            }
 
             ArchitectFlightController.tick(mc);
 

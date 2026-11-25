@@ -357,6 +357,36 @@ public class ArchitectWorkspaceScreen {
                         tabBar.setActiveTab(WorkspaceTab.PROJECTS);
                     }));
                 }
+
+                // VoxelDreamer-style Prompt-to-Build Bar
+                UITextField promptField = new UITextField(
+                    new UIBounds(contentX, contentY + 84, contentWidth - 88, rowHeight),
+                    "Prompt",
+                    model.lastPrompt(),
+                    s -> {}
+                );
+                tabWidgets.add(promptField);
+                tabWidgets.add(new UIButton(new UIBounds(contentX + contentWidth - 84, contentY + 84, 84, rowHeight), "Generate", b -> {
+                    var res = model.applyPrompt(promptField.text());
+                    refreshHierarchy();
+                    setStatus("Generated: " + res.summary());
+                    tabBar.setActiveTab(WorkspaceTab.ARCHITECTURE);
+                }));
+                tabWidgets.add(new UIButton(new UIBounds(contentX, contentY + 110, contentWidth / 3 - 4, rowHeight), "Medieval Manor", b -> {
+                    var res = model.applyPrompt("2-story medieval manor with balcony and chimney");
+                    refreshHierarchy();
+                    setStatus("Generated: " + res.summary());
+                }));
+                tabWidgets.add(new UIButton(new UIBounds(contentX + contentWidth / 3, contentY + 110, contentWidth / 3 - 4, rowHeight), "Hillside Stilt Cabin", b -> {
+                    var res = model.applyPrompt("nordic cabin on stilts with porch");
+                    refreshHierarchy();
+                    setStatus("Generated: " + res.summary());
+                }));
+                tabWidgets.add(new UIButton(new UIBounds(contentX + (contentWidth / 3) * 2, contentY + 110, contentWidth / 3 - 4, rowHeight), "Coastal Port Town", b -> {
+                    var res = model.applyPrompt("coastal port town");
+                    refreshHierarchy();
+                    setStatus("Generated: " + res.summary());
+                }));
             }
 
             case ARCHITECTURE -> {
@@ -364,13 +394,13 @@ public class ArchitectWorkspaceScreen {
                     // City Designer Controls
                     tabWidgets.add(new UISlider(new UIBounds(contentX, contentY, contentWidth / 2 - 6, rowHeight), "City Width", 24, 96, model.width(), w -> {
                         model.setWidth(w);
-                        if (model.activeCityProject() != null) com.x64Dynamics.tfb.city.CityPlannerEngine.planCity(model.activeCityProject());
+                        if (model.activeCityProject() != null) com.x64Dynamics.tfb.city.CityPlannerEngine.planCity(model.activeCityProject(), model.sampleLiveHeightmap(model.boundingBox()));
                         model.generatePreview();
                         refreshHierarchy();
                     }));
                     tabWidgets.add(new UISlider(new UIBounds(contentX + contentWidth / 2, contentY, contentWidth / 2 - 6, rowHeight), "City Depth", 24, 96, model.depth(), d -> {
                         model.setDepth(d);
-                        if (model.activeCityProject() != null) com.x64Dynamics.tfb.city.CityPlannerEngine.planCity(model.activeCityProject());
+                        if (model.activeCityProject() != null) com.x64Dynamics.tfb.city.CityPlannerEngine.planCity(model.activeCityProject(), model.sampleLiveHeightmap(model.boundingBox()));
                         model.generatePreview();
                         refreshHierarchy();
                     }));
@@ -384,7 +414,7 @@ public class ArchitectWorkspaceScreen {
                     List<StylePreset> styles = Arrays.asList(StylePreset.values());
                     tabWidgets.add(new UIDropdown<>(new UIBounds(contentX + contentWidth / 2, contentY + 26, contentWidth / 2 - 6, rowHeight), TFBLocalization.tr("tfb.ui.style"), styles, styles.indexOf(model.stylePreset()), st -> {
                         model.setStylePreset(st);
-                        if (model.activeCityProject() != null) com.x64Dynamics.tfb.city.CityPlannerEngine.planCity(model.activeCityProject());
+                        if (model.activeCityProject() != null) com.x64Dynamics.tfb.city.CityPlannerEngine.planCity(model.activeCityProject(), model.sampleLiveHeightmap(model.boundingBox()));
                         model.generatePreview();
                         refreshHierarchy();
                     }));

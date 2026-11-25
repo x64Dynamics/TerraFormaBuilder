@@ -66,4 +66,33 @@ public final class HeightmapGrid {
     public BoundingBox3i bounds() {
         return bounds;
     }
+
+    /**
+     * Samples live world surface elevations across the XZ footprint of {@code bounds}.
+     * Falls back to flat {@code bounds.min().y()} when {@code level} is null.
+     */
+    public static HeightmapGrid sample(BoundingBox3i bounds, com.x64Dynamics.tfb.platform.ILevelAccess level) {
+        HeightmapGrid grid = new HeightmapGrid(bounds);
+        if (level == null) {
+            return grid;
+        }
+        for (int x = bounds.min().x(); x <= bounds.max().x(); x++) {
+            for (int z = bounds.min().z(); z <= bounds.max().z(); z++) {
+                int y = level.getSurfaceHeight(x, z);
+                grid.setElevation(x, z, y);
+            }
+        }
+        return grid;
+    }
+
+    /**
+     * Samples live world surface elevations over {@code bounds} expanded horizontally by {@code padding}.
+     */
+    public static HeightmapGrid samplePadded(BoundingBox3i bounds, int padding, com.x64Dynamics.tfb.platform.ILevelAccess level) {
+        BoundingBox3i padded = BoundingBox3i.fromCorners(
+            new Vec3i(bounds.min().x() - padding, bounds.min().y(), bounds.min().z() - padding),
+            new Vec3i(bounds.max().x() + padding, bounds.max().y(), bounds.max().z() + padding)
+        );
+        return sample(padded, level);
+    }
 }

@@ -109,6 +109,8 @@ public class ArchitectWorkspaceModel {
     private List<PlacementTarget> cachedPreviewTargets = new ArrayList<>();
     private ProgressiveBuildPlan cachedBuildPlan = null;
     private com.x64Dynamics.tfb.architectural.plan.BuildingPlan latestPlan = null;
+    private transient com.x64Dynamics.tfb.platform.ILevelAccess liveLevelAccess = null;
+    private String lastPrompt = "";
 
     public enum BuildScope { ENTIRE_PROJECT, SELECTED_DISTRICT, SELECTED_PARCEL }
 
@@ -172,6 +174,53 @@ public class ArchitectWorkspaceModel {
 
     public WorldSelectionManager selectionManager() { return selectionManager; }
     public WorldPreviewBuffer previewBuffer() { return previewBuffer; }
+
+    public void setLiveLevelAccess(com.x64Dynamics.tfb.platform.ILevelAccess level) {
+        this.liveLevelAccess = level;
+    }
+
+    public com.x64Dynamics.tfb.platform.ILevelAccess liveLevelAccess() {
+        return liveLevelAccess;
+    }
+
+    public String lastPrompt() {
+        return lastPrompt;
+    }
+
+    public com.x64Dynamics.tfb.terrain.HeightmapGrid sampleLiveHeightmap(BoundingBox3i box) {
+        return com.x64Dynamics.tfb.terrain.HeightmapGrid.samplePadded(box, 8, liveLevelAccess);
+    }
+
+    public synchronized com.x64Dynamics.tfb.architectural.PromptBuildingInterpreter.PromptInterpretation applyPrompt(String prompt) {
+        this.lastPrompt = prompt == null ? "" : prompt.trim();
+        var interp = com.x64Dynamics.tfb.architectural.PromptBuildingInterpreter.interpret(this.lastPrompt);
+        this.stylePreset = interp.stylePreset();
+        this.activePalette = interp.stylePreset().createPalette();
+        this.roofShape = interp.roofType();
+        this.wingConfiguration = interp.wingConfiguration();
+        this.foundationStrategy = interp.foundationStrategy();
+        this.width = interp.width();
+        this.height = interp.height();
+        this.depth = interp.depth();
+        this.requestedStories = interp.stories();
+        this.addPorchAndGarden = interp.porchAndGarden();
+        this.addChimney = interp.chimney();
+        this.addBalconies = interp.balconies();
+        this.addDormers = interp.dormers();
+        this.addWindowShutters = interp.shutters();
+        this.furnishRooms = interp.furnishInterior();
+        this.enableInteriors = interp.furnishInterior();
+        if (interp.cityMode()) {
+            createNewCity("Prompt City", interp.settlementPattern(), interp.width(), interp.depth());
+        } else {
+            this.cityMode = false;
+            this.activeBrush = new ArchitecturalBrushes.HouseBrush();
+            this.activeCategory = BrushCategory.ARCHITECTURAL;
+            selectionManager.setPrimaryBox(boundingBox());
+            generatePreview();
+        }
+        return interp;
+    }
 
     public void setPos1(Vec3i pos) {
         selectionManager.setPos1(pos);
@@ -423,7 +472,7 @@ public class ArchitectWorkspaceModel {
             this.stylePreset,
             this.proceduralSeed
         );
-        com.x64Dynamics.tfb.city.CityPlannerEngine.planCity(this.activeCityProject);
+        com.x64Dynamics.tfb.city.CityPlannerEngine.planCity(this.activeCityProject, sampleLiveHeightmap(boundingBox()));
         generatePreview();
     }
 
@@ -469,13 +518,14 @@ public class ArchitectWorkspaceModel {
     public synchronized void generatePreview() {
         List<PlacementTarget> targets = new ArrayList<>();
         BoundingBox3i box = boundingBox();
+        com.x64Dynamics.tfb.terrain.HeightmapGrid liveHeightmap = sampleLiveHeightmap(box);
 
         if (cityMode && activeCityProject != null) {
             activeCityProject.setBounds(box);
             activeCityProject.setPrimaryStyle(stylePreset);
             activeCityProject.setSeed(proceduralSeed);
             if (activeCityProject.districts().isEmpty()) {
-                com.x64Dynamics.tfb.city.CityPlannerEngine.planCity(activeCityProject);
+                com.x64Dynamics.tfb.city.CityPlannerEngine.planCity(activeCityProject, liveHeightmap);
             }
             if (buildScope == BuildScope.SELECTED_PARCEL && selectedParcelId != null) {
                 targets.addAll(activeCityProject.resolveParcelTargets(selectedParcelId));
@@ -503,7 +553,7 @@ public class ArchitectWorkspaceModel {
                     proceduralSeed
                 );
             com.x64Dynamics.tfb.architectural.plan.BuildingPlan plan =
-                com.x64Dynamics.tfb.architectural.IntelligentHomeGenerator.generatePlan(def);
+                com.x64Dynamics.tfb.architectural.IntelligentHomeGenerator.generatePlan(def, liveHeightmap, foundationStrategy);
             this.latestPlan = plan;
             targets.addAll(plan.targets());
             this.generatedStories = plan.floors().size();
@@ -518,7 +568,7 @@ public class ArchitectWorkspaceModel {
                 if (selectionManager.pos1() != null && selectionManager.pos2() != null) {
                     pathPts = List.of(selectionManager.pos1(), selectionManager.pos2());
                 }
-                BrushContext ctx = new BrushContext(box, pathPts, activePalette, null, foundationStrategy, Collections.emptyMap());
+                BrushContext ctx = new BrushContext(box, pathPts, activePalette, liveHeightmap, foundationStrategy, Collections.emptyMap());
                 if (activeBrush != null) {
                     targets.addAll(activeBrush.generate(ctx));
                 }
@@ -605,7 +655,7 @@ public class ArchitectWorkspaceModel {
 
         this.cachedPreviewTargets = targets;
         this.cachedBuildPlan = new ProgressiveBuildPlan(targets);
-        this.previewBuffer.updateFromTargets(targets, null);
+        this.previewBuffer.updateFromTargets(targets, liveLevelAccess);
     }
 
     public void pushHistorySnapshot() {

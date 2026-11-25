@@ -163,4 +163,30 @@ public class IntelligentHomeGeneratorTest {
         assertTrue("2-story wide home should have second-floor balcony railing", hasBalconyFence);
         assertTrue("Wide gable home should have roof dormer glazing", hasDormerGlass);
     }
+
+    @Test
+    public void testLiveHeightmapTerrainAwareHomeAndPromptInterpreter() {
+        com.x64Dynamics.tfb.platform.ILevelAccess slopedLevel = new com.x64Dynamics.tfb.platform.ILevelAccess() {
+            @Override public int getSurfaceHeight(int x, int z) { return 64 - Math.max(0, z - 5); }
+            @Override public BlockIdentifier getBlockState(Vec3i pos) { return BlockIdentifier.AIR; }
+            @Override public boolean setBlockState(Vec3i pos, BlockIdentifier state) { return true; }
+            @Override public boolean isAir(Vec3i pos) { return true; }
+        };
+
+        var model = new com.x64Dynamics.tfb.ui.model.ArchitectWorkspaceModel();
+        model.setLiveLevelAccess(slopedLevel);
+        var interp = model.applyPrompt("2-story nordic cabin on stilts with porch");
+        assertEquals(StylePreset.NORDIC, interp.stylePreset());
+        assertEquals(com.x64Dynamics.tfb.terrain.FoundationStrategy.PILLARS_STILTS, interp.foundationStrategy());
+        assertFalse(model.cachedPreviewTargets().isEmpty());
+
+        // Verify stilts extend down below minY=64 on the sloped rear/front
+        boolean hasLowerStilt = model.cachedPreviewTargets().stream()
+            .anyMatch(t -> t.role() == MaterialRole.PILLAR && t.pos().y() < 64);
+        assertTrue("Sloped terrain with PILLARS_STILTS should generate support pillars below base Y", hasLowerStilt);
+
+        var cityInterp = com.x64Dynamics.tfb.architectural.PromptBuildingInterpreter.interpret("coastal port town");
+        assertTrue(cityInterp.cityMode());
+        assertEquals(com.x64Dynamics.tfb.city.SettlementPattern.INDUSTRIAL_SECTOR, cityInterp.settlementPattern());
+    }
 }

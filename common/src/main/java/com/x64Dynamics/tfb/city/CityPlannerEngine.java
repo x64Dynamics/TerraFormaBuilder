@@ -83,6 +83,20 @@ public final class CityPlannerEngine {
             project.pattern() == SettlementPattern.ORGANIC_VILLAGE ? RoadInfrastructureEngine.IntersectionType.ROUNDABOUT : RoadInfrastructureEngine.IntersectionType.FOUR_WAY,
             arterialProfile, basePalette
         ));
+        if (heightmap != null) {
+            List<PlacementTarget> gradedRoads = new ArrayList<>(roadTargets.size());
+            com.x64Dynamics.tfb.material.BlockIdentifier sub = basePalette.get(com.x64Dynamics.tfb.material.MaterialRole.FOUNDATION);
+            for (PlacementTarget rt : roadTargets) {
+                int gy = heightmap.getElevation(rt.pos().x(), rt.pos().z());
+                int dy = gy - y;
+                Vec3i newPos = rt.pos().add(0, dy, 0);
+                gradedRoads.add(new PlacementTarget(newPos, rt.block(), rt.role()));
+                if (rt.pos().y() == y && dy > 0) {
+                    gradedRoads.add(new PlacementTarget(newPos.add(0, -1, 0), sub, com.x64Dynamics.tfb.material.MaterialRole.FOUNDATION));
+                }
+            }
+            roadTargets = gradedRoads;
+        }
         project.roadNetwork().setResolvedTargets(roadTargets);
 
         // 3. Create 4 Districts around the main crossroads with thematic diversity

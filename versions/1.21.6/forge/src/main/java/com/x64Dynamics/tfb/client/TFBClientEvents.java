@@ -40,6 +40,7 @@ public final class TFBClientEvents {
 
     @Mod.EventBusSubscriber(modid = TerraFormaBuilder.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
     public static class ForgeBusEvents {
+        private static ForgeLevelAccess liveLevelAccess;
         @SubscribeEvent
         public static void onCustomizeChat(CustomizeGuiOverlayEvent.Chat event) {
             TFBInWorldHud.render(event.getGuiGraphics(), Minecraft.getInstance());
@@ -50,6 +51,14 @@ public final class TFBClientEvents {
 
             Minecraft mc = Minecraft.getInstance();
             if (mc.player == null) return;
+            if (mc.level != null) {
+                if (liveLevelAccess == null) {
+                    liveLevelAccess = new ForgeLevelAccess(mc.level);
+                    TFBClientController.getInstance().model().setLiveLevelAccess(liveLevelAccess);
+                } else {
+                    liveLevelAccess.setLevel(mc.level);
+                }
+            }
 
             ArchitectFlightController.tick(mc);
 
