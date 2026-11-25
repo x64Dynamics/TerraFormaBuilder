@@ -15,6 +15,7 @@ public enum BlockTrait {
     TORCH,
     CARPET,
     DECORATIVE,
+    FURNITURE,
     INTERACTABLE,
     WATERLOGGABLE,
     LIGHT_EMITTING

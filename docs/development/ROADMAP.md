@@ -20,10 +20,10 @@
 - [x] Dynamic roof intersection resolver for non-rectangular complex compounds.
 - [x] Advanced facade window arrays with rhythmic pilaster fluting and pediment cornices.
 
-### Phase 3: Universal Block Intelligence & Dynamic Mod Discovery
-- [ ] Automated scan of loaded block registries for custom modded stairs, slabs, pillars, and decorations.
-- [ ] Universal visual harmony calculator taking RGB texture averages and HSV complementary colors into account.
-- [ ] Modded furniture and light source dynamic taxonomy tagging.
+### Phase 3: Universal Block Intelligence & Dynamic Mod Discovery (COMPLETED)
+- [x] Automated scan of loaded block registries for custom modded stairs, slabs, pillars, and decorations.
+- [x] Universal visual harmony calculator taking RGB texture averages and HSV complementary colors into account.
+- [x] Modded furniture and light source dynamic taxonomy tagging.
 
 ### Phase 4: Full Multi-Version Matrix Rollout
 - [ ] Deploy client adapters across all 30 Minecraft releases from 1.18.2 to 26.3.

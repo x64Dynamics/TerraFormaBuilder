@@ -34,8 +34,12 @@ public final class BlockTaxonomyEngine {
             else if (path.contains("trapdoor")) traits.add(BlockTrait.TRAPDOOR);
             else if (path.contains("pillar") || path.endsWith("_log") || path.endsWith("_wood") || path.endsWith("_stem") || path.endsWith("_hyphae")) traits.add(BlockTrait.PILLAR);
             else if (path.contains("pane") || path.contains("iron_bars")) traits.add(BlockTrait.GLASS_PANE);
-            else if (path.contains("lantern")) { traits.add(BlockTrait.LANTERN); traits.add(BlockTrait.LIGHT_EMITTING); }
-            else if (path.contains("torch")) { traits.add(BlockTrait.TORCH); traits.add(BlockTrait.LIGHT_EMITTING); }
+            else if (path.contains("lantern") || path.contains("lamp") || path.contains("sconce") || path.contains("chandelier") || path.contains("brazier")) { traits.add(BlockTrait.LANTERN); traits.add(BlockTrait.LIGHT_EMITTING); }
+            else if (path.contains("torch") || path.contains("candle")) { traits.add(BlockTrait.TORCH); traits.add(BlockTrait.LIGHT_EMITTING); }
+            else if (path.contains("glow") || path.contains("froglight") || path.contains("shroomlight") || path.contains("bulb")) { traits.add(BlockTrait.LIGHT_EMITTING); }
+            else if (path.contains("chair") || path.contains("table") || path.contains("bench") || path.contains("stool") || path.contains("desk")
+                || path.contains("sofa") || path.contains("cabinet") || path.contains("shelf") || path.contains("bed") || path.contains("lectern")
+                || path.contains("chest") || path.contains("barrel")) { traits.add(BlockTrait.FURNITURE); traits.add(BlockTrait.DECORATIVE); }
             else if (path.contains("carpet")) traits.add(BlockTrait.CARPET);
             else traits.add(BlockTrait.SOLID_CUBE);
         }
