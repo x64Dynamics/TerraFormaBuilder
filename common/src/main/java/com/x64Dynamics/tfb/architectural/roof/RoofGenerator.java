@@ -146,10 +146,12 @@ public final class RoofGenerator {
                 if (xLeft < xRight) {
                     BlockIdentifier westStair = stair.withProperty("facing", "east").withProperty("half", "bottom");
                     BlockIdentifier eastStair = stair.withProperty("facing", "west").withProperty("half", "bottom");
+                    BlockIdentifier trimBlock = palette.get(MaterialRole.ROOF_OVERHANG);
 
                     for (int z = minZ; z <= maxZ; z++) {
-                        targets.add(new PlacementTarget(new Vec3i(xLeft, y, z), westStair, MaterialRole.ROOF_SLOPE));
-                        targets.add(new PlacementTarget(new Vec3i(xRight, y, z), eastStair, MaterialRole.ROOF_SLOPE));
+                        boolean bargeboard = (z == minZ || z == maxZ);
+                        targets.add(new PlacementTarget(new Vec3i(xLeft, y, z), bargeboard ? trimBlock : westStair, bargeboard ? MaterialRole.ROOF_OVERHANG : MaterialRole.ROOF_SLOPE));
+                        targets.add(new PlacementTarget(new Vec3i(xRight, y, z), bargeboard ? trimBlock : eastStair, bargeboard ? MaterialRole.ROOF_OVERHANG : MaterialRole.ROOF_SLOPE));
                     }
                     // Fill gable pediments on both ends
                     if (maxZ - minZ >= 2) {
@@ -204,10 +206,18 @@ public final class RoofGenerator {
             for (int x = curMinX + 1; x < curMaxX; x++) {
                 targets.add(new PlacementTarget(new Vec3i(x, y, curMinZ), stair.withProperty("facing", "south").withProperty("half", "bottom"), MaterialRole.ROOF_SLOPE));
                 targets.add(new PlacementTarget(new Vec3i(x, y, curMaxZ), stair.withProperty("facing", "north").withProperty("half", "bottom"), MaterialRole.ROOF_SLOPE));
+                if (curMaxZ - curMinZ >= 3) {
+                    targets.add(new PlacementTarget(new Vec3i(x, y, curMinZ + 1), cornerTrim, MaterialRole.ROOF_OVERHANG));
+                    targets.add(new PlacementTarget(new Vec3i(x, y, curMaxZ - 1), cornerTrim, MaterialRole.ROOF_OVERHANG));
+                }
             }
             for (int z = curMinZ + 1; z < curMaxZ; z++) {
                 targets.add(new PlacementTarget(new Vec3i(curMinX, y, z), stair.withProperty("facing", "east").withProperty("half", "bottom"), MaterialRole.ROOF_SLOPE));
                 targets.add(new PlacementTarget(new Vec3i(curMaxX, y, z), stair.withProperty("facing", "west").withProperty("half", "bottom"), MaterialRole.ROOF_SLOPE));
+                if (curMaxX - curMinX >= 3) {
+                    targets.add(new PlacementTarget(new Vec3i(curMinX + 1, y, z), cornerTrim, MaterialRole.ROOF_OVERHANG));
+                    targets.add(new PlacementTarget(new Vec3i(curMaxX - 1, y, z), cornerTrim, MaterialRole.ROOF_OVERHANG));
+                }
             }
             targets.add(new PlacementTarget(new Vec3i(curMinX, y, curMinZ), cornerTrim, MaterialRole.ROOF_OVERHANG));
             targets.add(new PlacementTarget(new Vec3i(curMaxX, y, curMinZ), cornerTrim, MaterialRole.ROOF_OVERHANG));
@@ -229,16 +239,24 @@ public final class RoofGenerator {
         for (int y = baseY; y < baseY + 2; y++) {
             int curMinX = minX + step, curMaxX = maxX - step;
             int curMinZ = minZ + step, curMaxZ = maxZ - step;
+            BlockIdentifier cornerMat = palette.get(MaterialRole.ROOF_OVERHANG);
             for (int x = curMinX + 1; x < curMaxX; x++) {
                 targets.add(new PlacementTarget(new Vec3i(x, y, curMinZ), primary.withProperty("facing", "south").withProperty("half", "bottom"), MaterialRole.ROOF_SLOPE));
                 targets.add(new PlacementTarget(new Vec3i(x, y, curMaxZ), primary.withProperty("facing", "north").withProperty("half", "bottom"), MaterialRole.ROOF_SLOPE));
+                if (curMaxZ - curMinZ >= 3) {
+                    targets.add(new PlacementTarget(new Vec3i(x, y, curMinZ + 1), cornerMat, MaterialRole.ROOF_OVERHANG));
+                    targets.add(new PlacementTarget(new Vec3i(x, y, curMaxZ - 1), cornerMat, MaterialRole.ROOF_OVERHANG));
+                }
             }
             for (int z = curMinZ + 1; z < curMaxZ; z++) {
                 targets.add(new PlacementTarget(new Vec3i(curMinX, y, z), primary.withProperty("facing", "east").withProperty("half", "bottom"), MaterialRole.ROOF_SLOPE));
                 targets.add(new PlacementTarget(new Vec3i(curMaxX, y, z), primary.withProperty("facing", "west").withProperty("half", "bottom"), MaterialRole.ROOF_SLOPE));
+                if (curMaxX - curMinX >= 3) {
+                    targets.add(new PlacementTarget(new Vec3i(curMinX + 1, y, z), cornerMat, MaterialRole.ROOF_OVERHANG));
+                    targets.add(new PlacementTarget(new Vec3i(curMaxX - 1, y, z), cornerMat, MaterialRole.ROOF_OVERHANG));
+                }
             }
             // Solid corner blocks for clean mansard hips without stair gaps
-            BlockIdentifier cornerMat = palette.get(MaterialRole.ROOF_OVERHANG);
             targets.add(new PlacementTarget(new Vec3i(curMinX, y, curMinZ), cornerMat, MaterialRole.ROOF_OVERHANG));
             targets.add(new PlacementTarget(new Vec3i(curMaxX, y, curMinZ), cornerMat, MaterialRole.ROOF_OVERHANG));
             targets.add(new PlacementTarget(new Vec3i(curMinX, y, curMaxZ), cornerMat, MaterialRole.ROOF_OVERHANG));
