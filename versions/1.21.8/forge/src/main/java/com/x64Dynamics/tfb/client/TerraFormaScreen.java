@@ -60,7 +60,7 @@ public class TerraFormaScreen extends Screen {
 
             @Override
             public void drawTooltip(String tooltip, int mx, int my) {
-                guiGraphics.renderTooltip(font, Component.literal(tooltip), mx, my);
+                guiGraphics.setTooltipForNextFrame(font, Component.literal(tooltip), mx, my);
             }
 
             @Override

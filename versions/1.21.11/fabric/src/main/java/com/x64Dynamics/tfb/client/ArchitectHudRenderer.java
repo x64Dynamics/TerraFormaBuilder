@@ -8,7 +8,7 @@ import com.x64Dynamics.tfb.ui.model.ArchitectWorkspaceModel;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -114,7 +114,7 @@ public final class ArchitectHudRenderer {
                 }
 
                 if (slot != null) {
-                    Item item = BuiltInRegistries.ITEM.getValue(ResourceLocation.parse(slot.iconItemKey()));
+                    Item item = BuiltInRegistries.ITEM.getValue(Identifier.parse(slot.iconItemKey()));
                     if (item != null && item != Items.AIR) {
                         g.renderItem(new ItemStack(item), slotX + 2, slotY + 2);
                     } else {
@@ -126,7 +126,7 @@ public final class ArchitectHudRenderer {
             // Floating Tooltip Pill over Active Slot
             BuilderHotbarSlot activeSlot = hotbarModel.getActiveSlotData();
             if (activeSlot != null && controller.isTooltipsVisible()) {
-                Item activeItem = BuiltInRegistries.ITEM.getValue(ResourceLocation.parse(activeSlot.iconItemKey()));
+                Item activeItem = BuiltInRegistries.ITEM.getValue(Identifier.parse(activeSlot.iconItemKey()));
                 String tip = activeSlot.name() + " (" + (hotbarModel.getActiveSlot() + 1) + ")";
                 int textWidth = mc.font.width(tip);
                 int tipWidth = textWidth + 28;

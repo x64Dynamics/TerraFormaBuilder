@@ -44,6 +44,7 @@ public final class ClientEntrypoint implements ClientModInitializer {
         }
 
         ArchitectFlightController.tick(mc);
+        ArchitectWorldRenderer.renderGizmos();
 
         if (mc.screen == null) {
             while (ArchitectKeyMappings.OPEN_WORKSPACE.consumeClick()) {
@@ -146,7 +147,7 @@ public final class ClientEntrypoint implements ClientModInitializer {
         if (scrollDelta == 0) return false;
 
         BuilderHotbarModel hotbar = BuilderHotbarModel.getInstance();
-        if (net.minecraft.client.gui.screens.Screen.hasShiftDown()) {
+        if (mc.hasShiftDown()) {
             if (scrollDelta > 0) {
                 hotbar.prevPage();
             } else {
