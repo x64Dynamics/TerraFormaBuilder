@@ -165,7 +165,7 @@ public class IntelligentHomeGeneratorTest {
     }
 
     @Test
-    public void testLiveHeightmapTerrainAwareHomeAndPromptInterpreter() {
+    public void testLiveHeightmapTerrainAwareHomeAndShapeEditor() throws Exception {
         com.x64Dynamics.tfb.platform.ILevelAccess slopedLevel = new com.x64Dynamics.tfb.platform.ILevelAccess() {
             @Override public int getSurfaceHeight(int x, int z) { return 64 - Math.max(0, z - 5); }
             @Override public BlockIdentifier getBlockState(Vec3i pos) { return BlockIdentifier.AIR; }
@@ -175,18 +175,32 @@ public class IntelligentHomeGeneratorTest {
 
         var model = new com.x64Dynamics.tfb.ui.model.ArchitectWorkspaceModel();
         model.setLiveLevelAccess(slopedLevel);
-        var interp = model.applyPrompt("2-story nordic cabin on stilts with porch");
-        assertEquals(StylePreset.NORDIC, interp.stylePreset());
-        assertEquals(com.x64Dynamics.tfb.terrain.FoundationStrategy.PILLARS_STILTS, interp.foundationStrategy());
+        model.setStylePreset(StylePreset.NORDIC);
+        model.setFoundationStrategy(com.x64Dynamics.tfb.terrain.FoundationStrategy.PILLARS_STILTS);
+        model.setShapeEditorMode(true);
         assertFalse(model.cachedPreviewTargets().isEmpty());
 
-        // Verify stilts extend down below minY=64 on the sloped rear/front
+        // Verify stilts extend down below minY=64 on the sloped rear
         boolean hasLowerStilt = model.cachedPreviewTargets().stream()
             .anyMatch(t -> t.role() == MaterialRole.PILLAR && t.pos().y() < 64);
         assertTrue("Sloped terrain with PILLARS_STILTS should generate support pillars below base Y", hasLowerStilt);
 
-        var cityInterp = com.x64Dynamics.tfb.architectural.PromptBuildingInterpreter.interpret("coastal port town");
-        assertTrue(cityInterp.cityMode());
-        assertEquals(com.x64Dynamics.tfb.city.SettlementPattern.INDUSTRIAL_SECTOR, cityInterp.settlementPattern());
+        // Verify section extension, floor stacking, lock preservation, and persistence
+        String mainId = model.selectedSectionId();
+        assertNotNull(mainId);
+        model.setActiveSculptTool(com.x64Dynamics.tfb.ui.model.ArchitectWorkspaceModel.SculptTool.TOWER);
+        model.sculptAt(new Vec3i(4, 64, 4), com.x64Dynamics.tfb.geometry.Direction.UP, true);
+        assertEquals(3, model.activeArchProject().findSection(mainId).orElseThrow().stories());
+
+        model.activeArchProject().toggleLock(mainId);
+        assertFalse("Locked section must refuse extension", model.activeArchProject().extendSection(mainId, com.x64Dynamics.tfb.geometry.Direction.EAST, 2));
+        model.activeArchProject().toggleLock(mainId);
+        assertTrue("Unlocked section should extend", model.activeArchProject().extendSection(mainId, com.x64Dynamics.tfb.geometry.Direction.EAST, 2));
+
+        java.nio.file.Path tempDir = java.nio.file.Files.createTempDirectory("tfb_arch_proj_test");
+        com.x64Dynamics.tfb.architectural.editor.ArchitecturalProjectStorage.setStorageDir(tempDir);
+        com.x64Dynamics.tfb.architectural.editor.ArchitecturalProjectStorage.save(model.activeArchProject());
+        var loaded = com.x64Dynamics.tfb.architectural.editor.ArchitecturalProjectStorage.load(model.activeArchProject().name()).orElseThrow();
+        assertEquals(model.activeArchProject().sections().size(), loaded.sections().size());
     }
 }

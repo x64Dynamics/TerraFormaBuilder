@@ -181,6 +181,16 @@ public class ArchitectWorkspaceScreen {
 
         hierarchyList = new UIScrollList<>(new UIBounds(6, listY, sidebarWidth - 8, listHeight), 15, buildHierarchyItems(), (item, idx) -> {
             String trimmed = item.trim();
+            if (model.isShapeEditorMode()) {
+                for (var s : model.activeArchProject().sections()) {
+                    if (trimmed.contains("[" + s.id() + "]")) {
+                        model.setSelectedSectionId(s.id());
+                        rebuildTabWidgets();
+                        setStatus("Selected " + s.id() + " (" + s.kind().name() + ", " + s.stories() + "F)");
+                        return;
+                    }
+                }
+            }
             if (model.isCityMode() && model.activeCityProject() != null) {
                 for (var d : model.activeCityProject().districts()) {
                     for (var p : d.parcels()) {
@@ -248,6 +258,16 @@ public class ArchitectWorkspaceScreen {
 
     private List<String> buildHierarchyItems() {
         List<String> items = new ArrayList<>();
+        if (model.isShapeEditorMode()) {
+            var proj = model.activeArchProject();
+            items.add("Arch: " + proj.name() + " (" + proj.sections().size() + " sec)");
+            for (var s : proj.sections()) {
+                String sel = s.id().equals(model.selectedSectionId()) ? "> " : "  ";
+                String lock = s.isLocked() ? " *LOCK*" : "";
+                items.add(sel + "[" + s.id() + "] " + s.kind().name() + " " + s.stories() + "F" + lock);
+            }
+            return items;
+        }
         if (model.isCityMode() && model.activeCityProject() != null) {
             var city = model.activeCityProject();
             items.add("City: " + city.name() + " (" + city.totalParcelCount() + " lots)");
@@ -358,39 +378,110 @@ public class ArchitectWorkspaceScreen {
                     }));
                 }
 
-                // VoxelDreamer-style Prompt-to-Build Bar
-                UITextField promptField = new UITextField(
-                    new UIBounds(contentX, contentY + 84, contentWidth - 88, rowHeight),
-                    "Prompt",
-                    model.lastPrompt(),
-                    s -> {}
-                );
-                tabWidgets.add(promptField);
-                tabWidgets.add(new UIButton(new UIBounds(contentX + contentWidth - 84, contentY + 84, 84, rowHeight), "Generate", b -> {
-                    var res = model.applyPrompt(promptField.text());
+                // Shape-First Architectural Studio Actions (100% local procedural grammar)
+                tabWidgets.add(new UIButton(new UIBounds(contentX, contentY + 84, contentWidth / 3 - 4, rowHeight), "Shape Sculpt Mode", b -> {
+                    model.setCityMode(false);
+                    model.setShapeEditorMode(true);
                     refreshHierarchy();
-                    setStatus("Generated: " + res.summary());
+                    setStatus("Shape Sculpt Mode active (" + model.activeArchProject().sections().size() + " sections)");
                     tabBar.setActiveTab(WorkspaceTab.ARCHITECTURE);
                 }));
-                tabWidgets.add(new UIButton(new UIBounds(contentX, contentY + 110, contentWidth / 3 - 4, rowHeight), "Medieval Manor", b -> {
-                    var res = model.applyPrompt("2-story medieval manor with balcony and chimney");
+                tabWidgets.add(new UIButton(new UIBounds(contentX + contentWidth / 3, contentY + 84, contentWidth / 3 - 4, rowHeight), "Add Wing / Annex", b -> {
+                    model.setCityMode(false);
+                    model.setShapeEditorMode(true);
+                    model.setActiveSculptTool(ArchitectWorkspaceModel.SculptTool.BUILDING);
+                    var baseBox = model.activeArchProject().sections().isEmpty()
+                        ? model.boundingBox()
+                        : model.activeArchProject().sections().get(0).bounds();
+                    var wingPos = new com.x64Dynamics.tfb.geometry.Vec3i(baseBox.max().x() + 5, baseBox.min().y(), baseBox.min().z() + 4);
+                    String msg = model.sculptAt(wingPos, com.x64Dynamics.tfb.geometry.Direction.EAST, true);
                     refreshHierarchy();
-                    setStatus("Generated: " + res.summary());
+                    setStatus(msg);
+                    tabBar.setActiveTab(WorkspaceTab.ARCHITECTURE);
                 }));
-                tabWidgets.add(new UIButton(new UIBounds(contentX + contentWidth / 3, contentY + 110, contentWidth / 3 - 4, rowHeight), "Hillside Stilt Cabin", b -> {
-                    var res = model.applyPrompt("nordic cabin on stilts with porch");
+                tabWidgets.add(new UIButton(new UIBounds(contentX + (contentWidth / 3) * 2, contentY + 84, contentWidth / 3 - 4, rowHeight), "Add Tower", b -> {
+                    model.setCityMode(false);
+                    model.setShapeEditorMode(true);
+                    model.setActiveSculptTool(ArchitectWorkspaceModel.SculptTool.TOWER);
+                    var baseBox = model.activeArchProject().sections().isEmpty()
+                        ? model.boundingBox()
+                        : model.activeArchProject().sections().get(0).bounds();
+                    var towerPos = new com.x64Dynamics.tfb.geometry.Vec3i(baseBox.min().x() - 3, baseBox.min().y(), baseBox.min().z());
+                    String msg = model.sculptAt(towerPos, com.x64Dynamics.tfb.geometry.Direction.NORTH, true);
                     refreshHierarchy();
-                    setStatus("Generated: " + res.summary());
-                }));
-                tabWidgets.add(new UIButton(new UIBounds(contentX + (contentWidth / 3) * 2, contentY + 110, contentWidth / 3 - 4, rowHeight), "Coastal Port Town", b -> {
-                    var res = model.applyPrompt("coastal port town");
-                    refreshHierarchy();
-                    setStatus("Generated: " + res.summary());
+                    setStatus(msg);
+                    tabBar.setActiveTab(WorkspaceTab.ARCHITECTURE);
                 }));
             }
 
             case ARCHITECTURE -> {
-                if (model.isCityMode() && model.activeCityProject() != null) {
+                if (model.isShapeEditorMode()) {
+                    String sid = model.selectedSectionId();
+                    var selOpt = sid != null ? model.activeArchProject().findSection(sid) : java.util.Optional.<com.x64Dynamics.tfb.architectural.editor.BuildingSection>empty();
+                    int bw = contentWidth / 4 - 4;
+                    tabWidgets.add(new UIButton(new UIBounds(contentX, contentY, bw, rowHeight), "Extend N +2", b -> {
+                        if (sid != null && model.activeArchProject().extendSection(sid, com.x64Dynamics.tfb.geometry.Direction.NORTH, 2)) {
+                            model.generatePreview(); refreshHierarchy(); setStatus("Extended " + sid + " North");
+                        }
+                    }));
+                    tabWidgets.add(new UIButton(new UIBounds(contentX + bw + 4, contentY, bw, rowHeight), "Extend S +2", b -> {
+                        if (sid != null && model.activeArchProject().extendSection(sid, com.x64Dynamics.tfb.geometry.Direction.SOUTH, 2)) {
+                            model.generatePreview(); refreshHierarchy(); setStatus("Extended " + sid + " South");
+                        }
+                    }));
+                    tabWidgets.add(new UIButton(new UIBounds(contentX + (bw + 4) * 2, contentY, bw, rowHeight), "Extend E +2", b -> {
+                        if (sid != null && model.activeArchProject().extendSection(sid, com.x64Dynamics.tfb.geometry.Direction.EAST, 2)) {
+                            model.generatePreview(); refreshHierarchy(); setStatus("Extended " + sid + " East");
+                        }
+                    }));
+                    tabWidgets.add(new UIButton(new UIBounds(contentX + (bw + 4) * 3, contentY, bw, rowHeight), "Extend W +2", b -> {
+                        if (sid != null && model.activeArchProject().extendSection(sid, com.x64Dynamics.tfb.geometry.Direction.WEST, 2)) {
+                            model.generatePreview(); refreshHierarchy(); setStatus("Extended " + sid + " West");
+                        }
+                    }));
+
+                    tabWidgets.add(new UIButton(new UIBounds(contentX, contentY + 26, bw, rowHeight), "Stack Floor +1", b -> {
+                        if (sid != null && model.activeArchProject().stackFloor(sid)) {
+                            model.generatePreview(); refreshHierarchy(); setStatus("Stacked floor on " + sid);
+                        }
+                    }));
+                    tabWidgets.add(new UIButton(new UIBounds(contentX + bw + 4, contentY + 26, bw, rowHeight), "Cycle Roof", b -> {
+                        if (selOpt.isPresent() && !selOpt.get().isLocked()) {
+                            var types = RoofGenerator.RoofType.values();
+                            var next = types[(selOpt.get().roofType().ordinal() + 1) % types.length];
+                            selOpt.get().setRoofType(next);
+                            model.generatePreview(); refreshHierarchy(); setStatus(sid + " roof: " + next.name());
+                        }
+                    }));
+                    tabWidgets.add(new UIButton(new UIBounds(contentX + (bw + 4) * 2, contentY + 26, bw, rowHeight), selOpt.map(s -> s.isLocked() ? "Unlock" : "Lock").orElse("Lock"), b -> {
+                        if (sid != null && model.activeArchProject().toggleLock(sid)) {
+                            refreshHierarchy(); rebuildTabWidgets(); setStatus("Toggled lock on " + sid);
+                        }
+                    }));
+                    tabWidgets.add(new UIButton(new UIBounds(contentX + (bw + 4) * 3, contentY + 26, bw, rowHeight), "Remove Sec", b -> {
+                        if (sid != null && model.activeArchProject().removeSection(sid)) {
+                            model.setSelectedSectionId(null);
+                            model.generatePreview(); refreshHierarchy(); rebuildTabWidgets(); setStatus("Removed " + sid);
+                        }
+                    }));
+
+                    tabWidgets.add(new UIButton(new UIBounds(contentX, contentY + 52, bw, rowHeight), "Tool: Building", b -> {
+                        model.setActiveSculptTool(ArchitectWorkspaceModel.SculptTool.BUILDING);
+                        setStatus("Sculpt Tool: Building");
+                    }));
+                    tabWidgets.add(new UIButton(new UIBounds(contentX + bw + 4, contentY + 52, bw, rowHeight), "Tool: Porch", b -> {
+                        model.setActiveSculptTool(ArchitectWorkspaceModel.SculptTool.PORCH_TERRACE);
+                        setStatus("Sculpt Tool: Porch / Terrace");
+                    }));
+                    tabWidgets.add(new UIButton(new UIBounds(contentX + (bw + 4) * 2, contentY + 52, bw, rowHeight), "Tool: Tower", b -> {
+                        model.setActiveSculptTool(ArchitectWorkspaceModel.SculptTool.TOWER);
+                        setStatus("Sculpt Tool: Tower / Stack");
+                    }));
+                    tabWidgets.add(new UIButton(new UIBounds(contentX + (bw + 4) * 3, contentY + 52, bw, rowHeight), "Exit Sculpt", b -> {
+                        model.setShapeEditorMode(false);
+                        refreshHierarchy(); rebuildTabWidgets(); setStatus("Returned to Home Builder");
+                    }));
+                } else if (model.isCityMode() && model.activeCityProject() != null) {
                     // City Designer Controls
                     tabWidgets.add(new UISlider(new UIBounds(contentX, contentY, contentWidth / 2 - 6, rowHeight), "City Width", 24, 96, model.width(), w -> {
                         model.setWidth(w);

@@ -56,6 +56,23 @@ public final class TFBClientRenderer {
             LevelRenderer.renderLineBox(poseStack, lineConsumer, p2x - 0.02, p2y - 0.02, p2z - 0.02, p2x + 1.02, p2y + 1.02, p2z + 1.02, 1.0f, 0.65f, 0.05f, 1.0f);
         }
 
+        if (controller.model().isShapeEditorMode() && controller.model().selectedSectionId() != null) {
+            controller.model().activeArchProject().findSection(controller.model().selectedSectionId()).ifPresent(sec -> {
+                BoundingBox3i sb = sec.bounds();
+                double sx0 = sb.min().x() - camPos.x - 0.03;
+                double sy0 = sb.min().y() - camPos.y - 0.03;
+                double sz0 = sb.min().z() - camPos.z - 0.03;
+                double sx1 = sb.max().x() + 1.03 - camPos.x;
+                double sy1 = sb.min().y() + sec.stories() * 4.0 + 1.03 - camPos.y;
+                double sz1 = sb.max().z() + 1.03 - camPos.z;
+                if (sec.isLocked()) {
+                    LevelRenderer.renderLineBox(poseStack, lineConsumer, sx0, sy0, sz0, sx1, sy1, sz1, 1.0f, 0.78f, 0.1f, 1.0f);
+                } else {
+                    LevelRenderer.renderLineBox(poseStack, lineConsumer, sx0, sy0, sz0, sx1, sy1, sz1, 0.18f, 0.95f, 0.45f, 1.0f);
+                }
+            });
+        }
+
         WorldPreviewBuffer previewBuffer = controller.model().previewBuffer();
         List<PreviewVoxel> voxels = previewBuffer.getFilteredVoxels();
         int maxRenderCount = 8192;

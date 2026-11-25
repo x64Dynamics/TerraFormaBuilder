@@ -169,6 +169,19 @@ public final class ClientEntrypoint implements ClientModInitializer {
                 && bhr.getType() == net.minecraft.world.phys.HitResult.Type.BLOCK) {
             BlockPos clicked = bhr.getBlockPos();
             Vec3i pos = new Vec3i(clicked.getX(), clicked.getY(), clicked.getZ());
+            if (controller.model().isShapeEditorMode()) {
+                com.x64Dynamics.tfb.geometry.Direction tfbDir = switch (bhr.getDirection()) {
+                    case NORTH -> com.x64Dynamics.tfb.geometry.Direction.NORTH;
+                    case SOUTH -> com.x64Dynamics.tfb.geometry.Direction.SOUTH;
+                    case WEST -> com.x64Dynamics.tfb.geometry.Direction.WEST;
+                    case EAST -> com.x64Dynamics.tfb.geometry.Direction.EAST;
+                    case UP -> com.x64Dynamics.tfb.geometry.Direction.UP;
+                    case DOWN -> com.x64Dynamics.tfb.geometry.Direction.DOWN;
+                };
+                String msg = controller.model().sculptAt(pos, tfbDir, button == 0);
+                mc.player.displayClientMessage(Component.literal("§b[TFB] §f" + msg), true);
+                return true;
+            }
             if (button == 0) {
                 controller.model().setPos1(pos);
                 mc.player.displayClientMessage(

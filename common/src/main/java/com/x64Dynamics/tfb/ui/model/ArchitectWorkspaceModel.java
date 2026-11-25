@@ -110,9 +110,16 @@ public class ArchitectWorkspaceModel {
     private ProgressiveBuildPlan cachedBuildPlan = null;
     private com.x64Dynamics.tfb.architectural.plan.BuildingPlan latestPlan = null;
     private transient com.x64Dynamics.tfb.platform.ILevelAccess liveLevelAccess = null;
-    private String lastPrompt = "";
 
     public enum BuildScope { ENTIRE_PROJECT, SELECTED_DISTRICT, SELECTED_PARCEL }
+    public enum SculptTool { BUILDING, PORCH_TERRACE, TOWER, STAIRS_APPROACH, ERASE_SECTION }
+
+    // Shape-First Architectural Editor state
+    private boolean shapeEditorMode = false;
+    private SculptTool activeSculptTool = SculptTool.BUILDING;
+    private final com.x64Dynamics.tfb.architectural.editor.ArchitecturalProject activeArchProject =
+        new com.x64Dynamics.tfb.architectural.editor.ArchitecturalProject("arch_main", "Studio Design");
+    private String selectedSectionId = null;
 
     // World-Scale City Designer state
     private boolean cityMode = false;
@@ -183,43 +190,127 @@ public class ArchitectWorkspaceModel {
         return liveLevelAccess;
     }
 
-    public String lastPrompt() {
-        return lastPrompt;
+    public boolean isShapeEditorMode() { return shapeEditorMode; }
+    public void setShapeEditorMode(boolean enabled) {
+        this.shapeEditorMode = enabled;
+        if (enabled && activeArchProject.sections().isEmpty()) {
+            BoundingBox3i initial = BoundingBox3i.fromOriginAndSize(origin, Math.max(9, width), 1, Math.max(9, depth));
+            var sec = activeArchProject.addSection(
+                com.x64Dynamics.tfb.architectural.editor.BuildingSection.SectionKind.MAIN_WING,
+                initial, 2, stylePreset, roofShape, Direction.SOUTH, proceduralSeed
+            );
+            selectedSectionId = sec.id();
+        }
+        generatePreview();
+    }
+
+    public SculptTool activeSculptTool() { return activeSculptTool; }
+    public void setActiveSculptTool(SculptTool tool) {
+        if (tool != null) this.activeSculptTool = tool;
+    }
+
+    public com.x64Dynamics.tfb.architectural.editor.ArchitecturalProject activeArchProject() {
+        return activeArchProject;
+    }
+
+    public String selectedSectionId() { return selectedSectionId; }
+    public void setSelectedSectionId(String id) { this.selectedSectionId = id; }
+
+    public synchronized String sculptAt(Vec3i hitPos, Direction face, boolean primaryClick) {
+        if (!shapeEditorMode) setShapeEditorMode(true);
+        Direction outFace = face != null ? face : Direction.SOUTH;
+        var hitSecOpt = activeArchProject.findSectionAt(hitPos);
+
+        if (!primaryClick) {
+            if (hitSecOpt.isPresent()) {
+                selectedSectionId = hitSecOpt.get().id();
+                return "Selected " + selectedSectionId + (hitSecOpt.get().isLocked() ? " [LOCKED]" : "");
+            }
+            return "No section at cursor";
+        }
+
+        String msg;
+        switch (activeSculptTool) {
+            case BUILDING -> {
+                if (hitSecOpt.isPresent()) {
+                    var sec = hitSecOpt.get();
+                    selectedSectionId = sec.id();
+                    if (activeArchProject.extendSection(sec.id(), outFace, 2)) {
+                        msg = "Extended " + sec.id() + " " + outFace.name() + " +2";
+                    } else {
+                        msg = sec.id() + " is locked";
+                    }
+                } else {
+                    BoundingBox3i footprint = BoundingBox3i.fromOriginAndSize(
+                        new Vec3i(hitPos.x() - 4, hitPos.y(), hitPos.z() - 4), 9, 1, 9
+                    );
+                    var kind = activeArchProject.sections().isEmpty()
+                        ? com.x64Dynamics.tfb.architectural.editor.BuildingSection.SectionKind.MAIN_WING
+                        : com.x64Dynamics.tfb.architectural.editor.BuildingSection.SectionKind.SIDE_WING;
+                    var sec = activeArchProject.addSection(kind, footprint, kind == com.x64Dynamics.tfb.architectural.editor.BuildingSection.SectionKind.MAIN_WING ? 2 : 1, stylePreset, roofShape, outFace, proceduralSeed + activeArchProject.sections().size());
+                    selectedSectionId = sec.id();
+                    msg = "Added " + kind.name() + " (" + sec.id() + ")";
+                }
+            }
+            case TOWER -> {
+                if (hitSecOpt.isPresent()) {
+                    var sec = hitSecOpt.get();
+                    selectedSectionId = sec.id();
+                    msg = activeArchProject.stackFloor(sec.id())
+                        ? "Stacked floor on " + sec.id() + " (" + sec.stories() + " stories)"
+                        : sec.id() + " is locked";
+                } else {
+                    BoundingBox3i footprint = BoundingBox3i.fromOriginAndSize(
+                        new Vec3i(hitPos.x() - 3, hitPos.y(), hitPos.z() - 3), 7, 1, 7
+                    );
+                    var sec = activeArchProject.addSection(
+                        com.x64Dynamics.tfb.architectural.editor.BuildingSection.SectionKind.TOWER,
+                        footprint, 3, stylePreset, roofShape, outFace, proceduralSeed + 77
+                    );
+                    selectedSectionId = sec.id();
+                    msg = "Added 3-story Tower (" + sec.id() + ")";
+                }
+            }
+            case PORCH_TERRACE -> {
+                BoundingBox3i footprint = BoundingBox3i.fromOriginAndSize(
+                    new Vec3i(hitPos.x() - 2, hitPos.y(), hitPos.z() - 2), 5, 1, 5
+                );
+                var sec = activeArchProject.addSection(
+                    com.x64Dynamics.tfb.architectural.editor.BuildingSection.SectionKind.PORCH,
+                    footprint, 1, stylePreset, RoofGenerator.RoofType.FLAT, outFace, proceduralSeed + 33
+                );
+                if (hitSecOpt.isPresent()) sec.setParentSectionId(hitSecOpt.get().id());
+                selectedSectionId = sec.id();
+                msg = "Attached Porch (" + sec.id() + ")";
+            }
+            case STAIRS_APPROACH -> {
+                BoundingBox3i footprint = BoundingBox3i.fromOriginAndSize(
+                    new Vec3i(hitPos.x() - 1, hitPos.y(), hitPos.z()), 3, 1, 4
+                );
+                var sec = activeArchProject.addSection(
+                    com.x64Dynamics.tfb.architectural.editor.BuildingSection.SectionKind.STAIR_APPROACH,
+                    footprint, 1, stylePreset, RoofGenerator.RoofType.FLAT, outFace, proceduralSeed + 55
+                );
+                selectedSectionId = sec.id();
+                msg = "Added Stair Approach (" + sec.id() + ")";
+            }
+            case ERASE_SECTION -> {
+                if (hitSecOpt.isPresent()) {
+                    String sid = hitSecOpt.get().id();
+                    msg = activeArchProject.removeSection(sid) ? "Removed " + sid : sid + " is locked";
+                    if (sid.equals(selectedSectionId)) selectedSectionId = null;
+                } else {
+                    msg = "No section at cursor";
+                }
+            }
+            default -> msg = "Ready";
+        }
+        generatePreview();
+        return msg;
     }
 
     public com.x64Dynamics.tfb.terrain.HeightmapGrid sampleLiveHeightmap(BoundingBox3i box) {
         return com.x64Dynamics.tfb.terrain.HeightmapGrid.samplePadded(box, 8, liveLevelAccess);
-    }
-
-    public synchronized com.x64Dynamics.tfb.architectural.PromptBuildingInterpreter.PromptInterpretation applyPrompt(String prompt) {
-        this.lastPrompt = prompt == null ? "" : prompt.trim();
-        var interp = com.x64Dynamics.tfb.architectural.PromptBuildingInterpreter.interpret(this.lastPrompt);
-        this.stylePreset = interp.stylePreset();
-        this.activePalette = interp.stylePreset().createPalette();
-        this.roofShape = interp.roofType();
-        this.wingConfiguration = interp.wingConfiguration();
-        this.foundationStrategy = interp.foundationStrategy();
-        this.width = interp.width();
-        this.height = interp.height();
-        this.depth = interp.depth();
-        this.requestedStories = interp.stories();
-        this.addPorchAndGarden = interp.porchAndGarden();
-        this.addChimney = interp.chimney();
-        this.addBalconies = interp.balconies();
-        this.addDormers = interp.dormers();
-        this.addWindowShutters = interp.shutters();
-        this.furnishRooms = interp.furnishInterior();
-        this.enableInteriors = interp.furnishInterior();
-        if (interp.cityMode()) {
-            createNewCity("Prompt City", interp.settlementPattern(), interp.width(), interp.depth());
-        } else {
-            this.cityMode = false;
-            this.activeBrush = new ArchitecturalBrushes.HouseBrush();
-            this.activeCategory = BrushCategory.ARCHITECTURAL;
-            selectionManager.setPrimaryBox(boundingBox());
-            generatePreview();
-        }
-        return interp;
     }
 
     public void setPos1(Vec3i pos) {
@@ -520,7 +611,16 @@ public class ArchitectWorkspaceModel {
         BoundingBox3i box = boundingBox();
         com.x64Dynamics.tfb.terrain.HeightmapGrid liveHeightmap = sampleLiveHeightmap(box);
 
-        if (cityMode && activeCityProject != null) {
+        if (shapeEditorMode) {
+            BoundingBox3i sampleBox = activeArchProject.sections().isEmpty()
+                ? box
+                : activeArchProject.sections().get(0).bounds();
+            com.x64Dynamics.tfb.terrain.HeightmapGrid secHeight = sampleLiveHeightmap(sampleBox);
+            activeArchProject.regenerateDirtySections(secHeight, foundationStrategy);
+            targets.addAll(activeArchProject.resolveAllTargets());
+            this.generatedStories = activeArchProject.sections().stream().mapToInt(com.x64Dynamics.tfb.architectural.editor.BuildingSection::stories).max().orElse(1);
+            this.generatedRoomCount = activeArchProject.sections().size();
+        } else if (cityMode && activeCityProject != null) {
             activeCityProject.setBounds(box);
             activeCityProject.setPrimaryStyle(stylePreset);
             activeCityProject.setSeed(proceduralSeed);
@@ -669,6 +769,10 @@ public class ArchitectWorkspaceModel {
     }
 
     public boolean undo() {
+        if (shapeEditorMode && activeArchProject.undo()) {
+            generatePreview();
+            return true;
+        }
         Optional<DesignHistorySnapshot> snapshot = historyStack.undo();
         if (snapshot.isPresent()) {
             restoreSnapshot(snapshot.get());
@@ -678,6 +782,10 @@ public class ArchitectWorkspaceModel {
     }
 
     public boolean redo() {
+        if (shapeEditorMode && activeArchProject.redo()) {
+            generatePreview();
+            return true;
+        }
         Optional<DesignHistorySnapshot> snapshot = historyStack.redo();
         if (snapshot.isPresent()) {
             restoreSnapshot(snapshot.get());

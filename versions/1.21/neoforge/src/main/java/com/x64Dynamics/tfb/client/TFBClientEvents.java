@@ -49,8 +49,8 @@ public final class TFBClientEvents {
 
     @EventBusSubscriber(modid = "terraformabuilder", value = Dist.CLIENT)
     public static class GameEvents {
-        @SubscribeEvent
-        private static NeoForgeLevelAccess liveLevelAccess;
+                private static NeoForgeLevelAccess liveLevelAccess;
+@SubscribeEvent
     public static void onClientTick(ClientTickEvent.Post event) {
             Minecraft mc = Minecraft.getInstance();
             if (mc.player == null || mc.level == null) return;
@@ -235,6 +235,20 @@ public final class TFBClientEvents {
                     BlockPos clicked = bhr.getBlockPos();
                     Vec3i pos = new Vec3i(clicked.getX(), clicked.getY(), clicked.getZ());
 
+                    if (controller.model().isShapeEditorMode()) {
+                        com.x64Dynamics.tfb.geometry.Direction tfbDir = switch (bhr.getDirection()) {
+                            case NORTH -> com.x64Dynamics.tfb.geometry.Direction.NORTH;
+                            case SOUTH -> com.x64Dynamics.tfb.geometry.Direction.SOUTH;
+                            case WEST -> com.x64Dynamics.tfb.geometry.Direction.WEST;
+                            case EAST -> com.x64Dynamics.tfb.geometry.Direction.EAST;
+                            case UP -> com.x64Dynamics.tfb.geometry.Direction.UP;
+                            case DOWN -> com.x64Dynamics.tfb.geometry.Direction.DOWN;
+                        };
+                        String msg = controller.model().sculptAt(pos, tfbDir, event.getButton() == 0);
+                        mc.player.displayClientMessage(Component.literal("§b[TFB] §f" + msg), true);
+                        event.setCanceled(true);
+                        return;
+                    }
                     if (event.getButton() == 0) { // Left click -> POS1
                         controller.model().setPos1(pos);
                         mc.player.displayClientMessage(

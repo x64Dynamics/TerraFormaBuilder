@@ -62,6 +62,13 @@ public final class TFBInWorldHud {
             g.text(mc.font, hint, bannerX + 6, bannerY + 41, 0xFFFFFFFF, false);
         }
 
+        if (workspaceModel.isShapeEditorMode() && controller.isStudioBannerVisible()) {
+            String sid = workspaceModel.selectedSectionId() != null ? workspaceModel.selectedSectionId() : "none";
+            String tool = workspaceModel.activeSculptTool().name();
+            String secInfo = "§aSculpt: §e" + tool + " §8| §7Section: §b" + sid + " §8| §7Sections: §f" + workspaceModel.activeArchProject().sections().size();
+            g.text(mc.font, secInfo, 14, 66, 0xFFFFFFFF, false);
+        }
+
         // 2. Bottom Dedicated Builder Hotbar
         if (controller.isBuilderHotbarVisible()) {
             int hotbarWidth = 202;
