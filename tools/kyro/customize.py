@@ -20,7 +20,7 @@ def customize(mod_id, group, name, version):
         raise ValueError('Name/version cannot contain newlines, backslashes, quotes, or dollar signs.')
     metadata = properties(ROOT / 'properties/mod.properties')
     old_id = metadata['mod.id']
-    old_package = metadata['mod.group']+'.'+old_id
+    old_package = metadata.get('mod.package') or (metadata['mod.group'] + '.' + old_id)
     package = group+'.'+mod_id
     edits = []
     for directory in ('common','versions','build-logic'):
@@ -39,7 +39,7 @@ def customize(mod_id, group, name, version):
         if source != destination:
             destination.parent.mkdir(parents=True,exist_ok=True)
             source.rename(destination)
-    metadata.update({'mod.id':mod_id,'mod.group':group,'mod.name':name,'mod.version':version})
+    metadata.update({'mod.id':mod_id,'mod.group':group,'mod.package':package,'mod.name':name,'mod.version':version})
     (ROOT / 'properties/mod.properties').write_text('\n'.join(f'{key}={value}' for key,value in metadata.items())+'\n',encoding='utf-8')
     catalog_path = ROOT / 'targets.json'
     catalog = json.loads(catalog_path.read_text())

@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-CMA_ROOT = Path(os.environ.get("CMA_ROOT", r"E:\CMA"))
+CMA_ROOT = Path(os.environ.get("CMA_ROOT", str(ROOT.parent / "CMA")))
 
 
 def run_cmd(cmd: list[str], cwd: Path = ROOT, env: dict[str, str] | None = None, capture: bool = False) -> tuple[int, str]:
@@ -27,7 +27,7 @@ def discover_cma_instances() -> list[dict]:
     code, out = run_cmd(
         ["pwsh", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(script), "list"],
         cwd=CMA_ROOT,
-        env={"CMA_CODEX_WORKSPACES_ROOT": r"E:\Git Repos\Codex Workspaces"},
+        env={"CMA_CODEX_WORKSPACES_ROOT": os.environ.get("CMA_CODEX_WORKSPACES_ROOT", str(ROOT.parent / "Codex Workspaces"))},
         capture=True,
     )
     if code != 0:
@@ -70,8 +70,8 @@ def main() -> int:
             sys.executable, str(ROOT / "tools/kyro/runtime.py"),
             "--target", args.smoke_client,
             "--mode", "client",
-            "--run-root", r"E:\Git Repos\x64Dynamics\TerraFormaBuilder-support\smoke-runs",
-            "--report-dir", r"E:\Git Repos\x64Dynamics\TerraFormaBuilder-support\smoke-reports",
+            "--run-root", str(ROOT.parent / f"{ROOT.name}-support" / "smoke-runs"),
+            "--report-dir", str(ROOT.parent / f"{ROOT.name}-support" / "smoke-reports"),
             "--timeout", "180",
         ])
         print(out)
