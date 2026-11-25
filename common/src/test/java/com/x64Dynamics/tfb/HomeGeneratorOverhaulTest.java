@@ -86,4 +86,19 @@ public class HomeGeneratorOverhaulTest {
         assertTrue(seg.bays().stream().anyMatch(b -> b.type() == com.x64Dynamics.tfb.architectural.WallSegmentationEngine.BayType.BALCONY));
         assertTrue(seg.bays().stream().anyMatch(b -> b.type() == com.x64Dynamics.tfb.architectural.WallSegmentationEngine.BayType.ARCHED_WINDOW));
     }
+
+    @Test
+    public void testContextAwareProceduralVariationPatterns() {
+        var bounds = BoundingBox3i.fromOriginAndSize(new Vec3i(0, 64, 0), 9, 12, 9);
+        var res = IntelligentHomeGenerator.generateHome(new IntelligentHomeGenerator.HomeConfig(
+            bounds, StylePreset.MEDIEVAL.createPalette(), RoofGenerator.RoofType.GABLE,
+            2, 4, StylePreset.MEDIEVAL, Direction.SOUTH, WingConfiguration.SINGLE_RECTANGLE,
+            false, false, false, 1.0f, 505L
+        ));
+        var varied = com.x64Dynamics.tfb.architectural.style.ProceduralVariationEngine.applyFacadeVariation(
+            res.targets(), StylePreset.MEDIEVAL.createPalette(), 505L, 0.5f
+        );
+        assertEquals(res.targets().size(), varied.size());
+        assertTrue(varied.stream().anyMatch(t -> t.role() == MaterialRole.WALL_ACCENT));
+    }
 }

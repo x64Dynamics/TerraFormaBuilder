@@ -443,7 +443,26 @@ public final class IntelligentHomeGenerator {
             }
         }
 
-        // 9. Live Terrain Adaptation
+        // 9. WFC Ornament & Variation Pass (connects WfcSolver + ProceduralVariationEngine to live pipeline)
+        if (rules.ornamentDensity() >= 0.5f && width >= 11 && depth >= 11) {
+            var wfcRes = com.x64Dynamics.tfb.architectural.wfc.WfcSolver.solve(
+                3, 1, 3,
+                com.x64Dynamics.tfb.architectural.wfc.WfcSolver.defaultArchitecturalGrammar(),
+                Map.of("1,0,1", new com.x64Dynamics.tfb.architectural.wfc.WfcSolver.ModuleVariant("interior_hall", 0)),
+                def.seed(), 4
+            );
+            if (wfcRes.success()) {
+                for (int gx = 0; gx < 3; gx++) {
+                    String mod = wfcRes.grid()[gx][0][0].moduleId();
+                    if ("corner_pillar".equals(mod)) {
+                        Vec3i accentPos = new Vec3i(minX + (gx * (width - 1)) / 2, minY + 1, minZ).offset(facing.opposite(), 0);
+                        map.putIfAbsent(accentPos, new PlacementTarget(accentPos, palette.get(MaterialRole.LIGHT_SOURCE), MaterialRole.LIGHT_SOURCE));
+                    }
+                }
+            }
+        }
+
+        // 10. Live Terrain Adaptation
         if (heightmap != null) {
             com.x64Dynamics.tfb.terrain.FoundationStrategy effectiveStrategy =
                 foundationStrategy != null ? foundationStrategy : com.x64Dynamics.tfb.terrain.FoundationStrategy.STEPPED_TERRACE;

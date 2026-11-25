@@ -3,11 +3,13 @@ package com.x64Dynamics.tfb.architectural.plan;
 import com.x64Dynamics.tfb.architectural.PlacementTarget;
 import com.x64Dynamics.tfb.geometry.BoundingBox3i;
 import com.x64Dynamics.tfb.geometry.Vec3i;
+import com.x64Dynamics.tfb.material.MaterialRole;
 
 import java.util.*;
 
 /**
- * Validates structural dimensions, room connectivity graph, stairwell headroom, and placement integrity.
+ * Validates structural dimensions, story heights, structural support under walls/pillars,
+ * door/window openings, room connectivity graph, stairwell headroom, and placement integrity.
  */
 public final class BuildingPlanValidator {
     private BuildingPlanValidator() { }
@@ -25,6 +27,9 @@ public final class BuildingPlanValidator {
         if (box.sizeX() < 5 || box.sizeZ() < 5) {
             errors.add("Footprint too small (" + box.sizeX() + "x" + box.sizeZ() + "); minimum 5x5 required.");
         }
+        if (def.storyHeight() < 3) {
+            errors.add("Story height " + def.storyHeight() + " too low; minimum 3 required.");
+        }
         if (floors.isEmpty()) {
             errors.add("Building plan contains no floors.");
         }
@@ -32,14 +37,39 @@ public final class BuildingPlanValidator {
             errors.add("Building plan produced zero block placements.");
         }
 
-        // Map placements for stairwell headroom check
         Map<Vec3i, PlacementTarget> byPos = new HashMap<>(targets.size());
+        int doorCount = 0;
+        int windowCount = 0;
         for (PlacementTarget t : targets) {
             if (t.pos() == null || t.block() == null) {
                 errors.add("Null placement position or block detected.");
                 continue;
             }
             byPos.put(t.pos(), t);
+            if (t.role() == MaterialRole.DOOR) doorCount++;
+            if (t.role() == MaterialRole.WINDOW) windowCount++;
+        }
+
+        if (doorCount == 0) {
+            warnings.add("Building has no entrance door placement.");
+        }
+        if (windowCount == 0 && box.sizeX() >= 7 && box.sizeZ() >= 7) {
+            warnings.add("Building >= 7x7 has no window openings.");
+        }
+
+        // Structural support check for load-bearing pillars above ground floor
+        int minY = box.min().y();
+        int unsupportedPillars = 0;
+        for (PlacementTarget t : targets) {
+            if (t.role() == MaterialRole.PILLAR && t.pos().y() > minY + 1) {
+                PlacementTarget below = byPos.get(t.pos().add(0, -1, 0));
+                if (below == null || below.block().isAir()) {
+                    unsupportedPillars++;
+                }
+            }
+        }
+        if (unsupportedPillars > 0) {
+            warnings.add("Detected " + unsupportedPillars + " unsupported pillar block(s) without column below.");
         }
 
         for (BuildingPlan.StairwellPlan sw : stairwells) {
@@ -65,7 +95,6 @@ public final class BuildingPlanValidator {
             }
         }
 
-        // Link floors via stairwells (connect any room on fromFloor to any room on toFloor)
         for (BuildingPlan.StairwellPlan sw : stairwells) {
             if (sw.fromFloor() < floors.size() && sw.toFloor() < floors.size()) {
                 List<BuildingPlan.PlannedRoom> fromRooms = floors.get(sw.fromFloor()).rooms();
